@@ -4,7 +4,7 @@ const keep_alive = require('./keep_alive.js')
 
 // Kết nối MongoDB
 mongoose.connect(
-  "mongodb+srv://duchieufaryoung0:80E9gUahdOXmGKuy@cluster0.6nlv1cv.mongodb.net/telegram_bot_db?retryWrites=true&w=majority",
+  "",
   { useNewUrlParser: true, useUnifiedTopology: true },
 );
 
@@ -32,7 +32,7 @@ const playerSchema = new mongoose.Schema({
 // Tạo model từ schema
 const Player = mongoose.model("Player", playerSchema);
 // Thay đổi URL webhook thành URL công khai của server nếu bạn triển khai bot trên môi trường production
-const bot = new TelegramBot("6737397282:AAEGGicIi4DRKOtDXIuWaOUpPQlIwqW_t2o", {
+const bot = new TelegramBot("", {
   polling: true,
 });
 
