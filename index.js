@@ -115,12 +115,12 @@ bot.onText(/\/member_info/, (msg) => {
     let response = '';
 
     response += `Bảng công ngày hôm nay (${new Date().toLocaleDateString()}):\n`;
-    response += 'Họ tên|\t\t|Quẩy|\t|Cộng|\t|Tính tiền\n';
+    response += 'Họ tên\t\tQuẩy\tCộng\tTính tiền\n';
 
     for (const userId in memberInfo) {
         for (const date in memberInfo[userId]) {
             const info = memberInfo[userId][date];
-            response += `${info['ten']}\t\t${info['quay']}q +\t${info['keo']}c\t${info['tinh_tien']}vnđ\n`;
+            response += `${info['ten']}\t\t${info['quay']}q+\t${info['keo']}c\t${info['tinh_tien']}vnđ\n`;
         }
     }
 
@@ -137,14 +137,14 @@ bot.onText(/\/bc(\d{1,2})?\/(\d{1,2})?\/(\d{4})?/, (msg, match) => {
     const requestedDate = match[0] ? new Date(`${match[3] || new Date().getFullYear()}-${match[2] || (new Date().getMonth() + 1)}-${match[1] || new Date().getDate()}`).toLocaleDateString() : new Date().toLocaleDateString();
 
     let response = `Bảng công ngày ${requestedDate}:\n`;
-    response += 'Họ tên\t\tQuẩy\tKéo\tTính tiền\n';
+    response += 'Họ tên\t\tQuẩy\tCộng\tTính tiền\n';
 
     let found = false;
     for (const userId in memberInfo) {
         for (const date in memberInfo[userId]) {
             if (date === requestedDate) {
                 const info = memberInfo[userId][date];
-                response += `${info['ten']}\t\t${info['quay']}q +\t${info['keo']}c\t${info['tinh_tien']}vnđ\n`;
+                response += `${info['ten']}\t\t${info['quay']}q+\t${info['keo']}c\t${info['tinh_tien']}vnđ\n`;
                 found = true;
             }
         }
