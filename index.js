@@ -1,17 +1,26 @@
 const TelegramBot = require('node-telegram-bot-api');
 const fs = require('fs');
-const keep_alive = require('./keep_alive.js')
 
 const token = '6748384489:AAGV42T0PoOel_1519X5ot_rLLnpQqqDTdA';
 const bot = new TelegramBot(token, { polling: true });
 
+
 // Đường dẫn tới file lưu trữ dữ liệu
-const dataFilePath = 'members_photos.json';
+const dataFilePath2 = 'members_photos.json';
 
 // Load dữ liệu từ file
 let membersPhotos = {};
+if (fs.existsSync(dataFilePath2)) {
+    membersPhotos = JSON.parse(fs.readFileSync(dataFilePath2));
+}
+// Đường dẫn tới file lưu trữ dữ liệu
+const dataFilePath = 'member_info.json';
+
+// Load dữ liệu từ file nếu có, nếu không có thì sẽ tạo một đối tượng trống
+let memberInfo = {};
 if (fs.existsSync(dataFilePath)) {
-    membersPhotos = JSON.parse(fs.readFileSync(dataFilePath));
+    const data = fs.readFileSync(dataFilePath);
+    memberInfo = JSON.parse(data);
 }
 
 // Chuỗi cấm
@@ -19,9 +28,6 @@ const bannedStringsRegex = /(ca\s?1|ca1|ca\s?2|Ca\s?2|Ca\s?1|Ca1|Ca\s?2|Ca2)/gi;
 
 // Lưu trữ tin nhắn chứa hình ảnh của từng thành viên
 let photoMessages = {};
-
-// Đối tượng lưu trữ thông tin của mỗi thành viên trong nhóm
-const memberInfo = {};
 
 // Hàm gửi bảng công vào thời điểm cố định hàng ngày
 function sendDailyReport() {
@@ -36,9 +42,7 @@ function sendDailyReport() {
         let response = '';
 
         response += `Bảng Công Ngày ${new Date().toLocaleDateString()} (Cập nhật tự động):\n\n\n`;
-        response += 'TÊN👩‍🎤|\t\tQUẨY💃|\tCỘNG➕|\tTIỀN💰\n\n';// Reset tổng số ảnh của thành viên sau 10 giây
-        
-    
+        response += 'TÊN👩‍🎤|\t\tQUẨY💃|\tCỘNG➕|\tTIỀN💰\n\n';
 
         for (const userId in memberInfo) {
             for (const date in memberInfo[userId]) {
@@ -58,7 +62,6 @@ function sendDailyReport() {
 // Kiểm tra thời gian và gửi bảng công mỗi phút
 setInterval(sendDailyReport, 60000); // Kiểm tra mỗi phút
 
-
 bot.on('message', (msg) => {
     const chatId = msg.chat.id;
 
@@ -74,12 +77,12 @@ bot.on('message', (msg) => {
         membersPhotos[userId] = (membersPhotos[userId] || 0) + 1;
 
         // Lưu dữ liệu vào file
-        fs.writeFileSync(dataFilePath, JSON.stringify(membersPhotos));
+        fs.writeFileSync(dataFilePath2, JSON.stringify(membersPhotos));
 
         // Reset tổng số ảnh của thành viên sau 10 giây
         setTimeout(() => {
             membersPhotos[userId] = 0;
-            fs.writeFileSync(dataFilePath, JSON.stringify(membersPhotos));
+            fs.writeFileSync(dataFilePath2, JSON.stringify(membersPhotos));
         }, 30 * 60 * 1000); // 30 phút
     }
 
@@ -105,7 +108,7 @@ bot.on('message', (msg) => {
                         bot.sendMessage(chatId, 'Bài nộp hợp lệ, đã ghi nhận vào bảng công ❤🥳', { reply_to_message_id: msg.message_id }).then(() => {
                         // Reset tổng số ảnh của thành viên
                         membersPhotos[userId] = 0;
-                        fs.writeFileSync(dataFilePath, JSON.stringify(membersPhotos));
+                        fs.writeFileSync(dataFilePath2, JSON.stringify(membersPhotos));
                     });
                     } else {
                         bot.sendMessage(chatId, 'Bài nộp không hợp lệ 😭 có thể do đếm sai số lượng quẩy hoặc sai cú pháp nộp 🥺, bài nộp của bạn đã bị gỡ hãy kiểm tra và nộp lại! 🤧🐵 (Cú pháp nộp hợp lệ "Số ca + số quẩy + số cộng" ví dụ: Ca1 5q 1c)', { reply_to_message_id: msg.message_id }).then(() => {
@@ -120,7 +123,7 @@ bot.on('message', (msg) => {
                             }
 // Reset tổng số ảnh của thành viên
                         membersPhotos[userId] = 0;
-                        fs.writeFileSync(dataFilePath, JSON.stringify(membersPhotos));
+                        fs.writeFileSync(dataFilePath2, JSON.stringify(membersPhotos));
                         });
                     }
                 }
@@ -145,7 +148,6 @@ bot.on('message', (msg) => {
         bot.sendMessage(chatId, "Tớ ko hiểu 🥺, tớ chỉ là AI được anh Hieu Gà đào tạo để quản lý bài nộp của mọi người 😊. Hi vọng tương lai tớ sẽ biết nhiều thứ hơn 🤯", { reply_to_message_id: msg.message_id });
     }
 
-  
     // Thêm code tính bảng công ở đây
     const userId = msg.from.id;
     const firstName = msg.from.first_name;
@@ -188,6 +190,9 @@ bot.on('message', (msg) => {
         memberInfo[userId][currentDate]['quay'] += quay;
         memberInfo[userId][currentDate]['keo'] += keo;
         memberInfo[userId][currentDate]['tinh_tien'] += quay * 500 + keo * 1000;
+
+        // Lưu dữ liệu vào file sau khi cập nhật
+        fs.writeFileSync(dataFilePath, JSON.stringify(memberInfo));
     }
 });
 
@@ -238,4 +243,3 @@ bot.onText(/\/bc(\d{1,2})?\/(\d{1,2})?\/(\d{4})?/, (msg, match) => {
 
     bot.sendMessage(chatId, response);
 });
-
