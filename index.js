@@ -246,6 +246,8 @@ function enterFarm(chatId) {
           ],
           ["Tưới nước", "Mua ô đất"],
           ["Cập nhật lại", "Quay lại"],
+          ["Nhận quà hàng ngày"]
+
         ],
         resize_keyboard: true,
         one_time_keyboard: false,
@@ -484,8 +486,8 @@ bot.on("message", async (msg) => {
 function sendDefaultReplyMarkup(chatId) {
   const opts = {
     reply_markup: {
-      keyboard: [["Tài Xỉu(Coming soon]"],["Đảo cướp biển"],["Cửa hàng"], ["Vào Nông Trại"], ["Xem Tài khoản"], ["Giới thiệu bạn bè"]],
-      resize_keyboard: true,
+      keyboard: [["Tài xỉu(Coming soon)"],["Đảo cướp biển"],["Cửa hàng"], ["Vào Nông Trại"], ["Xem Tài khoản"], ["Giới thiệu bạn bè"]],
+    resize_keyboard: true,
       one_time_keyboard: false,
     },
   };
@@ -725,8 +727,8 @@ bot.onText(/Quay lại/, (msg) => {
 function sendMainMenu(chatId) {
   const opts = {
     reply_markup: {
-      keyboard: [["Vào Nông Trại"], ["Cửa hàng", "Xem Tài khoản"],["Giới thiệu bạn bè"]],
-      resize_keyboard: true,
+      keyboard: [["Tài xỉu(Coming soon)"],["Đảo cướp biển"],["Cửa hàng"], ["Vào Nông Trại"], ["Xem Tài khoản"], ["Giới thiệu bạn bè"]],
+     resize_keyboard: true,
       one_time_keyboard: false,
     },
   };
