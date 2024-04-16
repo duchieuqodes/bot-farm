@@ -63,7 +63,7 @@ const playerSchema = new mongoose.Schema({
 const Player = mongoose.model("Player", playerSchema);
 
 // Thay đổi URL webhook thành URL công khai của server nếu bạn triển khai bot trên môi trường production
-const bot = new TelegramBot("6737397282:AAEGGicIi4DRKOtDXIuWaOUpPQlIwqW_t2o", {
+const bot = new TelegramBot("", {
   polling: true,
 });
 
