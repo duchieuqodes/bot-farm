@@ -63,7 +63,7 @@ bot.onText(/Đảo cướp biển/, async (msg) => {
     reply_markup: {
       keyboard: [
         [{ text: 'Đảo Của Bạn 🏝️' }], [{ text: 'Quay Thưởng 🎰' }, { text: 'Vòng Quay Đặc Biệt 🃏' }],
-        [{ text: 'Nâng Cấp Hòn Đảo 🚀' }], [{ text: 'Đi Cướp Biển ☠️' }],[{ text: 'Trở lại'}],
+        [{ text: 'Nâng Cấp Hòn Đảo 🚀' }], [{ text: 'Đi Cướp Biển ☠️' }],[{ text: 'Quay lại'}],
       ],
       resize_keyboard: true,
     },
@@ -452,7 +452,7 @@ function generateMainMenuKeyboard() {
   return {
     keyboard: [
       [{ text: 'Đảo Của Bạn 🏝️' }], [{ text: 'Quay Thưởng 🎉' }, { text: 'Vòng Quay Đặc Biệt 🃏' }],
-      [{ text: 'Nâng Cấp Hòn Đảo 🚀' }], [{ text: 'Đi Cướp Biển ☠️' }], [{text: 'Quay về'}],
+      [{ text: 'Nâng Cấp Hòn Đảo 🚀' }], [{ text: 'Đi Cướp Biển ☠️' }], [{text: 'Quay lại'}],
     ],
     resize_keyboard: true,
   };
@@ -497,7 +497,7 @@ bot.onText(/Nâng Cấp Hòn Đảo/, async (msg) => {
       reply_markup: {
         keyboard: [
           [{ text: 'Xác nhận nâng cấp' }],
-          [{ text: 'Quay về' }],
+          [{ text: 'Trở lại' }],
         ],
         resize_keyboard: true,
       },
