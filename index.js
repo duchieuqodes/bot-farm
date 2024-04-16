@@ -1,7 +1,7 @@
 const TelegramBot = require('node-telegram-bot-api');
 const fs = require('fs');
 const keep_alive = require('./keep_alive.js')
-
+const pirate = require('./pirate.js')
 
 const token = '6748384489:AAGV42T0PoOel_1519X5ot_rLLnpQqqDTdA';
 const bot = new TelegramBot(token, { polling: true });
