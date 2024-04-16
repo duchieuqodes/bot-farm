@@ -1,11 +1,9 @@
 const TelegramBot = require("node-telegram-bot-api");
 const mongoose = require("mongoose");
-const keep_alive = require('./keep_alive.js')
-const pirate = require('./pirate.js')
 
 // Kết nối MongoDB
 mongoose.connect(
-  "",
+  "mongodb+srv://duchieufaryoung0:80E9gUahdOXmGKuy@cluster0.6nlv1cv.mongodb.net/telegram_bot_db?retryWrites=true&w=majority",
   { useNewUrlParser: true, useUnifiedTopology: true },
 );
 
@@ -13,13 +11,27 @@ mongoose.connect(
 const playerSchema = new mongoose.Schema({
   telegramId: Number,
   username: String,
+  messageId: Number,
+  ip: String,
+  deviceId: String,
+  twoFactorAuth: Boolean,
+  createdAt: { type: Date, default: Date.now },
+  referralId: {
+    type: String,
+    default: null,
+  },
+
+
   seedsThanhLong: { type: Number, default: 0 },
   seedsDuaHau: { type: Number, default: 0 },
   gold: { type: Number, default: 100000 },
+  goldReferral: { type: Number, default: 0 },
+  referralCount: { type: Number, default: 0 },
   land: { type: Number, default: 1 },
   lastHarvestTime: Number,
   currentSeed: String,
   harvestTime: Number,
+  lotteryTicket: { type: Number, default: 0 },
   crops: {
     pest: { type: Number, default: 0 }, // Số con sâu bọ
     health: { type: Number, default: 100 }, // Sức khỏe cây trồng (%)
@@ -28,38 +40,128 @@ const playerSchema = new mongoose.Schema({
   fertilizer: { type: Number, default: 1000 }, // Số lượng phân bón
   pesticide: { type: Number, default: 1000 },
   isStolen: { type: Boolean, default: false }, // Thêm trường robbed// Số lượng thuốc diệt sâu
+
+
+  betType: { type: String, default: "" }, // Loại cược
+  betAmount: { type: Number, default: 0 }, // Số vàng đã cược
+  lastBetTime: { type: Number, default: 0 }, // Thời điểm cuối cùng đặt cược
+  goldReferral: { type: Number, default: 0 },
+  remainingTime: { type: Number, default: 10 },
+
+
+   choice: String,
+     bet: { type: Number, default: 0 },
+     gameInProgress: { type: Boolean, default: false },
+     gameTimeLeft: { type: Number, default: 0 },
+     chosenSide: String,
+    taixiuStarted: { type: Boolean, default: false },
+    broadcastSent: { type: Boolean, default: false } // Trạng thái đã gửi broadcast
+
 });
 
-// Tạo model từ schema
 const Player = mongoose.model("Player", playerSchema);
+
 // Thay đổi URL webhook thành URL công khai của server nếu bạn triển khai bot trên môi trường production
-const bot = new TelegramBot("", {
+const bot = new TelegramBot("6737397282:AAEGGicIi4DRKOtDXIuWaOUpPQlIwqW_t2o", {
   polling: true,
 });
 
-// Lắng nghe sự kiện khi người dùng bắt đầu trò chơi
+
+// Lắng nghe sự kiện khi người dùng bắt đầu trò chơi hoặc nhập lệnh /start
 bot.onText(/\/start/, async (msg) => {
-  const chatId = msg.chat.id;
-  const telegramId = msg.from.id;
+    const chatId = msg.chat.id;
+    const telegramId = msg.from.id;
+    const referralId = msg.text.split('/start ')[1]; // Lấy uid của người giới thiệu từ link
 
-  let player = await Player.findOne({ telegramId });
+    let player = await Player.findOne({ telegramId });
 
-  if (!player) {
-    const username = msg.from.username;
-    player = new Player({ telegramId, username });
-    await player.save();
-  } else {
-  }
+    if (!player) {
+        const username = msg.from.username;
+        player = new Player({ telegramId, username, referralId }); // Lưu referralId vào trường referralId
 
-  // Gửi menu mặc định
-  sendDefaultReplyMarkup(chatId);
+        if (referralId && !isNaN(referralId)) {
+            const referralPlayer = await Player.findOne({ telegramId: referralId });
+
+          
+          
+
+            if (referralPlayer) {
+                referralPlayer.gold += 2000; // Người giới thiệu nhận được 2000 vàng     
+                referralPlayer.referralCount += 1;
+                await referralPlayer.save();
+                bot.sendMessage(referralId, "Bạn đã nhận được thêm 2000 vàng từ lượt giới thiệu thành công!");
+            } else {
+                bot.sendMessage(chatId, "Link giới thiệu không hợp lệ hoặc người giới thiệu không tồn tại!");
+            }
+        }
+
+        await player.save();
+    } else {
+        // Người chơi đã có tài khoản, không cần tạo mới
+    }
+
+    // Gửi menu mặc định hoặc thông báo khác
+    sendDefaultReplyMarkup(chatId);
 });
+
+
+// Lệnh giới thiệu
+bot.onText(/Giới thiệu bạn bè/, async (msg) => {
+    const chatId = msg.chat.id;
+    const telegramId = msg.from.id;
+
+    // Tạo link giới thiệu có uid riêng của người chơi
+    const referralLink = `https://t.me/Tlvvdemo_bot?start=${telegramId}`;
+
+    let player = await Player.findOne({ telegramId });
+
+    if (!player) {
+        const username = msg.from.username;
+        player = new Player({ telegramId, username, referralLink, referralCount: 0 }); // Lưu link giới thiệu vào trường referralLink
+        await player.save();
+    }
+
+    // Tăng số lượng tuyến dưới và hiển thị
+    player.numberOfReferrals += 1;
+    await player.save();
+
+    // Hiển thị thông tin hoa hồng
+    const totalGoldReferral = player.goldReferral;
+    const referralCount = player.referralCount;
+
+  // Thêm URL hình ảnh vào tin nhắn
+  const imageURL = 'https://iili.io/JkZJpM7.png';
+
+  // Tin nhắn với mã HTML để chèn hình ảnh lấp đầy khung tin nhắn
+  const htmlMessage = `<a href="${imageURL}">&#8205;</a>\nMỗi lượt giới thiệu hợp lệ bạn sẽ nhận được 2000 vàng và 10% hoa hồng thu hoạch cây trồng từ người bạn mời.\nLink giới thiệu của bạn: ${referralLink}\n\n\nTổng hoa hồng nhận được trong tháng: ${totalGoldReferral} vàng (10% vàng thu hoạch được từ tuyến dưới)\n\nSố lượng tuyến dưới: ${referralCount}`;
+
+  bot.sendMessage(chatId, htmlMessage, { parse_mode: 'HTML' });
+
+    
+
+    // Kiểm tra nếu là mùng 1 hàng tháng thì reset goldReferral về 0
+    const today = new Date();
+    if (today.getDate() === 1) {
+        player.goldReferral = 0;
+        await player.save();
+    }
+});
+
+
+
+// Hàm gửi menu mặc định
+function sendDefaultReplyMarkup(chatId) {
+    // Gửi menu mặc định cho người chơi
+}
+
+
+  
 
 // Tạo nút reply markup cho cửa hàng và vào nông trại
 bot.onText(/\/menu/, (msg) => {
   const opts = {
     reply_markup: {
-      keyboard: [["Đảo Cướp Biển"],["Cửa hàng"], ["Vào Nông Trại"], ["Xem Tài khoản"]],
+    keyboard: [["Tài xỉu(Coming soon)"],["Đảo cướp biển"],["Cửa hàng"], ["Vào Nông Trại"], ["Xem Tài khoản"], ["Giới thiệu bạn bè"]],
       resize_keyboard: true,
       one_time_keyboard: false,
     },
@@ -112,14 +214,17 @@ function enterFarm(chatId) {
     if (player.currentSeed) {
       const remainingTime = player.harvestTime - Math.floor(Date.now() / 1000);
       if (remainingTime <= 0) {
-        message += `Đã có thể thu hoạch ${player.currentSeed === "seedsThanhLong" ? "Thanh Long" : "Dưa Hấu"} này,`;
+        message += `ĐÃ CÓ THỂ THU HOẠCH ${player.currentSeed === "seedsThanhLong" ? "Thanh Long" : "Dưa Hấu"},`;
         // Hiển thị tình trạng cây trồng
         message += `\nTình trạng cây trồng:`;
         message += `\n- Sâu bọ: ${player.crops.pest}`;
         message += `\n- Sức khỏe cây trồng: ${player.crops.health}%`;
         message += `\n- Độ tươi tốt: ${player.crops.freshness}`;
       } else {
-        message += `Đang gieo hạt ${player.currentSeed === "seedsThanhLong" ? "Thanh Long" : "Dưa Hấu"}, thời gian chờ thu hoạch còn lại: ${remainingTime} giây`;
+        const hours = Math.floor(remainingTime / 3600);
+        const minutes = Math.floor((remainingTime % 3600) / 60);
+        const seconds = remainingTime % 60;
+        message += `Đang gieo hạt ${player.currentSeed === "seedsThanhLong" ? "Thanh Long" : "Dưa Hấu"}, thời gian chờ thu hoạch còn lại: ${hours} giờ ${minutes} phút ${seconds} giây`;
         // Hiển thị tình trạng cây trồng
         message += `\nTình trạng cây trồng:`;
         message += `\n- Sâu bọ: ${player.crops.pest}`;
@@ -183,7 +288,6 @@ bot.on("message", async (msg) => {
   const player = await Player.findOne({ telegramId: chatId });
 
   if (!player) {
-    bot.sendMessage(chatId, "Bạn chưa có tài khoản nè!");
     return;
   }
 
@@ -221,21 +325,21 @@ function startCountdown(chatId, endTime, seedType) {
       // Cập nhật trạng thái của cây trồng
       const player = await Player.findOne({ telegramId: chatId });
       if (player && player.crops) {
-        // Tăng số sâu bọ (30% xuất hiện sau mỗi 5 giây)
-        if (Math.random() < 0.3) {
+        // Tăng số sâu bọ (30% xuất hiện sau mỗi 1p)
+        if (Math.random() < 0.9) {
           player.crops.pest += 1;
         }
         // Kiểm tra và giảm sức khỏe của cây trồng
         if (player.crops.freshness === "Khô" || player.crops.pest > 0) {
-          // Giảm sức khỏe của cây trồng (0.5% mỗi 5 giây nếu có sâu bọ, 0.4% mỗi 5 giây nếu cây trồng khô)
+          // Giảm sức khỏe của cây trồng (0.4% mỗi 1p nếu có sâu bọ, 0.4% mỗi 1p nếu cây trồng khô)
           if (player.crops.pest > 0) {
             player.crops.health = Math.max(0, player.crops.health - 0.5);
           } else {
             player.crops.health = Math.max(0, player.crops.health - 0.4);
           }
         }
-        // Kiểm tra và cập nhật độ tươi tốt của cây trồng (sau 30 giây)
-        if (currentTime % 30 === 0) {
+        // Kiểm tra và cập nhật độ tươi tốt của cây trồng (sau 20p)
+        if (currentTime % 1200 === 0) {
           player.crops.freshness = "Khô";
         }
         // Đảm bảo sức khỏe cây trồng không vượt quá 0% và không âm
@@ -243,7 +347,7 @@ function startCountdown(chatId, endTime, seedType) {
         await player.save();
       }
     }
-  }, 1000); // Đếm ngược mỗi 5 giây
+  }, 100000); // Đếm ngược mỗi 60 giây
 }
 
 // Xử lý chức năng gieo hạt
@@ -253,7 +357,6 @@ bot.on("message", async (msg) => {
   const player = await Player.findOne({ telegramId });
 
   if (!player) {
-    bot.sendMessage(chatId, "Bạn chưa có tài khoản ỏ!");
     return;
   }
 
@@ -286,12 +389,12 @@ bot.on("message", async (msg) => {
       return;
     }
     if (player.seedsThanhLong <= 0) {
-      bot.sendMessage(chatId, "Bạn không có hạt thanh long để gieo!");
+      bot.sendMessage(chatId, "Bạn không có đủ hạt thanh long để gieo!");
       return;
     }
     enterFarm(chatId);
     player.currentSeed = "seedsThanhLong";
-    player.harvestTime = Math.floor(Date.now() / 1000) + 60; // Thời gian chờ 1 phút
+    player.harvestTime = Math.floor(Date.now() / 1000) + 20; // Thời gian chờ 2 tiếng
     player.seedsThanhLong -= player.land;
     player.crops = { pest: 0, health: 100, freshness: "Tươi" }; // Tạo cây trồng mới
     await player.save();
@@ -310,12 +413,12 @@ bot.on("message", async (msg) => {
       return;
     }
     if (player.seedsDuaHau <= 0) {
-      bot.sendMessage(chatId, "Bạn không có hạt dưa hấu để gieo!");
+      bot.sendMessage(chatId, "Bạn không đủ hạt dưa hấu để gieo!");
       return;
     }
     enterFarm(chatId);
     player.currentSeed = "seedsDuaHau";
-    player.harvestTime = Math.floor(Date.now() / 1000) + 120; // Thời gian chờ 2 phút
+    player.harvestTime = Math.floor(Date.now() / 1000) + 3.5 * 60 * 60; // Thời gian chờ 2 phút
     player.seedsDuaHau -= player.land;
     player.crops = { pest: 0, health: 100, freshness: "Tươi" }; // Tạo cây trồng mới
     await player.save();
@@ -328,45 +431,59 @@ bot.on("message", async (msg) => {
   }
 });
 
-// Xử lý chức năng thu hoạch
-bot.on("message", async (msg) => {
-  const chatId = msg.chat.id;
-  const telegramId = msg.from.id;
-  const player = await Player.findOne({ telegramId });
+  // Xử lý chức năng thu hoạch
+  bot.on("message", async (msg) => {
+    const chatId = msg.chat.id;
+    const telegramId = msg.from.id;
+    const player = await Player.findOne({ telegramId });
 
-  if (!player) {
-    return;
-  }
-
-  if (msg.text === "Thu hoạch") {
-    if (!player.currentSeed || player.harvestTime > Date.now() / 1000) {
-      bot.sendMessage(chatId, "Hiện không có gì để thu hoạch!");
+    if (!player) {
       return;
     }
 
-    let goldEarned = 0;
-    if (player.currentSeed === "seedsThanhLong") {
-      goldEarned = player.land * 800 * (player.crops.health / 100);
-    } else if (player.currentSeed === "seedsDuaHau") {
-      goldEarned = player.land * 1000 * (player.crops.health / 100);
-    }
+    if (msg.text === "Thu hoạch") {
+      if (!player.currentSeed || player.harvestTime > Date.now() / 1000) {
+        bot.sendMessage(chatId, "Hiện không có gì để thu hoạch!");
+        return;
+      }
 
-    player.currentSeed = "";
-    player.harvestTime = 0;
-    player.gold += goldEarned;
-    await player.save();
-    bot.sendMessage(
-      chatId,
-      `Bạn đã thu hoạch thành công và nhận được ${goldEarned} vàng.`,
-    );
-  }
-});
+      let goldEarned = 0;
+      if (player.currentSeed === "seedsThanhLong") {
+        goldEarned = player.land * 800 * (player.crops.health / 100);
+      } else if (player.currentSeed === "seedsDuaHau") {
+        goldEarned = player.land * 1000 * (player.crops.health / 100);
+      }
+
+      // Cập nhật số vàng cho người chơi và người được giới thiệu
+      const referralPlayer = await Player.findOne({ telegramId: player.referralId });
+      if (referralPlayer) {
+        const referralGoldEarned = Math.floor(goldEarned * 0.1); // 10% số vàng
+        referralPlayer.gold += referralGoldEarned;
+        referralPlayer.goldReferral += referralGoldEarned;
+        await referralPlayer.save();
+        bot.sendMessage(
+          referralPlayer.telegramId,
+          `Bạn đã nhận được thêm ${referralGoldEarned} vàng từ số tiền thu hoạch của 1 người bạn giới thiệu!`,
+        );
+      }
+
+      player.currentSeed = "";
+      player.harvestTime = 0;
+      player.gold += goldEarned;
+      await player.save();
+      bot.sendMessage(
+        chatId,
+        `Bạn đã thu hoạch thành công và nhận được ${goldEarned} vàng.`,
+      );
+    }
+  });
+
 
 // Hàm gửi nút reply markup mặc định
 function sendDefaultReplyMarkup(chatId) {
   const opts = {
     reply_markup: {
-      keyboard: [["Cửa hàng"], ["Vào Nông Trại"], ["Xem Tài khoản"]],
+      keyboard: [["Tài Xỉu(Coming soon]"],["Đảo cướp biển"],["Cửa hàng"], ["Vào Nông Trại"], ["Xem Tài khoản"], ["Giới thiệu bạn bè"]],
       resize_keyboard: true,
       one_time_keyboard: false,
     },
@@ -607,7 +724,7 @@ bot.onText(/Quay lại/, (msg) => {
 function sendMainMenu(chatId) {
   const opts = {
     reply_markup: {
-      keyboard: [["Vào Nông Trại"], ["Cửa hàng", "Xem Tài khoản"]],
+      keyboard: [["Vào Nông Trại"], ["Cửa hàng", "Xem Tài khoản"],["Giới thiệu bạn bè"]],
       resize_keyboard: true,
       one_time_keyboard: false,
     },
@@ -719,3 +836,57 @@ bot.on("message", async (msg) => {
     });
   }
 });
+
+function claimDailyGift(chatId) {
+  Player.findOne({ telegramId: chatId }, async (err, player) => {
+    if (err || !player) {
+      bot.sendMessage(chatId, "Có lỗi xảy ra, không thể nhận quà hàng ngày.");
+      return;
+    }
+
+    // Random số lượng quà tặng
+    const money = 1; // Số vàng
+    const lotteryTicket = 1; // Vé quay số
+    const fertilizer = Math.floor(Math.random() * (10 - 3 + 1)) + 3; // Số lượng phân bón từ 3 đến 10
+    const pesticide = Math.floor(Math.random() * (10 - 3 + 1)) + 3; // Số lượng thuốc sâu bọ từ 3 đến 10
+    const seedsAmount = Math.floor(Math.random() * 3) + 1; // Số lượng hạt giống từ 1 đến 3
+    const seeds = [];
+    for (let i = 0; i < seedsAmount; i++) {
+      const randomSeed = Math.random() < 0.5 ? "seedsThanhLong" : "seedsDuaHau"; // Random loại hạt giống
+      seeds.push(randomSeed);
+    }
+
+    // Cộng quà tặng vào tài khoản của người chơi
+    player.gold += money;
+    player.lotteryTickets += lotteryTicket;
+    player.fertilizer += fertilizer;
+    player.pesticide += pesticide;
+    seeds.forEach((seed) => {
+      player[seed] += 1; // Tăng số lượng hạt giống
+    });
+
+    // Lưu thông tin tài khoản
+    await player.save();
+
+    // Gửi thông báo cho người chơi về quà tặng đã nhận
+    let message = `Chúc mừng! Bạn đã nhận được quà hàng ngày:\n`;
+    message += `${money} vàng\n`;
+    message += `${lotteryTicket} vé quay số\n`;
+    message += `${fertilizer} phân bón\n`;
+    message += `${pesticide} thuốc sâu bọ\n`;
+    message += `Hạt giống:\n`;
+    seeds.forEach((seed) => {
+      message += `${seed === "seedsThanhLong" ? "Thanh Long" : "Dưa Hấu"}\n`;
+    });
+
+    bot.sendMessage(chatId, message);
+  });
+}
+
+// Xử lý lệnh khi người chơi muốn nhận quà hàng ngày
+bot.onText(/\Nhận quà hàng ngày/, (msg) => {
+  const chatId = msg.chat.id;
+  claimDailyGift(chatId);
+});
+
+
