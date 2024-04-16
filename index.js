@@ -128,7 +128,7 @@ bot.on('message', (msg) => {
         setTimeout(() => {
             membersPhotos[userId] = 0;
             fs.writeFileSync(dataFilePath2, JSON.stringify(membersPhotos));
-        }, 30 * 60 * 1000); // 30 phút
+        }, 30000); // 30 phút
     }
 
     // Kiểm tra nếu tin nhắn chứa chuỗi cấm
