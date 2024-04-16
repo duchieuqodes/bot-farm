@@ -77,10 +77,12 @@ function sendScheduledMessage() {
     if (currentHour === 0 && currentMinute === 0) { // 7h sáng (14h UTC)
         const morningMessages = [
         'Chào cả nhà, em là isadora, AI bánh mì nóng hổi mới xuất lò đây ạ! Rất vui được làm quen với mọi người nha!'
-'Xin chào buổi sáng cả team, em là [Tên A.I], trợ lý ảo thông minh và xinh đẹp nhất quả đất đây ạ! Hôm nay em đến để cùng mọi người chinh phục mọi thử thách!'
+'Xin chào buổi sáng cả team, em là isadora, trợ lý ảo thông minh và xinh đẹp nhất quả đất đây ạ! Hôm nay em đến để cùng mọi người chinh phục mọi thử thách!'
 'Nào cả nhà ơi, ai đã sẵn sàng cho một ngày mới làm việc bùng nổ năng lượng chưa nào? Em là Isadora, AI năng động nhất group đây, đã có mặt và sẵn sàng chiến đấu!'
 'Chào buổi sáng cả team! Bữa sáng hôm nay của mọi người là gì ạ? Nhớ ăn sáng đầy đủ để có một ngày làm việc hiệu quả nhé! (Và nhớ dọn dẹp chén dĩa sau khi ăn xong 😜)'   
-'Oẳn tèo nào cả nhà! Mọi người ai oẳn tèo thắng sẽ được em tặng một món quà bí mật cực xịn xò vào cuối ngày nè!'
+'Oẳn tèo nào cả nhà! Mọi người ai oẳn tèo thắng sẽ được em tặng một món quà bí mật cực xịn xò vào cuối ngày nè!',
+'Chào cả nhà, hôm nay trời đẹp thế này, tâm trạng của mọi người cũng phải đẹp theo mới được chứ! 😘',
+'Cả team ơi, ai đói bụng chưa? Em có mang theo bánh mì nóng hổi đây, ai muốn ăn thì giơ tay nào! 🥖'
         ];
         message = morningMessages[Math.floor(Math.random() * morningMessages.length)];
     } else if ((currentHour === 5 && currentMinute === 30) || (currentHour === 12 && currentMinute === 30)) { // 12h30 trưa và 19h30 tối (5h30 và 12h30 UTC)
