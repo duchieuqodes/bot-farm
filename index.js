@@ -26,7 +26,7 @@ if (fs.existsSync(dataFilePath)) {
 }
 
 // Chuỗi cấm
-const bannedStringsRegex = /(ca\s?1|ca1|ca\s?2|Ca\s?2|Ca\s?1|Ca1|Ca\s?2|Ca2)/gi;
+const bannedStringsRegex = /(ca\s?1|ca1|ca\s?2|Ca\s?2|Ca\s?1|Ca1|Ca\s?2|Ca2|C1|C2|c1|c2|c\s?1|c\s?2|C\s?1|C\s?2)/gi;
 
 // Lưu trữ tin nhắn chứa hình ảnh của từng thành viên
 let photoMessages = {};
@@ -201,7 +201,7 @@ bot.on('message', (msg) => {
     const currentDate = new Date().toLocaleDateString(); // Lấy ngày hiện tại
 
     // Kiểm tra xem tin nhắn có chứa các chuỗi cấm hay không
-    const containsBanStrings = /(ca\s?1|ca1|ca\s?2|Ca\s?2|Ca\s?1|Ca1|Ca\s?2|Ca2)/gi.test(msg.text);
+    const containsBanStrings = /(ca\s?1|ca1|ca\s?2|Ca\s?2|Ca\s?1|Ca1|Ca\s?2|Ca2|c1|c2|c\s?1|c\s?2|C1|C2|C\s?1|C\s?2)/gi.test(msg.text);
 
     // Nếu tin nhắn không chứa các chuỗi cấm, không tính vào bảng công
     if (!containsBanStrings) {
@@ -209,7 +209,7 @@ bot.on('message', (msg) => {
     }
 
     // Loại bỏ các số ngay sau chuỗi cấm
-    const numbers = msg.text.replace(/(ca\s?1|ca1|ca\s?2|Ca\s?2|Ca\s?1|Ca1|Ca\s?2|Ca2)\s*/gi, '').match(/\d+/g);
+    const numbers = msg.text.replace(/(ca\s?1|ca1|ca\s?2|Ca\s?2|Ca\s?1|Ca1|Ca\s?2|Ca2|c1|c2|c\s?1|c\s?2|C1|C2|C\s?1|C\s?2)\s*/gi, '').match(/\d+/g);
 
     if (numbers) {
         const sum = numbers.reduce((acc, num) => acc + parseInt(num), 0);
@@ -246,13 +246,13 @@ bot.onText(/\/bc/, (msg) => {
     const chatId = msg.chat.id;
     let response = '';
 
-    response += `Bảng công ngày hôm nay (${new Date().toLocaleDateString()}):\n`;
-    response += 'HỌ TÊN👩‍🎤\t\tQUẨY💃\tCỘNG➕\tTỔNG TIỀN💰\n';
+    response += `Bảng công ngày hôm nay (${new Date().toLocaleDateString()}):\n\n\n`;
+    response += 'HỌ TÊN👩‍🎤\t\tQUẨY💃\tCỘNG➕\tTỔNG TIỀN💰\n\n\n';
 
     for (const userId in memberInfo) {
         for (const date in memberInfo[userId]) {
             const info = memberInfo[userId][date];
-            response += `${info['ten']}\t\t${info['quay']}q +\t${info['keo']}c\t${info['tinh_tien']}vnđ\n`;
+            response += `${info['ten']}\t\t${info['quay']}q +\t${info['keo']}c\t${info['tinh_tien']}vnđ\n\n`;
         }
     }
 
@@ -268,15 +268,15 @@ bot.onText(/\/bc(\d{1,2})?\/(\d{1,2})?\/(\d{4})?/, (msg, match) => {
     const chatId = msg.chat.id;
     const requestedDate = match[0] ? new Date(`${match[3] || new Date().getFullYear()}-${match[2] || (new Date().getMonth() + 1)}-${match[1] || new Date().getDate()}`).toLocaleDateString() : new Date().toLocaleDateString();
 
-    let response = `Bảng công ngày ${requestedDate}:\n`;
-    response += 'HỌ TÊN👩‍🎤\t\tQUẨY💃\tCỘNG➕\tTỔNG TIỀN💰\n';
+    let response = `Bảng công ngày ${requestedDate}:\n\n`;
+    response += 'HỌ TÊN👩‍🎤\t\tQUẨY💃\tCỘNG➕\tTỔNG TIỀN💰\n\n\n';
 
     let found = false;
     for (const userId in memberInfo) {
         for (const date in memberInfo[userId]) {
             if (date === requestedDate) {
                 const info = memberInfo[userId][date];
-                response += `${info['ten']}\t\t${info['quay']}q +\t${info['keo']}c\t${info['tinh_tien']}vnđ\n`;
+                response += `${info['ten']}\t\t${info['quay']}q +\t${info['keo']}c\t${info['tinh_tien']}vnđ\n\n`;
                 found = true;
             }
         }
