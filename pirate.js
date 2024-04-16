@@ -1,3 +1,11 @@
+const TelegramBot = require("node-telegram-bot-api");
+const mongoose = require("mongoose");
+
+// Kết nối MongoDB
+mongoose.connect(
+  "mongodb+srv://duchieufaryoung0:80E9gUahdOXmGKuy@cluster0.6nlv1cv.mongodb.net/telegram_bot_db?retryWrites=true&w=majority",
+  { useNewUrlParser: true, useUnifiedTopology: true },
+);
 
 const accountSchema = new mongoose.Schema({
   userId: { type: Number, required: true, unique: true },
