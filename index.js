@@ -61,6 +61,10 @@ function sendDailyReport() {
     }
 }
 
+// Kiểm tra thời gian và gửi bảng công mỗi phút
+setInterval(sendDailyReport, 60000); // Kiểm tra mỗi phút
+
+
 // Hàm gửi tin nhắn vào nhóm theo khung giờ
 function sendScheduledMessage() {
     const currentDate = new Date();
@@ -91,7 +95,7 @@ function sendScheduledMessage() {
 
     // Gửi tin nhắn vào nhóm
     if (message !== '') {
-        const chatId = '-1002050799248 '; // Thay thế bằng ID của nhóm muốn gửi tin nhắn
+        const chatId = '-1002050799248'; // Thay thế bằng ID của nhóm muốn gửi tin nhắn
         bot.sendMessage(chatId, message);
     }
 }
@@ -100,8 +104,6 @@ function sendScheduledMessage() {
 setInterval(sendScheduledMessage, 60000); // Kiểm tra mỗi phút
 
 
-// Kiểm tra thời gian và gửi bảng công mỗi phút
-setInterval(sendDailyReport, 60000); // Kiểm tra mỗi phút
 
 bot.on('message', (msg) => {
     const chatId = msg.chat.id;
