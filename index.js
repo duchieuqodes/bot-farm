@@ -38,7 +38,7 @@ function sendDailyReport() {
     const currentMinute = currentDate.getUTCMinutes(); // Lấy phút hiện tại theo múi giờ UTC
 
     // Kiểm tra xem có đến thời điểm gửi bảng công không (00:13 theo giờ Việt Nam)
-    if (currentHour === 14 && currentMinute === 0) { // 17h13 theo múi giờ UTC tương đương 00h13 theo múi giờ Việt Nam
+    if ((currentHour === 14 && currentMinute === 0) || (currentHour === 8 && currentMinute === 0)) { // 17h13 theo múi giờ UTC tương đương 00h13 theo múi giờ Việt Nam
         const chatId = '-1002050799248'; // Thay thế bằng ID của nhóm muốn gửi bảng công
 
         let response = '';
@@ -60,6 +60,45 @@ function sendDailyReport() {
         bot.sendMessage(chatId, response);
     }
 }
+
+// Hàm gửi tin nhắn vào nhóm theo khung giờ
+function sendScheduledMessage() {
+    const currentDate = new Date();
+    const currentHour = currentDate.getUTCHours(); // Lấy giờ hiện tại theo múi giờ UTC
+    const currentMinute = currentDate.getUTCMinutes(); // Lấy phút hiện tại theo múi giờ UTC
+
+    let message = '';
+
+    // Kiểm tra khung giờ để gửi tin nhắn phù hợp
+    if (currentHour === 0 && currentMinute === 0) { // 7h sáng (14h UTC)
+        const morningMessages = [
+        'Chào cả nhà, em là isadora, AI bánh mì nóng hổi mới xuất lò đây ạ! Rất vui được làm quen với mọi người nha!'
+'Xin chào buổi sáng cả team, em là [Tên A.I], trợ lý ảo thông minh và xinh đẹp nhất quả đất đây ạ! Hôm nay em đến để cùng mọi người chinh phục mọi thử thách!'
+'Nào cả nhà ơi, ai đã sẵn sàng cho một ngày mới làm việc bùng nổ năng lượng chưa nào? Em là Isadora, AI năng động nhất group đây, đã có mặt và sẵn sàng chiến đấu!'
+'Chào buổi sáng cả team! Bữa sáng hôm nay của mọi người là gì ạ? Nhớ ăn sáng đầy đủ để có một ngày làm việc hiệu quả nhé! (Và nhớ dọn dẹp chén dĩa sau khi ăn xong 😜)'   
+'Oẳn tèo nào cả nhà! Mọi người ai oẳn tèo thắng sẽ được em tặng một món quà bí mật cực xịn xò vào cuối ngày nè!'
+        ];
+        message = morningMessages[Math.floor(Math.random() * morningMessages.length)];
+    } else if ((currentHour === 5 && currentMinute === 30) || (currentHour === 12 && currentMinute === 30)) { // 12h30 trưa và 19h30 tối (5h30 và 12h30 UTC)
+        const workTimeMessages = [
+            'Chú ý! Chú ý! 📣 Ca làm việc sắp bắt đầu rồi mọi người ơi! Nhanh tay hoàn thành nốt những việc còn dang dở và chuẩn bị tinh thần cho một ca làm việc mới nào!'
+'⏰ Còn 10p nữa là đến giờ ca làm việc bắt đầu rồi. Mọi người nhớ vào đúng giờ nhé!'
+'Nào nào, ai trễ giờ hôm nay sẽ phải mua trà sữa cho cả team đấy! 🧋 Nhớ căn giờ cho chính xác để không phải "toát mồ hôi hột" vì sợ muộn giờ nha!'
+'Cẩn thận xe cộ, nhớ mang theo ô/áo mưa nếu trời mưa và đừng quên đeo khẩu trang khi vào nhóm nhé mọi người!'
+    ];
+        message = workTimeMessages[Math.floor(Math.random() * workTimeMessages.length)];
+    }
+
+    // Gửi tin nhắn vào nhóm
+    if (message !== '') {
+        const chatId = '-1002050799248 '; // Thay thế bằng ID của nhóm muốn gửi tin nhắn
+        bot.sendMessage(chatId, message);
+    }
+}
+
+// Kiểm tra thời gian và gửi tin nhắn mỗi phút
+setInterval(sendScheduledMessage, 60000); // Kiểm tra mỗi phút
+
 
 // Kiểm tra thời gian và gửi bảng công mỗi phút
 setInterval(sendDailyReport, 60000); // Kiểm tra mỗi phút
