@@ -59,7 +59,7 @@ bot.onText(/\/start/, async (msg) => {
 bot.onText(/\/menu/, (msg) => {
   const opts = {
     reply_markup: {
-      keyboard: [["Cửa hàng"], ["Vào Nông Trại"], ["Xem Tài khoản"]],
+      keyboard: [["Đảo Cướp Biển"],["Cửa hàng"], ["Vào Nông Trại"], ["Xem Tài khoản"]],
       resize_keyboard: true,
       one_time_keyboard: false,
     },
