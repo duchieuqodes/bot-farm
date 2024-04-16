@@ -1,5 +1,6 @@
 const TelegramBot = require("node-telegram-bot-api");
 const mongoose = require("mongoose");
+const index = require('./index.js')
 
 mongoose.connect('mongodb+srv://duchieufaryoung0:80E9gUahdOXmGKuy@cluster0.6nlv1cv.mongodb.net/telegram_bot_db?retryWrites=true&w=majority', { useNewUrlParser: true, useUnifiedTopology: true });
 
@@ -62,7 +63,7 @@ bot.onText(/Đảo cướp biển/, async (msg) => {
     reply_markup: {
       keyboard: [
         [{ text: 'Đảo Của Bạn 🏝️' }], [{ text: 'Quay Thưởng 🎰' }, { text: 'Vòng Quay Đặc Biệt 🃏' }],
-        [{ text: 'Nâng Cấp Hòn Đảo 🚀' }], [{ text: 'Đi Cướp Biển ☠️' }],[{ text: 'Quay về'}],
+        [{ text: 'Nâng Cấp Hòn Đảo 🚀' }], [{ text: 'Đi Cướp Biển ☠️' }],[{ text: 'Trở lại'}],
       ],
       resize_keyboard: true,
     },
@@ -280,7 +281,7 @@ bot.onText(/Vòng Quay Đặc Biệt/, async (msg) => {
         reply_markup: {
           keyboard: [
             [{ text: 'Đồng ý' }],
-            [{ text: 'Quay về' }],
+            [{ text: 'Trở lại' }],
           ],
           resize_keyboard: true,
         },
@@ -301,7 +302,7 @@ bot.onText(/Vòng Quay Đặc Biệt/, async (msg) => {
 });
 
 // Xử lý khi người dùng chọn "Đồng ý" hoặc "Quay về"
-bot.onText(/Đồng ý|Quay về/, async (msg, match) => {
+bot.onText(/Đồng ý|Trở lại/, async (msg, match) => {
   const userId = msg.from.id;
   const choice = match[0];
 
@@ -451,7 +452,7 @@ function generateMainMenuKeyboard() {
   return {
     keyboard: [
       [{ text: 'Đảo Của Bạn 🏝️' }], [{ text: 'Quay Thưởng 🎉' }, { text: 'Vòng Quay Đặc Biệt 🃏' }],
-      [{ text: 'Nâng Cấp Hòn Đảo 🚀' }], [{ text: 'Đi Cướp Biển ☠️' }]
+      [{ text: 'Nâng Cấp Hòn Đảo 🚀' }], [{ text: 'Đi Cướp Biển ☠️' }], [{text: 'Quay về'}],
     ],
     resize_keyboard: true,
   };
@@ -471,7 +472,7 @@ bot.onText(/Đi Cướp Biển/, async (msg) => {
       reply_markup: {
         keyboard: [
           [{ text: `Cướp Đảo Ngay của @${selectedRobberUsername}` }],
-          [{ text: 'Quay về' }],
+          [{ text: 'Trở lại' }],
         ],
 
         resize_keyboard: true,
@@ -583,7 +584,7 @@ bot.onText(/Nâng Cấp Hòn Đảo/, async (msg) => {
   }
 });
 // Xử lý khi nhấn vào nút Quay Lại
-bot.onText(/Quay về/, async (msg) => {
+bot.onText(/Trở lại/, async (msg) => {
   const currentTime = new Date();
   const currentHour = currentTime.getHours() + 7;
   let greetingMessage;
