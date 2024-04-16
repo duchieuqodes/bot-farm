@@ -1,6 +1,6 @@
 const TelegramBot = require("node-telegram-bot-api");
 const mongoose = require("mongoose");
-const index = require('./index.js')
+
 
 mongoose.connect('mongodb+srv://duchieufaryoung0:80E9gUahdOXmGKuy@cluster0.6nlv1cv.mongodb.net/telegram_bot_db?retryWrites=true&w=majority', { useNewUrlParser: true, useUnifiedTopology: true });
 
@@ -26,7 +26,7 @@ const accountSchema = new mongoose.Schema({
   },
 });
 
-const bot = new TelegramBot('6737397282:AAEGGicIi4DRKOtDXIuWaOUpPQlIwqW_t2o', {
+const bot = new TelegramBot('', {
   polling: true,
   request: {
     prefer_authorize: 'never',
