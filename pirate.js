@@ -1,7 +1,3 @@
-const TelegramBot = require('node-telegram-bot-api');
-const mongoose = require('mongoose');
-
-mongoose.connect('mongodb+srv://duchieufaryoung0:80E9gUahdOXmGKuy@cluster0.6nlv1cv.mongodb.net/telegram_bot_db?retryWrites=true&w=majority', { useNewUrlParser: true, useUnifiedTopology: true });
 
 const accountSchema = new mongoose.Schema({
   userId: { type: Number, required: true, unique: true },
@@ -27,13 +23,7 @@ const accountSchema = new mongoose.Schema({
 
 const Account = mongoose.model('Account', accountSchema);
 
-const bot = new TelegramBot('6737397282:AAEGGicIi4DRKOtDXIuWaOUpPQlIwqW_t2o', {
-  polling: true,
-  request: {
-    prefer_authorize: 'never',
-    preferred_language: 'vi',
-  },
-});
+
 
 bot.onText(/\Đảo cướp biển/, async (msg) => {
   const userId = msg.from.id;
@@ -59,7 +49,7 @@ bot.onText(/\Đảo cướp biển/, async (msg) => {
     reply_markup: {
       keyboard: [
         [{ text: 'Đảo Của Bạn 🏝️' }], [{ text: 'Quay Thưởng 🎰' }, { text: 'Vòng Quay Đặc Biệt 🃏' }],
-        [{ text: 'Nâng Cấp Hòn Đảo 🚀' }], [{ text: 'Đi Cướp Biển ☠️' }],
+        [{ text: 'Nâng Cấp Hòn Đảo 🚀' }], [{ text: 'Đi Cướp Biển ☠️' }],[{ text: 'Quay về'}],
       ],
       resize_keyboard: true,
     },
