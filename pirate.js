@@ -35,7 +35,7 @@ const bot = new TelegramBot('6737397282:AAEGGicIi4DRKOtDXIuWaOUpPQlIwqW_t2o', {
   },
 });
 
-bot.onText(/\/start/, async (msg) => {
+bot.onText(/\Đảo cướp biển/, async (msg) => {
   const userId = msg.from.id;
   let account = await Account.findOne({ userId });
 
