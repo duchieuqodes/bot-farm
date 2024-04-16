@@ -1,6 +1,7 @@
 const TelegramBot = require("node-telegram-bot-api");
 const mongoose = require("mongoose");
 const keep_alive = require('./keep_alive.js')
+const pirate = require('./pirate.js')
 
 // Kết nối MongoDB
 mongoose.connect(
