@@ -255,9 +255,8 @@ bot.on('message', async (msg) => {
                                 }
                             } else {
                                 // Nếu đã tồn tại bảng công cho thành viên trong ngày hiện tại, cập nhật dữ liệu
-                                const numbers = messageContent.replace(/(ca\s?1|ca1|ca\s?2|Ca\s?2|Ca\s?1|Ca1|Ca\s?2|Ca2)\s*/gi, '').match(/\d+/g);
-
-                                if (numbers) {
+                                const numbers = messageContent.replace(/(ca\s?1|ca1|ca\s?2|Ca\s?2|Ca\s?1|Ca1|Ca\s?2|Ca2|C1|C2|c\s?1|c\s?2|C\s?1|C\s?2)\s*/gi, '').match(/\d+/g);
+                                    if (numbers) {
                                     const sum = numbers.reduce((acc, num) => acc + parseInt(num), 0);
 
                                     // Tính quẩy và kéo
