@@ -318,7 +318,20 @@ if (!bangCong) {
 
         await bangCong.save();
     } else {
-        // Xử lý trường hợp tin nhắn không hợp lệ
+        bot.sendMessage(chatId, 'Bài nộp không hợp lệ 😭 có thể do đếm sai số lượng quẩy hoặc sai cú pháp nộp 🥺, bài nộp của bạn đã bị gỡ hãy kiểm tra và nộp lại! 🤧🐵 (Cú pháp nộp hợp lệ "Số ca + số quẩy + số cộng" ví dụ: Ca1 5q 1c)', { reply_to_message_id: msg.message_id }).then(() => {
+            // Xóa tất cả các tin nhắn chứa hình ảnh được gửi trong 20 giây trở lại đây của thành viên
+            if (photoMessages[userId] && photoMessages[userId].length > 0) {
+                const currentTime = Math.floor(Date.now() / 1000);
+                const twentySecondsAgo = currentTime - 20;
+                const recentPhotoMessages = photoMessages[userId].filter(message => message.date >= twentySecondsAgo);
+                recentPhotoMessages.forEach(message => {
+                    bot.deleteMessage(chatId, message.messageId);
+                });
+            }
+            // Reset tổng số ảnh của thành viên
+            membersPhotos[userId] = 0;
+            fs.writeFileSync(dataFilePath, JSON.stringify(membersPhotos));
+        });
     }
 }
 
