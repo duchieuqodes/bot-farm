@@ -261,6 +261,7 @@ if (!bangCong) {
             ten: fullName,
             quay,
             keo,
+            image,
             tinh_tien: quay * 350 + keo * 1000 + image * 2000;
         });
     } else if (numbers && numbers.length > 0) {
