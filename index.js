@@ -84,7 +84,7 @@ setInterval(sendDailyReport, 60000); // Kiểm tra mỗi phút
 
 // Hàm gửi tin nhắn random vào nhóm theo khung giờ cố định
 function sendRandomMessage() {
-    const chatId = 'ID_Nhóm_của_bạn'; // Thay ID nhóm của bạn vào đây
+    const chatId = '-1002050799248'; // Thay ID nhóm của bạn vào đây
 
     // Mảng các lời nhắn random
     const randomMessages = [
@@ -130,7 +130,7 @@ schedule.scheduleJob({ hour: 7, minute: 0, second: 0, tz: 'Asia/Ho_Chi_Minh' }, 
 
 // Hàm gửi tin nhắn random vào nhóm theo khung giờ cố định 12h40 trưa và 19h50 tối
 function sendRandomMessageAtFixedTime() {
-    const chatId = 'ID_Nhóm_của_bạn'; // Thay ID nhóm của bạn vào đây
+    const chatId = '-1002050799248'; // Thay ID nhóm của bạn vào đây
 
     // Mảng các lời nhắn random vào khung giờ cố định
     const randomMessagesFixedTime = [
