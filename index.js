@@ -1,6 +1,8 @@
 const TelegramBot = require('node-telegram-bot-api');
 const fs = require('fs');
 const mongoose = require('mongoose');
+const cron = require('node-cron');
+
 const keep_alive = require('./keep_alive.js')
 
 
@@ -82,11 +84,9 @@ async function sendDailyReport() {
 setInterval(sendDailyReport, 60000); // Kiểm tra mỗi phút
 
 
-// Hàm gửi tin nhắn random vào nhóm theo khung giờ cố định
+// Hàm để gửi tin nhắn ngẫu nhiên vào 7h hàng ngày theo giờ Việt Nam
 function sendRandomMessage() {
-    const chatId = '-1002050799248'; // Thay ID nhóm của bạn vào đây
-
-    // Mảng các lời nhắn random
+    // Lời nhắn ngẫu nhiên
     const randomMessages = [
         "Nắng đã lên, gió đã lùa, team ta mau dậy đi 'quẩy' thôi nào! ☀️🍃 Chúc cả team một buổi sáng tràn đầy năng lượng, sẵn sàng bùng nổ nhiệt huyết cho ngày làm việc 'quẩy nhóm' hăng say!",
         "Chào buổi sáng team yêu dấu! 🎊 Hôm nay là ngày 'quẩy nhóm' tung nóc, hãy cùng nhau biến nó thành một ngày thật bùng nổ và đáng nhớ nhé!",
@@ -101,7 +101,7 @@ function sendRandomMessage() {
         "😜 'Quẩy nhóm' mà không vui thì còn gì vui nữa? Cùng nhau biến ngày làm việc thành một bữa tiệc vui nhộn và đáng nhớ nhé!",
         "💃 Nhảy nào team ơi! Nhịp điệu sôi động sẽ giúp chúng ta thêm hăng say và 'quẩy' hết mình trong ngày làm việc!",
         "🤩 Hôm nay 'quẩy nhóm' mà không selfie thì quả là thiếu sót! Cùng nhau lưu lại những khoảnh khắc vui vẻ và đáng nhớ nhé!",
-        "🎉 'Quẩy nhóm' là phải bung xõa, là phải hết mình! Hãy cởi bỏ mọi lo toan và tận hưởng niềm vui của ngày làm việc!",
+        "🎉 'Quẩy nhóm' là để bung xõa, là phải hết mình! Hãy cởi bỏ mọi lo toan và tận hưởng niềm vui của ngày làm việc!",
         "🎁 'Quẩy nhóm' cũng có quà nha! Hãy hoàn thành tốt nhiệm vụ để nhận được những phần thưởng bất ngờ nhé!",
         "🏆 'Quẩy nhóm' là để chiến thắng! Hãy cùng nhau nỗ lực hết mình để đạt được mục tiêu chung của team!",
         "🧠 'Quẩy nhóm' cũng cần trí tuệ! Hãy cùng nhau brainstorming để tìm ra những ý tưởng sáng tạo và đột phá!",
@@ -114,67 +114,59 @@ function sendRandomMessage() {
         "🤫 'Quẩy nhóm' là để thả thính! Hãy cùng nhau 'thả thính' để lan tỏa năng lượng tích cực và tạo bầu không khí vui vẻ cho team!"
     ];
 
-    // Chọn ngẫu nhiên một lời nhắn từ mảng randomMessages
+    // Chọn ngẫu nhiên một lời nhắn từ danh sách
     const randomIndex = Math.floor(Math.random() * randomMessages.length);
     const randomMessage = randomMessages[randomIndex];
 
-    // Gửi tin nhắn random vào nhóm
-    bot.sendMessage(chatId, randomMessage);
+    // Lấy thời gian hiện tại
+    const currentTime = new Date();
+    
+    // Kiểm tra nếu là 7h sáng theo giờ Việt Nam
+    if (currentTime.getUTCHours() === 0 && currentTime.getUTCMinutes() === 0) {
+        // Gửi tin nhắn ngẫu nhiên vào nhóm
+        bot.sendMessage(-1002050799248, randomMessage);
+    }
 }
 
-// Đặt hẹn giờ gửi tin nhắn vào các khung giờ cố định
-// Khung giờ 7h sáng
-schedule.scheduleJob({ hour: 7, minute: 0, second: 0, tz: 'Asia/Ho_Chi_Minh' }, function () {
-    sendRandomMessage();
+// Thiết lập hẹn giờ để gửi tin nhắn vào 7h hàng ngày
+setInterval(sendRandomMessage, 24 * 60 * 60 * 1000); // 24 giờ
+
+
+
+// Mảng các lời nhắn ngẫu nhiên
+const randomMessages = [
+    "🚨🚨🚨 Cảnh báo! Cảnh báo! Còn 5 phút nữa là đến giờ rồi! Mọi người ơi, nhanh tay hoàn thành công việc và chuẩn bị tinh thần 'quẩy nhóm' nào!",
+    "🏃‍♀️🏃‍♂️ Nhanh lên nào cả team! Chỉ còn 3 phút nữa là đến giờ 'quẩy nhóm' rồi! Ai chưa sẵn sàng thì nhanh lên nhé, không là 'lỡ nhịp' mất đấy!",
+    "⏰ Giờ G 'quẩy nhóm' đang đến rất gần! Mọi người ơi, hãy tập trung cao độ và hoàn thành nốt những công việc còn dang dở để có thể 'quẩy' hết mình!",
+    "⏱️⏱️⏱️ Tích tắc... tích tắc... Còn 2 phút nữa là đến giờ 'quẩy nhóm' rồi! Mọi người ơi, hãy tắt chuông điện thoại và tập trung vào đây nào!",
+    "⏳⏳⏳ Hết giờ rồi! Hết giờ rồi! Mọi người ơi, nhanh tay di chuyển đến nơi 'quẩy nhóm' ngay!",
+    "💨💨💨 Nhanh lên nào cả team! 'Quẩy nhóm' đang chờ đợi chúng ta!",
+    "🏃‍♀️🏃‍♂️ Ai trễ giờ 'quẩy nhóm' sẽ phải chịu hình phạt 'cute' nhé!",
+    "😜😜😜 Isadora không thể chờ đợi được nữa! HÃY CÙNG 'QUẨY NHÓM' THÔI NÀO!",
+    "🤩🤩🤩 Isadora hứa hẹn 'quẩy nhóm' hôm nay sẽ là 'quẩy' 'siêu cấp' và 'siêu đỉnh'.",
+    "💃🕺 Isadora đã sẵn sàng 'cháy' hết mình với cả team rồi đây! Ai chưa sẵn sàng thì nhanh lên nhé, 'quẩy nhóm' đang chờ đợi chúng ta!",
+    "😎😎😎 Isadora tin rằng 'quẩy nhóm' là cơ hội để mọi người thể hiện cá tính và tài năng của bản thân. Hãy cùng nhau 'quẩy' và tỏa sáng nhé!",
+    "🤪🤪🤪 Isadora đã chuẩn bị sẵn sàng 'bung lụa' trong 'quẩy nhóm' hôm nay rồi đây! Mọi người nhớ 'quẩy' theo phong cách của riêng mình nhé!",
+    "😜😜😜 Isadora cam đoan rằng 'quẩy nhóm' hôm nay sẽ là 'quẩy' 'siêu bựa', 'siêu lầy' và 'siêu hài hước'. Hãy cùng nhau 'quẩy' và tận hưởng những giây phút vui vẻ nhất!",
+    "💃🕺 Isadora không thể chờ đợi được nữa! HÃY CÙNG 'QUẨY NHÓM' VỚI ISADORA NÀO!",
+    "🤩🤩🤩 Isadora hứa hẹn 'quẩy nhóm' hôm nay sẽ là 'quẩy' 'siêu cấp' và 'siêu đỉnh'.",
+    "🤪🤪🤪 Isadora đã chuẩn bị sẵn sàng 'chiêu thức' 'quẩy nhóm' độc đáo nhất rồi đây! Mọi người hãy cùng chờ đón và 'quẩy' thật嗨 nhé!",
+    "😎😎😎 Isadora tin rằng 'sức mạnh tập thể' sẽ khiến 'quẩy nhóm' hôm nay trở nên bùng nổ hơn bao giờ hết! Hãy cùng nhau 'quẩy' hết mình nào cả team!",
+    "💃🕺 Isadora đã sẵn sàng 'cháy' hết mình với cả team rồi đây! Ai chưa sẵn sàng thì nhanh lên nhé, 'quẩy nhóm' đang chờ đợi chúng ta!",
+    "🤩🤩🤩 Isadora tin rằng 'quẩy nhóm' là bí quyết để nâng cao hiệu quả công việc. Hãy cùng nhau 'quẩy' và gặt hái nhiều thành công hơn nữa nhé!",
+    "😜😜😜 Isadora cam đoan rằng 'quẩy nhóm' hôm nay sẽ là 'quẩy' 'siêu bựa', 'siêu lầy' và 'siêu hài hước'. Hãy cùng nhau 'quẩy' và tận hưởng những giây phút vui vẻ nhất!",
+    "🤪🤪🤪 Isadora đã chuẩn bị sẵn sàng 'bung lụa' trong 'quẩy nhóm' hôm nay rồi đây! Mọi người nhớ 'quẩy' theo phong cách của riêng mình nhé!"
+];
+
+// Hàm gửi tin nhắn ngẫu nhiên vào lúc 12h50 và 19h50 hàng ngày
+cron.schedule('50 12,19 * * *', () => {
+    const randomIndex = Math.floor(Math.random() * randomMessages.length);
+    const message = randomMessages[randomIndex];
+    bot.sendMessage(chatId, message);
+}, {
+    timezone: "Asia/Ho_Chi_Minh"
 });
 
-// Hàm gửi tin nhắn random vào nhóm theo khung giờ cố định 12h40 trưa và 19h50 tối
-function sendRandomMessageAtFixedTime() {
-    const chatId = '-1002050799248'; // Thay ID nhóm của bạn vào đây
-
-    // Mảng các lời nhắn random vào khung giờ cố định
-    const randomMessagesFixedTime = [
-        "🚨🚨🚨 Cảnh báo! Cảnh báo! Còn 5 phút nữa là đến giờ rồi! Mọi người ơi, nhanh tay hoàn thành công việc và chuẩn bị tinh thần 'quẩy nhóm' nào!",
-        "🏃‍♀️🏃‍♂️ Nhanh lên nào cả team! Chỉ còn 3 phút nữa là đến giờ 'quẩy nhóm' rồi! Ai chưa sẵn sàng thì nhanh lên nhé, không là 'lỡ nhịp' mất đấy!",
-        "⏰ Giờ G 'quẩy nhóm' đang đến rất gần! Mọi người ơi, hãy tập trung cao độ và hoàn thành nốt những công việc còn dang dở để có thể 'quẩy' hết mình!",
-        "⏱️⏱️⏱️ Tích tắc... tích tắc... Còn 2 phút nữa là đến giờ 'quẩy nhóm' rồi! Mọi người ơi, hãy tắt chuông điện thoại và tập trung vào đây nào!",
-        "⏳⏳⏳ Hết giờ rồi! Hết giờ rồi! Mọi người ơi, nhanh tay di chuyển đến nơi 'quẩy nhóm' ngay!",
-        "💨💨💨 Nhanh lên nào cả team! 'Quẩy nhóm' đang chờ đợi chúng ta!",
-        "🏃‍♀️🏃‍♂️ Ai trễ giờ 'quẩy nhóm' sẽ phải chịu hình phạt 'cute' nhé!",
-        "😜😜😜 Isadora không thể chờ đợi được nữa! HÃY CÙNG 'QUẨY NHÓM' THÔI NÀO!",
-        "🤩🤩🤩 Isadora hứa hẹn 'quẩy nhóm' hôm nay sẽ là 'quẩy' 'siêu cấp' và 'siêu đỉnh'.",
-        "💃🕺 Isadora đã sẵn sàng 'cháy' hết mình với cả team rồi đây! Ai chưa sẵn sàng thì nhanh lên nhé, 'quẩy nhóm' đang chờ đợi chúng ta!",
-        "😎😎😎 Isadora tin rằng 'quẩy nhóm' là cơ hội để mọi người thể hiện cá tính và tài năng của bản thân. Hãy cùng nhau 'quẩy' và tỏa sáng nhé!",
-        "🤪🤪🤪 Isadora đã chuẩn bị sẵn sàng 'bung lụa' trong 'quẩy nhóm' hôm nay rồi đây! Mọi người nhớ 'quẩy' theo phong cách của riêng mình nhé!",
-        "😜😜😜 Isadora cam đoan rằng 'quẩy nhóm' hôm nay sẽ là 'quẩy' 'siêu bựa', 'siêu lầy' và 'siêu hài hước'. Hãy cùng nhau 'quẩy' và tận hưởng những giây phút vui vẻ nhất!",
-        "💃🕺 Isadora không thể chờ đợi được nữa! HÃY CÙNG 'QUẨY NHÓM' VỚI ISADORA NÀO!",
-        "🤩🤩🤩 Isadora hứa hẹn 'quẩy nhóm' hôm nay sẽ là 'quẩy' 'siêu cấp' và 'siêu đỉnh'.",
-        "🤪🤪🤪 Isadora đã chuẩn bị sẵn sàng 'chiêu thức' 'quẩy nhóm' độc đáo nhất rồi đây! Mọi người hãy cùng chờ đón và 'quẩy' thật嗨 nhé!",
-        "😎😎😎 Isadora tin rằng 'sức mạnh tập thể' sẽ khiến 'quẩy nhóm' hôm nay trở nên bùng nổ hơn bao giờ hết! Hãy cùng nhau 'quẩy' hết mình nào cả team!",
-        "💃🕺 Isadora đã sẵn sàng 'cháy' hết mình với cả team rồi đây! Ai chưa sẵn sàng thì nhanh lên nhé, 'quẩy nhóm' đang chờ đợi chúng ta!",
-        "🤩🤩🤩 Isadora tin rằng 'quẩy nhóm' là bí quyết để nâng cao hiệu quả công việc. Hãy cùng nhau 'quẩy' và gặt hái nhiều thành công hơn nữa nhé!",
-        "😜😜😜 Isadora cam đoan rằng 'quẩy nhóm' hôm nay sẽ là 'quẩy' 'siêu bựa', 'siêu lầy' và 'siêu hài hước'. Hãy cùng nhau 'quẩy' và tận hưởng những giây phút vui vẻ nhất!",
-        "🤪🤪🤪 Isadora đã chuẩn bị sẵn sàng 'bung lụa' trong 'quẩy nhóm' hôm nay rồi đây! Mọi người nhớ 'quẩy' theo phong cách của riêng mình nhé!",
-    ];
-
-    // Chọn ngẫu nhiên một lời nhắn từ mảng randomMessagesFixedTime
-    const randomIndexFixedTime = Math.floor(Math.random() * randomMessagesFixedTime.length);
-    const randomMessageFixedTime = randomMessagesFixedTime[randomIndexFixedTime];
-
-    // Gửi tin nhắn random vào nhóm
-    bot.sendMessage(chatId, randomMessageFixedTime);
-}
-
-// Đặt hẹn giờ gửi tin nhắn vào nhóm vào các khung giờ cố định
-// Khung giờ 12h40 trưa
-schedule.scheduleJob({ hour: 12, minute: 40, second: 0, tz: 'Asia/Ho_Chi_Minh' }, function () {
-    sendRandomMessageAtFixedTime();
-});
-
-// Khung giờ 19h50 tối
-schedule.scheduleJob({ hour: 19, minute: 50, second: 0, tz: 'Asia/Ho_Chi_Minh' }, function () {
-    sendRandomMessageAtFixedTime();
-});
 
 
 bot.on('message', async (msg) => {
