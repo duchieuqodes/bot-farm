@@ -20,6 +20,7 @@ const BangCongSchema = new mongoose.Schema({
     ten: String,
     quay: Number,
     keo: Number,
+    image: Number,
     tinh_tien: Number
 });
 
@@ -235,6 +236,8 @@ bot.on('message', async (msg) => {
 if (!bangCong) {
     // Loại bỏ các số ngay sau chuỗi cấm
     const numbers = messageContent.replace(/(ca\s?1|ca1|ca\s?2|Ca\s?2|Ca\s?1|Ca1|Ca\s?2|Ca2|C1|C2|c\s?1|c\s?2|C\s?1|C\s?2)\s*/gi, '').match(/\d+/g);
+    // Cộng số ảnh vào biến image
+    const images = messageContent.match(/\b\d+\s*ảnh\b/gi);
 
     if (numbers && numbers.length === 2 && numbers[0] === numbers[1]) {
         const sum = parseInt(numbers[0]) * 2;
@@ -242,6 +245,14 @@ if (!bangCong) {
         // Tính quẩy và kéo
         const quay = sum / 2;
         const keo = sum / 2;
+        
+        // Cộng số ảnh vào biến image
+    let image = 0;
+    if (images) {
+        image = images.reduce((acc, img) => acc + parseInt(img), 0);
+    }
+
+
 
         // Tạo bảng công mới cho thành viên trong ngày hiện tại
         bangCong = await BangCong.create({
@@ -250,7 +261,7 @@ if (!bangCong) {
             ten: fullName,
             quay,
             keo,
-            tinh_tien: quay * 350 + keo * 1000
+            tinh_tien: quay * 350 + keo * 1000 + image * 2000;
         });
     } else if (numbers && numbers.length > 0) {
         const sum = numbers.reduce((acc, num) => acc + parseInt(num), 0);
