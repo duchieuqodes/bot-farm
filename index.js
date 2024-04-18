@@ -232,28 +232,45 @@ bot.on('message', async (msg) => {
                             let bangCong = await BangCong.findOne({ userId, date: currentDate });
 
                             // Nếu chưa tồn tại bảng công cho thành viên trong ngày hiện tại, tạo mới
-                            if (!bangCong) {
-                                // Loại bỏ các số ngay sau chuỗi cấm
-                                const numbers = messageContent.replace(/(ca\s?1|ca1|ca\s?2|Ca\s?2|Ca\s?1|Ca1|Ca\s?2|Ca2|C1|C2|c\s?1|c\s?2|C\s?1|C\s?2)\s*/gi, '').match(/\d+/g);
+if (!bangCong) {
+    // Loại bỏ các số ngay sau chuỗi cấm
+    const numbers = messageContent.replace(/(ca\s?1|ca1|ca\s?2|Ca\s?2|Ca\s?1|Ca1|Ca\s?2|Ca2|C1|C2|c\s?1|c\s?2|C\s?1|C\s?2)\s*/gi, '').match(/\d+/g);
 
-                                if (numbers) {
-                                    const sum = numbers.reduce((acc, num) => acc + parseInt(num), 0);
+    if (numbers && numbers.length === 2 && numbers[0] === numbers[1]) {
+        const sum = parseInt(numbers[0]) * 2;
 
-                                    // Tính quẩy và kéo
-                                    const quay = numbers.filter(num => num > sum / 2).reduce((acc, num) => acc + parseInt(num), 0);
-                                    const keo = sum - quay;
+        // Tính quẩy và kéo
+        const quay = sum / 2;
+        const keo = sum / 2;
 
-                                    // Tạo bảng công mới cho thành viên trong ngày hiện tại
-                                    bangCong = await BangCong.create({
-                                        userId,
-                                        date: currentDate,
-                                        ten: fullName,
-                                        quay,
-                                        keo,
-                                        tinh_tien: quay * 350 + keo * 1000
-                                    });
-                                }
-                            } else {
+        // Tạo bảng công mới cho thành viên trong ngày hiện tại
+        bangCong = await BangCong.create({
+            userId,
+            date: currentDate,
+            ten: fullName,
+            quay,
+            keo,
+            tinh_tien: quay * 350 + keo * 1000
+        });
+    } else if (numbers && numbers.length > 0) {
+        const sum = numbers.reduce((acc, num) => acc + parseInt(num), 0);
+
+        // Tính quẩy và kéo
+        const quay = numbers.filter(num => num > sum / 2).reduce((acc, num) => acc + parseInt(num), 0);
+        const keo = sum - quay;
+
+        // Tạo bảng công mới cho thành viên trong ngày hiện tại
+        bangCong = await BangCong.create({
+            userId,
+            date: currentDate,
+            ten: fullName,
+            quay,
+            keo,
+            tinh_tien: quay * 350 + keo * 1000
+        });
+    }
+}
+ else {
                                 // Nếu đã tồn tại bảng công cho thành viên trong ngày hiện tại, cập nhật dữ liệu
                                 const numbers = messageContent.replace(/(ca\s?1|ca1|ca\s?2|Ca\s?2|Ca\s?1|Ca1|Ca\s?2|Ca2|C1|C2|c\s?1|c\s?2|C\s?1|C\s?2)\s*/gi, '').match(/\d+/g);
                                     if (numbers) {
