@@ -120,11 +120,12 @@ function sendRandomMessage() {
 
     // Lấy thời gian hiện tại
     const currentTime = new Date();
+    const chatId = '-1002050799248'; // Thay thế bằng ID của nhóm muốn gửi bảng công
     
     // Kiểm tra nếu là 7h sáng theo giờ Việt Nam
     if (currentTime.getUTCHours() === 0 && currentTime.getUTCMinutes() === 0) {
         // Gửi tin nhắn ngẫu nhiên vào nhóm
-        bot.sendMessage(-1002050799248, randomMessage);
+        bot.sendMessage(chatId, randomMessage);
     }
 }
 
@@ -162,6 +163,7 @@ const randomMessages = [
 cron.schedule('50 12,19 * * *', () => {
     const randomIndex = Math.floor(Math.random() * randomMessages.length);
     const message = randomMessages[randomIndex];
+    const chatId = '-1002050799248'; // Thay thế bằng ID của nhóm muốn gửi bảng công
     bot.sendMessage(chatId, message);
 }, {
     timezone: "Asia/Ho_Chi_Minh"
