@@ -171,7 +171,6 @@ cron.schedule('50 12,19 * * *', () => {
 });
 
 
-
 bot.on('message', async (msg) => {
     const chatId = msg.chat.id;
 
@@ -190,155 +189,129 @@ bot.on('message', async (msg) => {
         // Lưu dữ liệu vào file
         fs.writeFileSync(dataFilePath, JSON.stringify(membersPhotos));
 
-        // Reset tổng số ảnh của thành viên sau 10 giây
+        // Reset tổng số ảnh của thành viên sau 30 phút
         setTimeout(() => {
             membersPhotos[userId] = 0;
             fs.writeFileSync(dataFilePath, JSON.stringify(membersPhotos));
         }, 30 * 60 * 1000); // 30 phút
     }
 
-  // Chỉ kiểm tra nếu không phải là nhóm có ID -1002050799248
-if (chatId !== -1002050799248) {  
- // Kiểm tra nếu tin nhắn chứa chuỗi cấm
-     if ((msg.text || msg.caption) && bannedStringsRegex.test(msg.text || msg.caption)) { // Thêm kiểm tra nếu tin nhắn chứa caption
-        const messageContent = msg.text || msg.caption;
+    // Chỉ kiểm tra nếu không phải là nhóm có ID -1002050799248
+    if (chatId !== -1002128289933) {
+        // Kiểm tra nếu tin nhắn chứa chuỗi cấm
+        if ((msg.text || msg.caption) && bannedStringsRegex.test(msg.text || msg.caption)) {
+            const messageContent = msg.text || msg.caption;
 
-         
-        
-              const matches = messageContent.match(bannedStringsRegex);
-                if (matches) {
-                    let sum = 0;
-                    matches.forEach(match => {
-                        const index = messageContent.indexOf(match);
-                        const numbersAfterMatch = messageContent.substring(index + match.length).match(/\d+/g);
-                        if (numbersAfterMatch) {
-                            sum += numbersAfterMatch.reduce((acc, cur) => acc + parseInt(cur), 0);
+            const matches = messageContent.match(bannedStringsRegex);
+            if (matches) {
+                let sum = 0;
+                matches.forEach((match) => {
+                    const index = messageContent.indexOf(match);
+                    const numbersAfterMatch = messageContent.substring(index + match.length).match(/\d+/g);
+                    if (numbersAfterMatch) {
+                        sum += numbersAfterMatch.reduce((acc, cur) => acc + parseInt(cur, 10), 0);
+                    }
+                });
+
+                const userId = msg.from.id;
+                const userPhotoCount = membersPhotos[userId] || 0;
+
+                // Nếu bài hợp lệ
+                bot.sendMessage(chatId, 'Bài nộp hợp lệ, đã ghi vào bảng công ❤🥳', { reply_to_message_id: msg.message_id }).then(async () => {
+                    // Reset tổng số ảnh của thành viên
+                    membersPhotos[userId] = 0;
+                    fs.writeFileSync(dataFilePath, JSON.stringify(membersPhotos));
+
+                    const currentDate = new Date().toLocaleDateString();
+                    const firstName = msg.from.first_name;
+                    const lastName = msg.from.last_name;
+                    const fullName = lastName ? `${firstName} ${lastName}` : firstName;
+
+                    // Kiểm tra xem đã tồn tại bảng công cho thành viên trong ngày hiện tại chưa
+                    let bangCong = await BangCong.findOne({ userId, date: currentDate });
+
+                    const numbers = messageContent.replace(/(ca\s?1|ca1|ca\s?2|Ca\s?2|Ca\s?1|Ca1|Ca\s?2|Ca2|C1|C2|c\s?1|c\s?2|C\s?1|C\s?2)\s*/gi, '').match(/\d+/g);
+                    let image = 0;
+                    const images = messageContent.match(/\b\d+\s*ảnh\b/gi);
+                    if (images) {
+                        image = images.reduce((acc, img) => acc + parseInt(img, 10), 0);
+                    }
+
+                    if (!bangCong) {
+                        if (numbers && numbers.length === 2 && numbers[0] === numbers[1]) {
+                            const sum = parseInt(numbers[0], 10) * 2;
+                            const quay = sum / 2;
+                            const keo = sum / 2;
+
+                            bangCong = await BangCong.create({
+                                userId,
+                                date: currentDate,
+                                ten: fullName,
+                                quay,
+                                keo,
+                                image,
+                                tinh_tien: quay * 350 + keo * 1000 + image * 2000
+                            });
+                        } else if (numbers && numbers.length > 0) {
+                            const sum = numbers.reduce((acc, num) => acc + parseInt(num, 10), 0);
+
+                            const quay = numbers.filter(num => num > sum / 2).reduce((acc, num) => acc + parseInt(num, 10), 0);
+                            const keo = sum - quay;
+
+                            bangCong = await BangCong.create({
+                                userId,
+                                date: currentDate,
+                                ten: fullName,
+                                quay,
+                                keo,
+                                image,
+                                tinh_tien: quay * 350 + keo * 1000 + image * 2000
+                            });
                         }
-                    });
+                    } else {
+                        if (numbers && numbers.length === 2 && numbers[0] === numbers[1]) {
+                            const sum = parseInt(numbers[0], 10) * 2;
+                            const quay = sum / 2;
+                            const keo = sum / 2;
 
-                    const userId = msg.from.id;
-                    const userPhotoCount = membersPhotos[userId] || 0;
+                            bangCong.quay += quay;
+                            bangCong.keo += keo;
+                            bangCong.image += image;
+                            bangCong.tinh_tien += quay * 350 + keo * 1000 + image * 2000;
+                        } else if (numbers && numbers.length > 0) {
+                            const sum = numbers.reduce((acc, num) => acc + parseint(num, 10), 0);
 
-                    if (true) {
-                        bot.sendMessage(chatId, 'Bài nộp hợp lệ, đã ghi vào bảng công ❤🥳', { reply_to_message_id: msg.message_id }).then(async () => {
-                            // Reset tổng số ảnh của thành viên
-                            membersPhotos[userId] = 0;
-                            fs.writeFileSync(dataFilePath, JSON.stringify(membersPhotos));
+                            const quay = numbers.filter(num => num > sum / 2).reduce((acc, num) => acc + parseint(num, 10), 0);
+                            const keo = sum - quay;
 
-                            // Lưu dữ liệu vào MongoDB
-                            const currentDate = new Date().toLocaleDateString();
-                         const firstName = msg.from.first_name;
-                            const lastName = msg.from.last_name;
-                            const fullName = lastName ? `${firstName} ${lastName}` : firstName;
+                            bangCong.quay += quay;
+                            bangCong.keo += keo;
+                            bangCong.image += image;
+                            bangCong.tinh_tien += quay * 350 + keo * 1000 + image * 2000;
+                        } else {
+                            bot.sendMessage(chatId, 'Bài nộp không hợp lệ 😭 có thể do đếm sai số lượng quẩy hoặc sai cú pháp nộp 🥺, bài nộp của bạn đã bị gỡ, hãy kiểm tra và nộp lại! 🤧🐵 (Cú pháp nộp hợp lệ "Số ca + số quẩy + số cộng" ví dụ: Ca1 5q 1c)', { reply_to_message_id: msg.message_id })
+                                .then(() => {
+                                    const currentTime = Math.floor(Date.now() / 1000);
+                                    const twentySecondsAgo = currentTime - 20;
 
-                            // Kiểm tra xem đã tồn tại bảng công cho thành viên trong ngày hiện tại chưa
-                            let bangCong = await BangCong.findOne({ userId, date: currentDate });
+                                    const recentPhotoMessages = photoMessages[userId].filter(
+                                        (message) => message.date >= twentySecondsAgo
+                                    );
+                                    recentPhotoMessages.forEach((message) => {
+                                        bot.deleteMessage(chatId, message.messageId);
+                                    });
 
-                        
-                              // Nếu chưa tồn tại bảng công cho thành viên trong ngày hiện tại, tạo mới
-// Nếu chưa tồn tại bảng công cho thành viên trong ngày hiện tại, tạo mới
-if (!bangCong) {
-    // Loại bỏ các số ngay sau chuỗi cấm
-    const numbers = messageContent.replace(/(ca\s?1|ca1|ca\s?2|Ca\s?2|Ca\s?1|Ca1|Ca\s?2|Ca2|C1|C2|c\s?1|c\s?2|C\s?1|C\s?2)\s*/gi, '').match(/\d+/g);
-    // Cộng số ảnh vào biến image
-    const images = messageContent.match(/\b\d+\s*ảnh\b/gi);
-    let image = 0;
-    if (images) {
-        image = images.reduce((acc, img) => acc + parseInt(img), 0);
-    }
-
-    if (numbers && numbers.length === 2 && numbers[0] === numbers[1]) {
-        const sum = parseInt(numbers[0]) * 2;
-
-        // Tính quẩy và kéo
-        const quay = sum / 2;
-        const keo = sum / 2;
-
-        // Tạo bảng công mới cho thành viên trong ngày hiện tại
-        bangCong = await BangCong.create({
-            userId,
-            date: currentDate,
-            ten: fullName,
-            quay,
-            keo,
-            image,
-            tinh_tien: quay * 350 + keo * 1000 + image * 2000
-        });
-    } else if (numbers && numbers.length > 0) {
-        const sum = numbers.reduce((acc, num) => acc + parseInt(num), 0);
-
-        // Tính quẩy và kéo
-        const quay = numbers.filter(num => num > sum / 2).reduce((acc, num) => acc + parseInt(num), 0);
-        const keo = sum - quay;
-
-        // Tạo bảng công mới cho thành viên trong ngày hiện tại
-        bangCong = await BangCong.create({
-            userId,
-            date: currentDate,
-            ten: fullName,
-            quay,
-            keo,
-            image,
-            tinh_tien: quay * 350 + keo * 1000 + image * 2000
-        });
-    }
-} else {
-    const numbers = messageContent.replace(/(ca\s?1|ca1|ca\s?2|Ca\s?2|Ca\s?1|Ca1|Ca\s?2|Ca2|C1|C2|c\s?1|c\s?2|C\s?1|C\s?2)\s*/gi, '').match(/\d+/g);
-    // Cộng số ảnh vào biến image
-    const images = messageContent.match(/\b\d+\s*ảnh\b/gi);
-    let image = 0;
-    if (images) {
-        image = images.reduce((acc, img) => acc + parseInt(img), 0);
-    }
-
-    if (numbers && numbers.length === 2 && numbers[0] === numbers[1]) {
-        const sum = parseInt(numbers[0]) * 2;
-
-        // Tính quẩy và kéo
-        const quay = sum / 2;
-        const keo = sum / 2;
-
-        // Cập nhật dữ liệu bảng công
-        bangCong.quay += quay;
-        bangCong.keo += keo;
-        bangCong.image += image;
-        bangCong.tinh_tien += quay * 350 + keo * 1000 + image * 2000;
-
-        await bangCong.save();
-    } else if (numbers && numbers.length > 0) {
-        const sum = numbers.reduce((acc, num) => acc + parseInt(num), 0);
-
-        // Tính quẩy và kéo
-        const quay = numbers.filter(num => num > sum / 2).reduce((acc, num) => acc + parseInt(num), 0);
-        const keo = sum - quay;
-
-        // Cập nhật dữ liệu bảng công
-        bangCong.quay += quay;
-        bangCong.keo += keo;
-        bangCong.image += image;
-        bangCong.tinh_tien += quay * 350 + keo * 1000 + image * 2000;
-
-        await bangCong.save();
-    } else {
-        bot.sendMessage(chatId, 'Bài nộp không hợp lệ 😭 có thể do đếm sai số lượng quẩy hoặc sai cú pháp nộp 🥺, bài nộp của bạn đã bị gỡ hãy kiểm tra và nộp lại! 🤧🐵 (Cú pháp nộp hợp lệ "Số ca + số quẩy + số cộng" ví dụ: Ca1 5q 1c)', { reply_to_message_id: msg.message_id }).then(() => {
-            // Xóa tất cả các tin nhắn chứa hình ảnh được gửi trong 20 giây trở lại đây của thành viên
-            if (photoMessages[userId] && photoMessages[userId].length > 0) {
-                const currentTime = Math.floor(Date.now() / 1000);
-                const twentySecondsAgo = currentTime - 20;
-                const recentPhotoMessages = photoMessages[userId].filter(message => message.date >= twentySecondsAgo);
-                recentPhotoMessages.forEach(message => {
-                    bot.deleteMessage(chatId, message.messageId);
+                                    membersPhotos[userId] = 0;
+                                    fs.writeFileSync(dataFilePath, JSON.stringify(membersPhotos));
+                                });
+                        }
+                    }
                 });
             }
-            // Reset tổng số ảnh của thành viên
-            membersPhotos[userId] = 0;
-            fs.writeFileSync(dataFilePath, JSON.stringify(membersPhotos));
-        });
+        }
     }
-}
-                        
+});
 
-                        
 
                                                                                                                                 
     // Kiểm tra nếu tin nhắn là lời chào và gửi URL hình ảnh vào nhóm
