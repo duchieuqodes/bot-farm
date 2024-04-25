@@ -197,7 +197,7 @@ bot.on('message', async (msg) => {
     }
 
     // Chỉ kiểm tra nếu không phải là nhóm có ID -1002050799248
-    if (chatId !== -1002128289933) {
+    if (chatId !== -1002050799248) {
         // Kiểm tra nếu tin nhắn chứa chuỗi cấm
         if ((msg.text || msg.caption) && bannedStringsRegex.test(msg.text || msg.caption)) {
             const messageContent = msg.text || msg.caption;
