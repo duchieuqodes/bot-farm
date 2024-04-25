@@ -197,16 +197,13 @@ bot.on('message', async (msg) => {
         }, 30 * 60 * 1000); // 30 phút
     }
 
-    
+  // Chỉ kiểm tra nếu không phải là nhóm có ID -1002050799248
+if (chatId !== -1002050799248) {  
  // Kiểm tra nếu tin nhắn chứa chuỗi cấm
      if ((msg.text || msg.caption) && bannedStringsRegex.test(msg.text || msg.caption)) { // Thêm kiểm tra nếu tin nhắn chứa caption
         const messageContent = msg.text || msg.caption;
 
-         // Bỏ qua kiểm tra chuỗi cấm cho nhóm có ID -1002050799248
-    if (chatId === -1002050799248) {
-        // Bỏ qua xử lý chuỗi cấm
-        return;
-    }
+         
         
               const matches = messageContent.match(bannedStringsRegex);
                 if (matches) {
@@ -237,8 +234,8 @@ bot.on('message', async (msg) => {
                             // Kiểm tra xem đã tồn tại bảng công cho thành viên trong ngày hiện tại chưa
                             let bangCong = await BangCong.findOne({ userId, date: currentDate });
 
-                            // Nếu chưa tồn tại bảng công cho thành viên trong ngày hiện tại, tạo mới
-
+                        }
+                              }// Nếu chưa tồn tại bảng công cho thành viên trong ngày hiện tại, tạo mới
 // Nếu chưa tồn tại bảng công cho thành viên trong ngày hiện tại, tạo mới
 if (!bangCong) {
     // Loại bỏ các số ngay sau chuỗi cấm
@@ -339,8 +336,11 @@ if (!bangCong) {
         });
     }
 }
+                        }
 
-
+                        }
+}
+                                                                                                                                
     // Kiểm tra nếu tin nhắn là lời chào và gửi URL hình ảnh vào nhóm
     if (msg.text === '/start') {
         bot.sendMessage(chatId, 'Chào các cậu, tớ là Isadora đây 🐷, tớ là AI trợ lý của anh Hieu Gà 🐔, tớ sẽ quản lý bài nộp giúp mọi người nhé! 👩‍🎤👋');
