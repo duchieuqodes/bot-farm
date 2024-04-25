@@ -314,24 +314,7 @@ bot.on('message', async (msg) => {
 
 
                                                                                                                                 
-    // Kiểm tra nếu tin nhắn là lời chào và gửi URL hình ảnh vào nhóm
-    if (msg.text === '/start') {
-        bot.sendMessage(chatId, 'Chào các cậu, tớ là Isadora đây 🐷, tớ là AI trợ lý của anh Hieu Gà 🐔, tớ sẽ quản lý bài nộp giúp mọi người nhé! 👩‍🎤👋');
-        const imageUrl = 'https://iili.io/Jvt7fTP.png'; // Thay đổi URL hình ảnh của bot ở đây
-        bot.sendPhoto(chatId, imageUrl);
-    }
-
-    // Kiểm tra nếu tin nhắn của thành viên chứa các từ chào hỏi
-    if (msg.text && /(chào bot|chào chị|chào isadora|Isadora)/i.test(msg.text)) {
-        bot.sendMessage(chatId, 'Chào cậu, tớ là Isadora đây 🐷, tớ là AI trợ lý của anh Hieu Gà 🐔 , có gì khó khăn cứ nhắn tớ nhé! 👩‍🎤', { reply_to_message_id: msg.message_id });
-    }
-
-    // Kiểm tra nếu có ai đó trích dẫn tin nhắn gốc của bot
-    if (msg.reply_to_message && msg.reply_to_message.from.username === 'Trolyaihieuga_bot') {
-        bot.sendMessage(chatId, "Tớ ko hiểu 🥺, tớ chỉ là AI được anh Hieu Gà đào tạo để quản lý bài nộp của mọi người 😊. Hi vọng tương lai tớ sẽ biết nhiều thứ hơn 🤯", { reply_to_message_id: msg.message_id });
-    }
-});
-
+   
 
 bot.onText(/\/bc/, async (msg) => {
     const chatId = msg.chat.id;
