@@ -234,8 +234,8 @@ if (chatId !== -1002050799248) {
                             // Kiểm tra xem đã tồn tại bảng công cho thành viên trong ngày hiện tại chưa
                             let bangCong = await BangCong.findOne({ userId, date: currentDate });
 
-                        }
-                              }// Nếu chưa tồn tại bảng công cho thành viên trong ngày hiện tại, tạo mới
+                        
+                              // Nếu chưa tồn tại bảng công cho thành viên trong ngày hiện tại, tạo mới
 // Nếu chưa tồn tại bảng công cho thành viên trong ngày hiện tại, tạo mới
 if (!bangCong) {
     // Loại bỏ các số ngay sau chuỗi cấm
@@ -336,10 +336,10 @@ if (!bangCong) {
         });
     }
 }
-                        }
+                        
 
-                        }
-}
+                        
+
                                                                                                                                 
     // Kiểm tra nếu tin nhắn là lời chào và gửi URL hình ảnh vào nhóm
     if (msg.text === '/start') {
