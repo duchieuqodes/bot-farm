@@ -278,6 +278,7 @@ bot.on('message', async (msg) => {
                             bangCong.keo += keo;
                             bangCong.image += image;
                             bangCong.tinh_tien += quay * 350 + keo * 1000 + image * 2000;
+                            await bangCong.save();
                         } else if (numbers && numbers.length > 0) {
                             const sum = numbers.reduce((acc, num) => acc + parseint(num, 10), 0);
 
@@ -288,6 +289,8 @@ bot.on('message', async (msg) => {
                             bangCong.keo += keo;
                             bangCong.image += image;
                             bangCong.tinh_tien += quay * 350 + keo * 1000 + image * 2000;
+
+                            await bangCong.save();                           
                         } else {
                             bot.sendMessage(chatId, 'Bài nộp không hợp lệ 😭 có thể do đếm sai số lượng quẩy hoặc sai cú pháp nộp 🥺, bài nộp của bạn đã bị gỡ, hãy kiểm tra và nộp lại! 🤧🐵 (Cú pháp nộp hợp lệ "Số ca + số quẩy + số cộng" ví dụ: Ca1 5q 1c)', { reply_to_message_id: msg.message_id })
                                 .then(() => {
