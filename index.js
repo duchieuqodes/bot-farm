@@ -234,7 +234,7 @@ bot.on('message', async (msg) => {
           } else {
             const numbers = messageContent.replace(/(ca\s?1|ca1|ca\s?2|Ca\s?2|Ca\s?1|Ca1|Ca\s?2|Ca2|C1|C2|c\s?1|c\s?2|C\s?1|C\s?2)\s*/gi, '').match(/\d+/g);
 
-            if (numbers && numbers.length === 2 và numbers[0] === numbers[1]) {
+            if (numbers && numbers.length === 2 && numbers[0] === numbers[1]) {
               const calculatedSum = parseInt(numbers[0]) * 2;
               const quay = calculatedSum / 2;
               const keo = calculatedSum / 2;
