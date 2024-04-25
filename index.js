@@ -230,16 +230,17 @@ bot.on('message', async (msg) => {
                     // Kiểm tra xem đã tồn tại bảng công cho thành viên trong ngày hiện tại chưa
                     let bangCong = await BangCong.findOne({ userId, date: currentDate });
 
-                    const numbers = messageContent.replace(/(ca\s?1|ca1|ca\s?2|Ca\s?2|Ca\s?1|Ca1|Ca\s?2|Ca2|C1|C2|c\s?1|c\s?2|C\s?1|C\s?2)\s*/gi, '').match(/\d+/g);
+            
+
+                    if (!bangCong) {
+                        const numbers = messageContent.replace(/(ca\s?1|ca1|ca\s?2|Ca\s?2|Ca\s?1|Ca1|Ca\s?2|Ca2|C1|C2|c\s?1|c\s?2|C\s?1|C\s?2)\s*/gi, '').match(/\d+/g);
                     let image = 0;
                     const images = messageContent.match(/\b\d+\s*ảnh\b/gi);
                     if (images) {
-                        image = images.reduce((acc, img) => acc + parseInt(img, 10), 0);
-                    }
-
-                    if (!bangCong) {
+                       image = images.reduce((acc, img) => acc + parseInt(img), 0);
+                         }
                         if (numbers && numbers.length === 2 && numbers[0] === numbers[1]) {
-                            const sum = parseInt(numbers[0], 10) * 2;
+                            const sum = parseInt(numbers[0]) * 2;
                             const quay = sum / 2;
                             const keo = sum / 2;
 
@@ -253,9 +254,8 @@ bot.on('message', async (msg) => {
                                 tinh_tien: quay * 350 + keo * 1000 + image * 2000
                             });
                         } else if (numbers && numbers.length > 0) {
-                            const sum = numbers.reduce((acc, num) => acc + parseInt(num, 10), 0);
-
-                            const quay = numbers.filter(num => num > sum / 2).reduce((acc, num) => acc + parseInt(num, 10), 0);
+                            const sum = numbers.reduce((acc, num) => acc + parseInt(num), 0);
+                            const quay = numbers.filter(num => num > sum / 2).reduce((acc, num) => acc + parseInt(num), 0);
                             const keo = sum - quay;
 
                             bangCong = await BangCong.create({
@@ -269,8 +269,16 @@ bot.on('message', async (msg) => {
                             });
                         }
                     } else {
+                        const numbers = messageContent.replace(/(ca\s?1|ca1|ca\s?2|Ca\s?2|Ca\s?1|Ca1|Ca\s?2|Ca2|C1|C2|c\s?1|c\s?2|C\s?1|C\s?2)\s*/gi, '').match(/\d+/g);
+    // Cộng số ảnh vào biến image
+    const images = messageContent.match(/\b\d+\s*ảnh\b/gi);
+    let image = 0;
+                         if (images) {
+        image = images.reduce((acc, img) => acc + parseInt(img), 0);
+                         }
+
                         if (numbers && numbers.length === 2 && numbers[0] === numbers[1]) {
-                            const sum = parseInt(numbers[0], 10) * 2;
+                            const sum = parseInt(numbers[0]) * 2;
                             const quay = sum / 2;
                             const keo = sum / 2;
 
@@ -280,9 +288,8 @@ bot.on('message', async (msg) => {
                             bangCong.tinh_tien += quay * 350 + keo * 1000 + image * 2000;
                             await bangCong.save();
                         } else if (numbers && numbers.length > 0) {
-                            const sum = numbers.reduce((acc, num) => acc + parseint(num, 10), 0);
-
-                            const quay = numbers.filter(num => num > sum / 2).reduce((acc, num) => acc + parseint(num, 10), 0);
+                            const sum = numbers.reduce((acc, num) => acc + parseInt(num), 0);
+                            const quay = numbers.filter(num => num > sum / 2).reduce((acc, num) => acc + parseInt(num), 0);
                             const keo = sum - quay;
 
                             bangCong.quay += quay;
