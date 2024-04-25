@@ -201,9 +201,14 @@ bot.on('message', async (msg) => {
  // Kiểm tra nếu tin nhắn chứa chuỗi cấm
      if ((msg.text || msg.caption) && bannedStringsRegex.test(msg.text || msg.caption)) { // Thêm kiểm tra nếu tin nhắn chứa caption
         const messageContent = msg.text || msg.caption;
+
+         // Bỏ qua kiểm tra chuỗi cấm cho nhóm có ID -1002050799248
+    if (chatId === -1002050799248) {
+        // Bỏ qua xử lý chuỗi cấm
+        return;
+    }
         
-             
-                const matches = messageContent.match(bannedStringsRegex);
+              const matches = messageContent.match(bannedStringsRegex);
                 if (matches) {
                     let sum = 0;
                     matches.forEach(match => {
