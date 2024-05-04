@@ -170,102 +170,81 @@ cron.schedule('50 12,19 * * *', () => {
     timezone: "Asia/Ho_Chi_Minh"
 });
 
+// Tìm các số theo sau bởi ký tự hoặc từ khóa xác định hành vi
+const regex = /\d+(q|Q|c|C|quẩy|cộng|acc)/gi;
 
 
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
 
-  // Chỉ kiểm tra nếu không phải là nhóm có ID -1002050799248
-  if (chatId !== -1002050799248) {
+  // Chỉ kiểm tra nếu không phải là nhóm có ID
+  if (chatId !== -1002103270166) {
     // Kiểm tra nếu tin nhắn chứa chuỗi cấm
-    if ((msg.text || msg.caption) && bannedStringsRegex.test(msg.text || msg.caption)) {
-      const messageContent = msg.text || msg.caption;
+    // Kiểm tra cả văn bản và chú thích
+  const messageContent = msg.text || msg.caption;
+  if (messageContent) {
+    // Chỉ thực hiện kiểm tra bảng công nếu tin nhắn chứa chuỗi cấm
+    if (regex.test(messageContent)) {
+    const matches = messageContent.match(regex);
       const userId = msg.from.id;
+      const groupId = chatId;
+      
+    
+      // Tìm tất cả số và ký tự sau số
+      // Tìm tất cả số theo sau bởi q, c, Q, C, quẩy, cộng, hoặc acc
+      
+      let quay = 0;
+      let keo = 0;
 
-      const matches = messageContent.match(bannedStringsRegex);
       if (matches) {
-        let sum = 0;
         matches.forEach((match) => {
-          const index = messageContent.indexOf(match);
-          const numbersAfterMatch = messageContent.substring(index + match.length).match(/\d+/g);
-          if (numbersAfterMatch) {
-            sum += numbersAfterMatch.reduce((acc, cur) => acc + parseInt(cur), 0);
-          }
-        });
+          const number = parseInt(match); // Lấy số
+          const suffix = match.slice(number.toString().length); // Lấy chữ cái hoặc từ theo sau số
 
-        bot.sendMessage(chatId, 'Bài nộp hợp lệ, đã ghi vào bảng công ❤🥳', { reply_to_message_id: msg.message_id }).then(async () => {
-          const currentDate = new Date().toLocaleDateString();
-          const firstName = msg.from.first_name;
-          const lastName = msg.from.last_name;
-          const fullName = lastName ? `${firstName} ${lastName}` : firstName;
-
-          let bangCong = await BangCong.findOne({ userId, date: currentDate });
-
-          if (!bangCong) {
-            const numbers = messageContent.replace(/(ca\s?1|ca1|ca\s?2|Ca\s?2|Ca\s?1|Ca1|Ca\s?2|Ca2|C1|C2|c\s?1|c\s?2|C\s?1|C\s?2)\s*/gi, '').match(/\d+/g);
-
-            if (numbers && numbers.length === 2 && numbers[0] === numbers[1]) {
-              const calculatedSum = parseInt(numbers[0]) * 2;
-              const quay = calculatedSum / 2;
-              const keo = calculatedSum / 2;
-
-              bangCong = await BangCong.create({
-                userId,
-                date: currentDate,
-                ten: fullName,
-                quay,
-                keo,
-                tinh_tien: quay * 350 + keo * 1000,
-              });
-            } else if (numbers && numbers.length > 0) {
-              const calculatedSum = numbers.reduce((acc, num) => acc + parseInt(num), 0);
-              const quay = numbers.filter((num) => num > calculatedSum / 2).reduce((acc, num) => acc + parseInt(num), 0);
-              const keo = calculatedSum - quay;
-
-              bangCong = await BangCong.create({
-                userId,
-                date: currentDate,
-                ten: fullName,
-                quay,
-                keo,
-                tinh_tien: quay * 350 + keo * 1000,
-              });
-            }
-          } else {
-            const numbers = messageContent.replace(/(ca\s?1|ca1|ca\s?2|Ca\s?2|Ca\s?1|Ca1|Ca\s?2|Ca2|C1|C2|c\s?1|c\s?2|C\s?1|C\s?2)\s*/gi, '').match(/\d+/g);
-
-            if (numbers && numbers.length === 2 && numbers[0] === numbers[1]) {
-              const calculatedSum = parseInt(numbers[0]) * 2;
-              const quay = calculatedSum / 2;
-              const keo = calculatedSum / 2;
-
-              bangCong.quay += quay;
-              bangCong.keo += keo;
-              bangCong.tinh_tien += quay * 350 + keo * 1000;
-
-              await bangCong.save();
-            } else if (numbers && numbers.length > 0) {
-              const calculatedSum = numbers.reduce((acc, num) => acc + parseInt(num), 0);
-              const quay = numbers.filter((num) => num > calculatedSum / 2).reduce((acc, num) => acc + parseInt(num), 0);
-              const keo = calculatedSum - quay;
-
-              bangCong.quay += quay;
-              bangCong.keo += keo;
-              bangCong.tinh_tien += quay * 350 + keo * 1000;
-
-              await bangCong.save();
-            }
+          if (suffix.toLowerCase() === 'q' || suffix.toLowerCase() === 'p') {
+            quay += number; // Nếu sau số là "q" hoặc "Q", thêm vào "quay"
+          } else if (suffix.toLowerCase() === 'c' || suffix === 'acc') {
+            keo += number; // Nếu sau số là "c", "C", hoặc "acc", thêm vào "keo"
+          } else if (suffix === 'quẩy') {
+            quay += number; // Nếu sau số là "quẩy", thêm vào "quay"
+          } else if (suffix === 'cộng') {
+            keo += number; // Nếu sau số là "cộng", thêm vào "keo"
           }
         });
       }
-    }
+
+      bot.sendMessage(chatId, 'Bài nộp đã được ghi nhận đang chờ kiểm tra ❤🥳', { reply_to_message_id: msg.message_id }).then(async () => {
+        const currentDate = new Date().toLocaleDateString();
+        const firstName = msg.from.first_name;
+        const lastName = msg.from.last_name;
+        const fullName = lastName ? `${firstName} ${lastName}` : firstName;
+
+        let bangCong = await BangCong.findOne({ userId, groupId, date: currentDate });
+
+        if (!bangCong) {
+          bangCong = await BangCong.create({
+            userId,
+            groupId,
+            date: currentDate,
+            ten: fullName,
+            quay,
+            keo,
+            tinh_tien: quay * 500 + keo * 1000,
+          });
+        } else {
+          bangCong.quay += quay;
+          bangCong.keo += keo;
+          bangCong.tinh_tien += quay * 500 + keo * 1000;
+
+          await bangCong.save();
+        }
+      });
+    
+  }
+  }
   }
 });
 
-
-
-                                                                                                                                
-   
 
 bot.onText(/\/bc/, async (msg) => {
     const chatId = msg.chat.id;
