@@ -1,175 +1,50 @@
 const TelegramBot = require('node-telegram-bot-api');
-const fs = require('fs');
 const mongoose = require('mongoose');
-const cron = require('node-cron');
-
+const cron = require('node-cron'); // Thư viện để thiết lập cron jobs
 const keep_alive = require('./keep_alive.js')
 
-
-const token = '6748384489:AAGV42T0PoOel_1519X5ot_rLLnpQqqDTdA';
-const bot = new TelegramBot(token, { polling: true });
-
 // Kết nối tới MongoDB
-mongoose.connect('mongodb+srv://duchieufaryoung0:80E9gUahdOXmGKuy@cluster0.6nlv1cv.mongodb.net/telegram_bot_db?retryWrites=true&w=majority', { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect(
+  'mongodb+srv://duchieufaryoung0:80E9gUahdOXmGKuy@cluster0.6nlv1cv.mongodb.net/telegram_bot_db?retryWrites=true&w=majority',
+  { useNewUrlParser: true, useUnifiedTopology: true }
+);
 const db = mongoose.connection;
 
 // Định nghĩa schema cho bảng công
 const BangCongSchema = new mongoose.Schema({
-    userId: Number,
-    date: Date,
-    ten: String,
-    quay: Number,
-    keo: Number,
-    image: Number,
-    tinh_tien: Number
+  userId: Number,
+  groupId: Number,
+  date: Date,
+  ten: String,
+  quay: Number,
+  keo: Number,
+  tinh_tien: Number,
 });
 
 // Tạo model từ schema
-const BangCong = mongoose.model('BangCong', BangCongSchema);
+const BangCong2 = mongoose.model('BangCong2', BangCongSchema);
 
-// Đường dẫn tới file lưu trữ dữ liệu
-const dataFilePath = 'members_photos.json';
+const token = '7150645082:AAGUNk7BrBPYJqv085nINEGx7p5tCE9WcK0';
+const bot = new TelegramBot(token, { polling: true });
 
-// Load dữ liệu từ file
-let membersPhotos = {};
-if (fs.existsSync(dataFilePath)) {
-    membersPhotos = JSON.parse(fs.readFileSync(dataFilePath));
-}
-
-// Chuỗi cấm
+// Chuỗi cấmm
 const bannedStringsRegex = /(ca\s?1|ca1|ca\s?2|Ca\s?2|Ca\s?1|Ca1|Ca\s?2|Ca2|C1|C2|c\s?1|c\s?2|C\s?1|C\s?2)\s*/gi;
 
-// Lưu trữ tin nhắn chứa hình ảnh của từng thành viên
-let photoMessages = {};
+// Thiết lập cron job để xóa dữ liệu bảng công của ngày hôm trước
+cron.schedule('0 0 * * *', async () => {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const formattedYesterday = new Date(yesterday.toLocaleDateString());
 
-// Đối tượng lưu trữ thông tin của mỗi thành viên trong nhóm
-const memberInfo = {};
-// Lưu trữ thông tin về người dùng  
-// Hàm gửi bảng công vào thời điểm cố định hàng ngày
-async function sendDailyReport() {
-    const currentDate = new Date();
-    const currentHour = currentDate.getUTCHours(); // Lấy giờ hiện tại theo múi giờ UTC
-    const currentMinute = currentDate.getUTCMinutes(); // Lấy phút hiện tại theo múi giờ UTC
-
-    // Kiểm tra xem có đến thời điểm gửi bảng công không (00:13 theo giờ Việt Nam)
-    if ((currentHour === 14 && currentMinute === 0) || (currentHour === 7 && currentMinute === 0)) { // 17h13 theo múi giờ UTC tương đương 00h13 theo múi giờ Việt Nam
-        const chatId = '-1002050799248'; // Thay thế bằng ID của nhóm muốn gửi bảng công
-
-        let response = '';
-        response += `Bảng Công Hôm Nay ${currentDate.getDate()}/${currentDate.getMonth() + 1}/${currentDate.getFullYear()}  (Cập nhật lại tự động sau mỗi ca ):\n\n\n`;
-        response += 'HỌ TÊN👩‍🎤|\t\tQUẨY💃|\tCỘNG➕|\tTIỀN💰\n\n'; // Reset tổng số ảnh của thành viên sau 10 giây
-
-        try {
-            // Lấy dữ liệu bảng công từ MongoDB cho ngày hiện tại
-            const currentDate = new Date().toLocaleDateString(); // Ngày hiện tại
-            const bangCongs = await BangCong.find({ date: currentDate });
-
-            bangCongs.forEach(bangCong => {
-                const formattedTien = bangCong.tinh_tien.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); // Định dạng số tiền thành dạng ngăn cách bằng dấu chấm
-            response += `${bangCong.ten}\t\t${bangCong.quay}q +\t${bangCong.keo}c\t${formattedTien}vnđ\n`;
-        });
-        } catch (error) {
-            console.error('Lỗi khi truy vấn dữ liệu từ MongoDB:', error);
-            response += 'Đã xảy ra lỗi khi truy vấn dữ liệu từ cơ sở dữ liệu.';
-        }
-
-        if (response === '') {
-            response = 'Chưa có số nào được gửi trong nhóm.';
-        }
-
-        bot.sendMessage(chatId, response);
-    }
-}
-
-// Kiểm tra thời gian và gửi bảng công mỗi phút
-setInterval(sendDailyReport, 60000); // Kiểm tra mỗi phút
-
-
-// Hàm để gửi tin nhắn ngẫu nhiên vào 7h hàng ngày theo giờ Việt Nam
-function sendRandomMessage() {
-    // Lời nhắn ngẫu nhiên
-    const randomMessages = [
-        "Nắng đã lên, gió đã lùa, team ta mau dậy đi 'quẩy' thôi nào! ☀️🍃 Chúc cả team một buổi sáng tràn đầy năng lượng, sẵn sàng bùng nổ nhiệt huyết cho ngày làm việc 'quẩy nhóm' hăng say!",
-        "Chào buổi sáng team yêu dấu! 🎊 Hôm nay là ngày 'quẩy nhóm' tung nóc, hãy cùng nhau biến nó thành một ngày thật bùng nổ và đáng nhớ nhé!",
-        "⏰ Chuông báo thức đã reo, team ơi hãy thức dậy và nạp thêm năng lượng cho một ngày 'quẩy nhóm' cực 'phiêu' nào!",
-        "🌞 Bầu trời xanh, mây trắng, nắng vàng rực rỡ - khung cảnh hoàn hảo cho một ngày 'quẩy nhóm' cực đã! Chúc cả team có một ngày làm việc vui vẻ và hiệu quả!",
-        "🎶 Nhạc đã sẵn sàng, tâm hồn đã hân hoan, team ta cùng nhau 'quẩy' cho tưng bừng náo nhiệt nhé!",
-        "🤪 Cười nào team ơi! Nụ cười là bí quyết cho một ngày 'quẩy nhóm' vui vẻ và thành công!",
-        "☕️ Cà phê thơm lừng, bánh mì giòn tan - bữa sáng hoàn hảo để khởi đầu một ngày 'quẩy nhóm' tuyệt vời! Chúc cả team ngon miệng và có một ngày làm việc tràn đầy năng lượng!",
-        "💪 Lên nào team ơi! Hôm nay là ngày để chúng ta 'quẩy' hết mình và chinh phục mọi thử thách!",
-        "🎯 Mục tiêu đã đặt sẵn, tinh thần đã hừng hực - team ta cùng nhau 'quẩy' cho đến khi nào thành công thôi nào!",
-        "🤝 Teamwork là sức mạnh! Hãy cùng nhau phối hợp ăn ý, hỗ trợ lẫn nhau để có một ngày 'quẩy nhóm' thật hiệu quả và gắn kết!",
-        "😜 'Quẩy nhóm' mà không vui thì còn gì vui nữa? Cùng nhau biến ngày làm việc thành một bữa tiệc vui nhộn và đáng nhớ nhé!",
-        "💃 Nhảy nào team ơi! Nhịp điệu sôi động sẽ giúp chúng ta thêm hăng say và 'quẩy' hết mình trong ngày làm việc!",
-        "🤩 Hôm nay 'quẩy nhóm' mà không selfie thì quả là thiếu sót! Cùng nhau lưu lại những khoảnh khắc vui vẻ và đáng nhớ nhé!",
-        "🎉 'Quẩy nhóm' là để bung xõa, là phải hết mình! Hãy cởi bỏ mọi lo toan và tận hưởng niềm vui của ngày làm việc!",
-        "🎁 'Quẩy nhóm' cũng có quà nha! Hãy hoàn thành tốt nhiệm vụ để nhận được những phần thưởng bất ngờ nhé!",
-        "🏆 'Quẩy nhóm' là để chiến thắng! Hãy cùng nhau nỗ lực hết mình để đạt được mục tiêu chung của team!",
-        "🧠 'Quẩy nhóm' cũng cần trí tuệ! Hãy cùng nhau brainstorming để tìm ra những ý tưởng sáng tạo và đột phá!",
-        "💡 'Quẩy nhóm' là cơ hội để học hỏi và phát triển! Hãy tích cực trao đổi kinh nghiệm và hỗ trợ lẫn nhau để cùng nhau tiến bộ!",
-        "😄 'Quẩy nhóm' là để gắn kết! Hãy cùng nhau chia sẻ những niềm vui, nỗi buồn và tạo nên những kỷ niệm đẹp đẽ bên nhau!",
-        "💖 'Quẩy nhóm' là gia đình! Hãy luôn yêu thương, thấu hiểu và hỗ trợ lẫn nhau như những người thân yêu trong gia đình!",
-        "😜 'Quẩy nhóm' là để bung lụa! Hãy cởi bỏ mọi rào cản và thể hiện cá tính độc đáo của bản thân!",
-        "🤪 'Quẩy nhóm' là để troll nhau! Hãy cùng nhau trêu đùa, chọc ghẹo nhau một cách vui vẻ để ngày làm việc thêm sôi động!",
-        "🤫 'Quẩy nhóm' là để bí mật! Hãy cùng nhau chia sẻ những bí mật nho nhỏ để gắn kết tình cảm thêm khăng khít!",
-        "🤫 'Quẩy nhóm' là để thả thính! Hãy cùng nhau 'thả thính' để lan tỏa năng lượng tích cực và tạo bầu không khí vui vẻ cho team!"
-    ];
-
-    // Chọn ngẫu nhiên một lời nhắn từ danh sách
-    const randomIndex = Math.floor(Math.random() * randomMessages.length);
-    const randomMessage = randomMessages[randomIndex];
-
-    // Lấy thời gian hiện tại
-    const currentTime = new Date();
-    const chatId = '-1002050799248'; // Thay thế bằng ID của nhóm muốn gửi bảng công
-    
-    // Kiểm tra nếu là 7h sáng theo giờ Việt Nam
-    if (currentTime.getUTCHours() === 0 && currentTime.getUTCMinutes() === 0) {
-        // Gửi tin nhắn ngẫu nhiên vào nhóm
-        bot.sendMessage(chatId, randomMessage);
-    }
-}
-
-// Thiết lập hẹn giờ để gửi tin nhắn vào 7h hàng ngày
-setInterval(sendRandomMessage, 24 * 60 * 60 * 1000); // 24 giờ
-
-
-
-// Mảng các lời nhắn ngẫu nhiên
-const randomMessages = [
-    "🚨🚨🚨 Cảnh báo! Cảnh báo! Còn 5 phút nữa là đến giờ rồi! Mọi người ơi, nhanh tay hoàn thành công việc và chuẩn bị tinh thần 'quẩy nhóm' nào!",
-    "🏃‍♀️🏃‍♂️ Nhanh lên nào cả team! Chỉ còn 3 phút nữa là đến giờ 'quẩy nhóm' rồi! Ai chưa sẵn sàng thì nhanh lên nhé, không là 'lỡ nhịp' mất đấy!",
-    "⏰ Giờ G 'quẩy nhóm' đang đến rất gần! Mọi người ơi, hãy tập trung cao độ và hoàn thành nốt những công việc còn dang dở để có thể 'quẩy' hết mình!",
-    "⏱️⏱️⏱️ Tích tắc... tích tắc... Còn 2 phút nữa là đến giờ 'quẩy nhóm' rồi! Mọi người ơi, hãy tắt chuông điện thoại và tập trung vào đây nào!",
-    "⏳⏳⏳ Hết giờ rồi! Hết giờ rồi! Mọi người ơi, nhanh tay di chuyển đến nơi 'quẩy nhóm' ngay!",
-    "💨💨💨 Nhanh lên nào cả team! 'Quẩy nhóm' đang chờ đợi chúng ta!",
-    "🏃‍♀️🏃‍♂️ Ai trễ giờ 'quẩy nhóm' sẽ phải chịu hình phạt 'cute' nhé!",
-    "😜😜😜 Isadora không thể chờ đợi được nữa! HÃY CÙNG 'QUẨY NHÓM' THÔI NÀO!",
-    "🤩🤩🤩 Isadora hứa hẹn 'quẩy nhóm' hôm nay sẽ là 'quẩy' 'siêu cấp' và 'siêu đỉnh'.",
-    "💃🕺 Isadora đã sẵn sàng 'cháy' hết mình với cả team rồi đây! Ai chưa sẵn sàng thì nhanh lên nhé, 'quẩy nhóm' đang chờ đợi chúng ta!",
-    "😎😎😎 Isadora tin rằng 'quẩy nhóm' là cơ hội để mọi người thể hiện cá tính và tài năng của bản thân. Hãy cùng nhau 'quẩy' và tỏa sáng nhé!",
-    "🤪🤪🤪 Isadora đã chuẩn bị sẵn sàng 'bung lụa' trong 'quẩy nhóm' hôm nay rồi đây! Mọi người nhớ 'quẩy' theo phong cách của riêng mình nhé!",
-    "😜😜😜 Isadora cam đoan rằng 'quẩy nhóm' hôm nay sẽ là 'quẩy' 'siêu bựa', 'siêu lầy' và 'siêu hài hước'. Hãy cùng nhau 'quẩy' và tận hưởng những giây phút vui vẻ nhất!",
-    "💃🕺 Isadora không thể chờ đợi được nữa! HÃY CÙNG 'QUẨY NHÓM' VỚI ISADORA NÀO!",
-    "🤩🤩🤩 Isadora hứa hẹn 'quẩy nhóm' hôm nay sẽ là 'quẩy' 'siêu cấp' và 'siêu đỉnh'.",
-    "🤪🤪🤪 Isadora đã chuẩn bị sẵn sàng 'chiêu thức' 'quẩy nhóm' độc đáo nhất rồi đây! Mọi người hãy cùng chờ đón và 'quẩy' thật嗨 nhé!",
-    "😎😎😎 Isadora tin rằng 'sức mạnh tập thể' sẽ khiến 'quẩy nhóm' hôm nay trở nên bùng nổ hơn bao giờ hết! Hãy cùng nhau 'quẩy' hết mình nào cả team!",
-    "💃🕺 Isadora đã sẵn sàng 'cháy' hết mình với cả team rồi đây! Ai chưa sẵn sàng thì nhanh lên nhé, 'quẩy nhóm' đang chờ đợi chúng ta!",
-    "🤩🤩🤩 Isadora tin rằng 'quẩy nhóm' là bí quyết để nâng cao hiệu quả công việc. Hãy cùng nhau 'quẩy' và gặt hái nhiều thành công hơn nữa nhé!",
-    "😜😜😜 Isadora cam đoan rằng 'quẩy nhóm' hôm nay sẽ là 'quẩy' 'siêu bựa', 'siêu lầy' và 'siêu hài hước'. Hãy cùng nhau 'quẩy' và tận hưởng những giây phút vui vẻ nhất!",
-    "🤪🤪🤪 Isadora đã chuẩn bị sẵn sàng 'bung lụa' trong 'quẩy nhóm' hôm nay rồi đây! Mọi người nhớ 'quẩy' theo phong cách của riêng mình nhé!"
-];
-
-// Hàm gửi tin nhắn ngẫu nhiên vào lúc 12h50 và 19h50 hàng ngày
-cron.schedule('50 12,19 * * *', () => {
-    const randomIndex = Math.floor(Math.random() * randomMessages.length);
-    const message = randomMessages[randomIndex];
-    const chatId = '-1002050799248'; // Thay thế bằng ID của nhóm muốn gửi bảng công
-    bot.sendMessage(chatId, message);
-}, {
-    timezone: "Asia/Ho_Chi_Minh"
+  try {
+    const result = await BangCong2.deleteMany({ date: formattedYesterday });
+    console.log(`Đã xóa ${result.deletedCount} bảng công của ngày ${formattedYesterday.toLocaleDateString()}`);
+  } catch (error) {
+    console.error("Lỗi khi xóa dữ liệu từ MongoDB:", error);
+  }
 });
 
+            
 // Tìm các số theo sau bởi ký tự hoặc từ khóa xác định hành vi
 const regex = /\d+(q|Q|c|C|quẩy|cộng|acc)/gi;
 
@@ -219,10 +94,10 @@ bot.on('message', async (msg) => {
         const lastName = msg.from.last_name;
         const fullName = lastName ? `${firstName} ${lastName}` : firstName;
 
-        let bangCong = await BangCong.findOne({ userId, groupId, date: currentDate });
+        let bangCong = await BangCong2.findOne({ userId, groupId, date: currentDate });
 
         if (!bangCong) {
-          bangCong = await BangCong.create({
+          bangCong = await BangCong2.create({
             userId,
             groupId,
             date: currentDate,
@@ -244,242 +119,207 @@ bot.on('message', async (msg) => {
   }
   }
 });
+       
+                                             
+          
+// Bảng tra cứu tên nhóm dựa trên ID nhóm
+const groupNames = {
+  "-1002039100507": "CỘNG ĐỒNG NẮM BẮT CƠ HỘI",
+  "-1002004082575": "KHÔNG NGỪNG PHÁT TRIỂN",
+  "-1002123430691": "DẪN LỐI THÀNH CÔNG",
+  "-1002143712364": "CURRENCY SHINING STAR GROUP",
+  "-1002128975957": "CỘNG ĐỒNG KHỞI NGHIỆP",
+  "-1002129896837": "KHÔNG NGỪNG ĐỔI MỚI",
+};
 
-
+// Xử lý lệnh /bc để hiển thị bảng công cho tất cả các nhóm
 bot.onText(/\/bc/, async (msg) => {
-    const chatId = msg.chat.id;
+  const chatId = msg.chat.id;
 
-    try {
-        // Lấy dữ liệu bảng công từ MongoDB cho ngày hiện tại
-        const currentDate = new Date().toLocaleDateString(); // Ngày hiện tại
-        const bangCongs = await BangCong.find({ date: currentDate });
-
-        let response = '';
-        response += `Bảng Công Ngày Hôm Nay (${currentDate}):\n\n\n`;
-        response += 'HỌ TÊN👩‍🎤\t\tQUẨY💃\tCỘNG➕\tTỔNG TIỀN💰\n\n';
-
-        bangCongs.forEach(bangCong => {
-            const formattedTien = bangCong.tinh_tien.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); // Định dạng số tiền thành dạng ngăn cách bằng dấu chấm
-            response += `${bangCong.ten}\t\t${bangCong.quay}q +\t${bangCong.keo}c\t${formattedTien}vnđ\n`;
-        });
-
-        if (response === '') {
-            response = 'Chưa có số nào được gửi trong nhóm vào ngày hôm nay.';
-        }
-bot.sendMessage(chatId, response);
-    } catch (error) {
-        console.error('Lỗi khi truy vấn dữ liệu từ MongoDB:', error);
-        bot.sendMessage(chatId, 'Đã xảy ra lỗi khi truy vấn dữ liệu từ cơ sở dữ liệu.');
+  try {
+    const currentDate = new Date().toLocaleDateString(); // Ngày hiện tại
+    const bangCongs = await BangCong2.find({ date: currentDate }); // Lấy bảng công cho ngày hiện tại
+    
+    if (bangCongs.length === 0) {
+      bot.sendMessage(chatId, "Không có bảng công nào cho ngày hôm nay.");
+      return;
     }
+
+    // Tạo bảng công phân loại theo ID nhóm
+    const groupedByGroupId = {};
+    bangCongs.forEach((bangCong) => {
+      const groupId = bangCong.groupId ? bangCong.groupId.toString() : ''; // Kiểm tra nếu groupId không undefined
+      if (!groupedByGroupId[groupId]) {
+        groupedByGroupId[groupId] = [];
+      }
+      groupedByGroupId[groupId].push(bangCong);
+    });
+
+    let response = '';
+
+    // Tạo bảng công cho mỗi nhóm
+    for (const groupId in groupedByGroupId) {
+      if (!groupId) {
+        continue; // Bỏ qua nếu groupId không hợp lệ
+      }
+
+      const groupData = groupedByGroupId[groupId];
+      const groupName = groupNames[groupId] || `Nhóm ${groupId}`; // Lấy tên nhóm từ bảng tra cứu
+
+      response += `Bảng công nhóm ${groupName}:\n\n`;
+      
+      let totalGroupMoney = 0; // Biến để tính tổng số tiền của nhóm
+
+      groupData.forEach((bangCong) => {
+        if (bangCong.tinh_tien !== undefined) { // Kiểm tra trước khi truy cập thuộc tính
+          const formattedTien = bangCong.tinh_tien.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+          response += `${bangCong.ten}\t\t${bangCong.quay}q +\t${bangCong.keo}c\t${formattedTien}vnđ\n`;
+          totalGroupMoney += bangCong.tinh_tien; // Tính tổng tiền
+        }
+      });
+
+      const formattedTotal = totalGroupMoney.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      response += `Tổng tiền: ${formattedTotal}vnđ\n\n`; // Hiển thị tổng tiền của nhóm
+    }
+
+    bot.sendMessage(chatId, response.trim());
+  } catch (error) {
+    console.error('Lỗi khi truy vấn dữ liệu từ MongoDB:', error);
+    bot.sendMessage(chatId, 'Đã xảy ra lỗi khi truy vấn dữ liệu từ cơ sở dữ liệu.');
+  }
 });
 
-        
-// Lệnh để tính toán bảng công theo ngày mà người dùng yêu cầu
-bot.onText(/\/bc(\d{1,2})?\/(\d{1,2})?\/(\d{4})?/, async (msg, match) => {
-    const chatId = msg.chat.id;
-    const requestedDate = match[0] ? new Date(`${match[3] || new Date().getFullYear()}-${match[2] || (new Date().getMonth() + 1)}-${match[1] || new Date().getDate()}`).toLocaleDateString() : new Date().toLocaleDateString();
+   
 
-    let response = `Bảng công ngày ${requestedDate}:\n`;
-    response += 'HỌ TÊN👩‍🎤\t\tQUẨY💃\tCỘNG➕\tTỔNG TIỀN💰\n';
+bot.onText(/\/tong/, async (msg) => {
+  const chatId = msg.chat.id;
 
-    let found = false;
-    for (const userId in memberInfo) {
-        for (const date in memberInfo[userId]) {
-            if (date === requestedDate) {
-                const info = memberInfo[userId][date];
-                response += `${info['ten']}\t\t${info['quay']}q +\t${info['keo']}c\t${info['tinh_tien']}vnđ\n`;
-                found = true;
-            }
-        }
+  try {
+    const currentDate = new Date(); // Ngày hiện tại
+
+    // Truy vấn để tổng hợp bảng công của các thành viên trong ngày hiện tại
+    const aggregatedData = await BangCong2.aggregate([
+      {
+        $match: { date: new Date(currentDate.toLocaleDateString()) }, // Lọc theo ngày hiện tại
+      },
+      {
+        $group: {
+          _id: {
+            userId: "$userId",
+            ten: "$ten",
+          },
+          totalQuay: { $sum: "$quay" },
+          totalKeo: { $sum: "$keo" },
+          totalTinhTien: { $sum: "$tinh_tien" },
+        },
+      },
+      {
+        $sort: { totalTinhTien: -1 }, // Sắp xếp theo tổng tiền giảm dần
+      },
+    ]);
+
+    if (aggregatedData.length === 0) {
+      bot.sendMessage(chatId, "Không có bảng công nào cho ngày hôm nay.");
+      return;
     }
 
-    if (!found) {
-        response = 'Không có dữ liệu cho ngày này.';
-    }
+    let response = "Bảng công tổng hợp cho ngày hôm nay:\n\n";
+    response += "HỌ TÊN👩‍🎤\t\tQUẨY💃\tCỘNG➕\tTỔNG TIỀN💰\n";
+
+    aggregatedData.forEach((data) => {
+      const formattedTotal = data.totalTinhTien.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      response += `${data._id.ten}\t\t${data.totalQuay}q +\t${data.totalKeo}c\t${formattedTotal}vnđ\n`;
+    });
 
     bot.sendMessage(chatId, response);
+  } catch (error) {
+    console.error("Lỗi khi truy vấn dữ liệu từ MongoDB:", error);
+    bot.sendMessage(chatId, "Đã xảy ra lỗi khi truy vấn dữ liệu từ cơ sở dữ liệu.");
+  }
 });
 
-// Lệnh để reset dữ liệu bảng công từ MongoDB cho ngày hiện tại
-bot.onText(/\/resetbc/, async (msg) => {
-    const chatId = msg.chat.id;
-    const userId = msg.from.id;
+// Lệnh /reset để xóa bảng công của những ngày trước
+bot.onText(/\/reset/, async (msg) => {
+  const chatId = msg.chat.id;
 
-    try {
-        // Kiểm tra vai trò của người gửi lệnh
-        const member = await bot.getChatMember(chatId, userId);
-        const isAdmin = member.status === 'creator' || member.status === 'administrator';
+  try {
+    // Ngày hiện tại
+    const currentDate = new Date().toLocaleDateString();
+    
+    // Xóa tất cả bảng công có ngày trước ngày hiện tại
+    const result = await BangCong2.deleteMany({
+      date: { $lt: currentDate },
+    });
 
-        if (!isAdmin) {
-            // Nếu không phải là quản trị viên, thông báo không có quyền
-            bot.sendMessage(chatId, 'Bạn không có quyền reset dữ liệu bảng công.');
-            return;
-        }
+    bot.sendMessage(chatId, `Đã xóa ${result.deletedCount} bảng công của những ngày trước.`);
+  } catch (error) {
+    console.error('Lỗi khi xóa bảng công:', error);
+    bot.sendMessage(chatId, 'Đã xảy ra lỗi khi xóa bảng công. Vui lòng thử lại.');
+  }
+});
 
-        // Lấy ngày hiện tại
-        const currentDate = new Date().toLocaleDateString();
+// Hàm loại bỏ icon và emoji từ tên
+const normalizeName = (name) => {
+  // Loại bỏ các icon, emoji hoặc ký tự đặc biệt không phải chữ cái
+  return name.replace(/[^\w\s]/gi, '').toLowerCase().trim();
+};
 
-        // Xóa dữ liệu bảng công cho ngày hiện tại từ MongoDB
-        await BangCong.deleteMany({ date: currentDate });
+// Lệnh /edit để chỉnh sửa bảng công
+bot.onText(/\/edit (.+)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const text = match[1]; // Phần sau "/edit"
 
-        // Thông báo reset thành công
-        bot.sendMessage(chatId, `Đã reset dữ liệu bảng công cho ngày ${currentDate}.`);
-    } catch (error) {
-        console.error('Lỗi khi reset dữ liệu bảng công:', error);
-        bot.sendMessage(chatId, 'Đã xảy ra lỗi khi reset dữ liệu bảng công.');
+  // Phân tích cú pháp để lấy các tham số
+  const parts = text.split(',');
+  if (parts.length !== 4) {
+    bot.sendMessage(chatId, 'Định dạng không hợp lệ. Đúng định dạng là: /edit groupId, ten, quay, keo.');
+    return;
+  }
+
+  const [groupId, rawTen, quayStr, keoStr] = parts.map((p) => p.trim());
+  const quay = parseInt(quayStr, 10); // Chuyển đổi quay thành số nguyên
+  const keo = parseInt(keoStr, 10); // Chuyển đổi keo thành số nguyên
+
+  if (isNaN(quay) || isNaN(keo)) {
+    bot.sendMessage(chatId, 'Quay và Keo phải là số.');
+    return;
+  }
+
+  try {
+    const normalizedRawTen = normalizeName(rawTen); // Chuẩn hóa tên đầu vào
+
+    const currentDate = new Date().toLocaleDateString();
+
+    // Tìm bảng công với tên gần đúng (loại bỏ icon và emoji)
+    const bangCong = await BangCong2.findOne({
+      groupId,
+      date: currentDate,
+      ten: { $regex: normalizedRawTen, $options: 'i' }, // So khớp không phân biệt chữ hoa/thường
+    });
+
+    if (!bangCong) {
+      bot.sendMessage(chatId, `Không tìm thấy bảng công cho thành viên có tên gần đúng với "${rawTen}" trong nhóm ${groupId}.`);
+      return;
     }
+
+    // Cập nhật quay và keo
+    bangCong.quay = quay;
+    bangCong.keo = keo;
+
+    // Cập nhật tổng tiền
+    bangCong.tinh_tien = quay * 500 + keo * 1000;
+
+    await bangCong.save(); // Lưu thay đổi
+
+    bot.sendMessage(chatId, `Bảng công cho thành viên có tên gần đúng với "${rawTen}" trong nhóm ${groupId} đã được cập nhật.`);
+  } catch (error) {
+    console.error('Lỗi khi chỉnh sửa bảng công:', error);
+    bot.sendMessage(chatId, 'Đã xảy ra lỗi khi chỉnh sửa bảng công. Vui lòng thử lại.');
+  }
 });
 
-// Lệnh để reset dữ liệu bảng công từ MongoDB cho các ngày trước đó
-bot.onText(/Tính bc mới/i, async (msg) => {
-    const chatId = msg.chat.id;
-
-    try {
-        // Reply với thông điệp xác nhận
-        bot.sendMessage(chatId, "Dạ, Isadora đã ghi nhận. Bắt đầu tính tổng lương mới từ hôm nay ạ👌", { reply_to_message_id: msg.message_id });
-
-        // Lấy ngày hiện tại
-        const currentDate = new Date().toLocaleDateString();
-
-        // Xóa dữ liệu bảng công cho các ngày trước đó từ MongoDB
-        await BangCong.deleteMany({ date: { $lt: currentDate } });
-    } catch (error) {
-        console.error('Lỗi khi reset dữ liệu bảng công:', error);
-        bot.sendMessage(chatId, 'Đã xảy ra lỗi khi reset dữ liệu bảng công.');
-    }
-});
-
-
-// Lệnh để hiển thị bảng công của từng ngày trong cơ sở dữ liệu
-bot.onText(/(Chốt bc|Xem tổng bc)/i, async (msg) => {
-    const chatId = msg.chat.id;
-    const randomResponse = [
-        "Chào anh Hiếu Gà, Isadora đây ạ! 🙋‍♀️ Bảng công tổng đây ạ, anh xem có cần chỉnh sửa gì không ạ? 📋",
-        "Xin chào anh Hiếu Gà! Bảng công tổng nóng hổi vừa ra lò, anh xem và góp ý cho em nhé! ♨️",
-        "Isadora gửi bảng công tổng cho anh Hiếu Gà đây ạ! Nhớ kiểm tra kỹ và phản hồi cho em nha! 💌",
-        "Bảng công tổng đã đến tay anh Hiếu Gà rồi ạ! Anh xem có gì cần chỉnh sửa thì cứ báo em nhé! 📝",
-        "Isadora gửi bảng công tổng cho anh Hiếu Gà với tốc độ ánh sáng! ⚡️",
-        "Bảng công tổng đã được Isadora chuẩn bị chu đáo, anh Hiếu Gà chỉ việc kiểm tra và duyệt thôi ạ! ✅",
-        "Chúc anh và mọi người một ngày làm việc hiệu quả và suôn sẻ với bảng công tổng đầy đủ thông tin! 📈",
-        "Đây là bảng công tổng, cùng Isadora hoàn thành công việc một cách xuất sắc nào! 💪",
-        "Isadora luôn sẵn sàng hỗ trợ anh Hiếu Gà và mọi người mọi lúc mọi nơi! 🤗",
-        "Em xin gửi bảng công tổng, chúc cả team một ngày làm việc vui vẻ và gặt hái được nhiều thành công! 🎉"
-    ];
-
-    try {
-        let response = '';
-
-        // Lấy tất cả các ngày có dữ liệu bảng công từ MongoDB
-        const dates = await BangCong.distinct('date');
-
-        // Hiển thị bảng công của từng ngày
-        for (const date of dates) {
-            const bangCongs = await BangCong.find({ date });
-
-          // Định dạng ngày theo chuẩn số ngày/số tháng/số năm
-            const formattedDate = new Date(date).toLocaleDateString('vi-VN');
-
-            response += `Bảng Công Ngày ${formattedDate}:\n\n`;
-            response += 'TÊN👩‍🎤\t\tQUẨY💃\tCỘNG➕\tTIỀN💰\n';
-            bangCongs.forEach(bangCong => {
-                const formattedTien = bangCong.tinh_tien.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); // Định dạng số tiền thành dạng ngăn cách bằng dấu chấm
-            response += `${bangCong.ten}\t\t${bangCong.quay}q +\t${bangCong.keo}c\t${formattedTien}vnđ\n`;
-        });
-            response += '\n\n';
-        }
-
-        // Tính toán tổng bảng công và tổng tiền của tất cả thành viên từ tất cả các ngày
-        const totalBangCong = {};
-        let totalMoney = 0;
-        for (const date of dates) {
-            const bangCongs = await BangCong.find({ date });
-            bangCongs.forEach(bangCong => {
-                if (!totalBangCong[bangCong.userId]) {
-                    totalBangCong[bangCong.userId] = { ten: bangCong.ten, quay: 0, keo: 0, tinh_tien: 0 };
-                }
-                totalBangCong[bangCong.userId].quay += bangCong.quay;
-                totalBangCong[bangCong.userId].keo += bangCong.keo;
-                totalBangCong[bangCong.userId].tinh_tien += bangCong.tinh_tien;
-                totalMoney += bangCong.tinh_tien;
-            });
-        }
-
-        // Hiển thị tổng bảng công và tổng tiền của tất cả thành viên
-        response += '\nTổng Bảng Công Các Ngày:\n\n';
-        response += 'TÊN👩‍🎤\t\tQUẨY💃\tCỘNG➕\tTIỀN💰\n';
-        for (const userId in totalBangCong) {
-            const bangCong = totalBangCong[userId];
-            const formattedTien = bangCong.tinh_tien.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-            response += `${bangCong.ten}\t\t${bangCong.quay}q +\t${bangCong.keo}c\t${formattedTien}vnđ\n\n`;
-        }
-        const formattedTotalMoney = totalMoney.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); // Định dạng số tiền thành dạng ngăn cách bằng dấu chấm
-        response += `Tổng tiền của CTV: ${formattedTotalMoney}vnđ`;
-
-        // Gửi thông điệp chứa bảng công của từng ngày và tổng bảng công của tất cả thành viên
-        bot.sendMessage(chatId, response);
-    // Phản hồi cho quản trị viên với nội dung ngẫu nhiên
-        const randomIndex = Math.floor(Math.random() * randomResponse.length);
-        const replyMessage = randomResponse[randomIndex];
-        bot.sendMessage(chatId, replyMessage, { reply_to_message_id: msg.message_id });
-    } catch (error) {
-        console.error('Lỗi khi hiển thị bảng công:', error);
-        bot.sendMessage(chatId, 'Đã xảy ra lỗi khi hiển thị bảng công.');
-    }
-});
-
-
-// Lệnh để xử lý tin nhắn của quản trị viên để cập nhật dữ liệu bảng công từ tin nhắn của quản trị viên
+// Các xử lý khác (ví dụ: xử lý message)
 bot.on('message', async (msg) => {
-    const chatId = msg.chat.id;
-
-  // Kiểm tra vai trò của người gửi lệnh nếu là quản trị viên
-        const member = await bot.getChatMember(chatId, msg.from.id);
-        if (member.status === 'creator' || member.status === 'administrator') {
-
-    // Kiểm tra nếu tin nhắn không phải là reply và có chứa thông tin để cập nhật bảng công
-    if (!msg.reply_to_message && msg.text) {
-        const editedContent = msg.text.trim();
-        const userInfoRegex = /(.+),\s*(\d+)\s*q,\s*(\d+)\s*c/;
-        const matches = editedContent.match(userInfoRegex);
-
-        
-            if (matches) {
-                const fullName = matches[1].trim();
-                const quay = parseInt(matches[2]);
-                const keo = parseInt(matches[3]);
-
-                try {
-                    // Kiểm tra xem đã tồn tại bảng công cho thành viên có tên như trong tin nhắn chưa
-                    const currentDate = new Date().toLocaleDateString();
-                    let bangCong = await BangCong.findOne({ ten: fullName, date: currentDate });
-
-                    if (bangCong) {
-                        // Nếu đã tồn tại bảng công cho thành viên, cập nhật dữ liệu quay và kéo
-                        bangCong.quay = quay;
-                        bangCong.keo = keo;
-                        bangCong.tinh_tien = quay * 350 + keo * 1000;
-                        await bangCong.save();
-                    } else {
-                        // Nếu chưa tồn tại bảng công cho thành viên, tạo mới
-                        bangCong = await BangCong.create({
-                            ten: fullName,
-                            quay,
-                            keo,
-                            tinh_tien: quay * 350 + keo * 1000,
-                            date: currentDate
-                        });
-                    }
-
-                    // Phản hồi lại tin nhắn của quản trị viên
-                    bot.sendMessage(chatId, "Em đã cập nhật bảng công như anh yêu cầu");
-                } catch (error) {
-                    console.error('Lỗi khi cập nhật bảng công:', error);
-                    bot.sendMessage(chatId, 'Đã xảy ra lỗi khi cập nhật bảng công.');
-                }
-            }
-        } else {
-            
-   }
-    }
+  const chatId = msg.chat.id;
+  // Các đoạn mã khác như xử lý bảng công...
 });
-
