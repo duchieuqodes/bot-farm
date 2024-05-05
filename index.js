@@ -130,7 +130,6 @@ const groupNames = {
   "-1002143712364": "CURRENCY SHINING STAR GROUP",
   "-1002128975957": "CỘNG ĐỒNG KHỞI NGHIỆP",
   "-1002129896837": "KHÔNG NGỪNG ĐỔI MỚI",
-  "-1002050799248": "BE TRULY RICH", 
 };
 
 // Xử lý lệnh /bc để hiển thị bảng công cho tất cả các nhóm
@@ -142,7 +141,7 @@ bot.onText(/\/bc/, async (msg) => {
     // Lấy bảng công cho ngày hiện tại, loại trừ nhóm có chatId -1002050799248
     const bangCongs = await BangCong2.find({
       date: currentDate,
-      groupId: { $ne: -1002050799248 }, // Loại trừ nhóm này
+      groupId: { $ne: -1002108234982 }, // Loại trừ nhóm này
     });
     if (bangCongs.length === 0) {
       bot.sendMessage(chatId, "Không có bảng công nào cho ngày hôm nay.");
@@ -204,8 +203,11 @@ bot.onText(/\/tong/, async (msg) => {
     // Truy vấn để tổng hợp bảng công của các thành viên trong ngày hiện tại
     const aggregatedData = await BangCong2.aggregate([
       {
-        $match: { date: new Date(currentDate.toLocaleDateString()) }, // Lọc theo ngày hiện tại
+        $match: { date: new Date(currentDate.toLocaleDateString()),
+        groupId: { $ne: -1002108234982 }, // Loại trừ nhóm -1002050799248 // Lọc theo ngày hiện tại
       },
+      },
+
       {
         $group: {
           _id: {
@@ -253,7 +255,7 @@ bot.onText(/\/reset/, async (msg) => {
     // Xóa tất cả bảng công có ngày trước ngày hiện tại
     const result = await BangCong2.deleteMany({
       date: { $lt: currentDate },
-      groupId: { $ne: -1002050799248 }, // Loại trừ nhóm có chatId -1002050799248
+      groupId: { $ne: -1002108234982 }, // Loại trừ nhóm có chatId -1002050799248
     });
 
     bot.sendMessage(chatId, `Đã xóa ${result.deletedCount} bảng công của những ngày trước.`);
@@ -337,10 +339,10 @@ bot.onText(/\/bc2/, async (msg) => {
     const currentDate = new Date().toLocaleDateString();
 
     // Tìm tất cả bảng công cho nhóm -1002050799248
-    const bangCongs = await BangCong2.find({ groupId: -1002050799248 });
+    const bangCongs = await BangCong2.find({ groupId: -1002108234982 });
 
     if (bangCongs.length === 0) {
-      bot.sendMessage(chatId, "Không có bảng công nào cho nhóm -1002050799248.");
+      bot.sendMessage(chatId, "Không có bảng công nào cho nhóm Be truly rich");
       return;
     }
 
@@ -401,7 +403,7 @@ bot.onText(/\/reset2/, async (msg) => {
     // Xóa tất cả bảng công của những ngày trước cho nhóm có chatId -1002050799248
     const result = await BangCong2.deleteMany({
       date: { $lt: currentDate },
-      groupId: -1002050799248, // Chỉ xóa bảng công của nhóm này
+      groupId: -1002108234982, // Chỉ xóa bảng công của nhóm này
     });
 
     bot.sendMessage(chatId, `Đã xóa ${result.deletedCount} bảng công của những ngày trước từ nhóm -1002050799248.`);
