@@ -135,6 +135,7 @@ const groupNames = {
 // Xử lý lệnh /bc để hiển thị bảng công cho tất cả các nhóm
 bot.onText(/\/bc/, async (msg) => {
   const chatId = msg.chat.id;
+  const MESSAGE_LIMIT = 4000; // Giới hạn độ dài tin nhắn cho Telegram
 
   try {
     const currentDate = new Date().toLocaleDateString(); // Ngày hiện tại
@@ -143,6 +144,7 @@ bot.onText(/\/bc/, async (msg) => {
       date: currentDate,
       groupId: { $ne: -1002108234982 }, // Loại trừ nhóm này
     });
+
     if (bangCongs.length === 0) {
       bot.sendMessage(chatId, "Không có bảng công nào cho ngày hôm nay.");
       return;
@@ -158,6 +160,7 @@ bot.onText(/\/bc/, async (msg) => {
       groupedByGroupId[groupId].push(bangCong);
     });
 
+    // Chuỗi để giữ nội dung tin nhắn
     let response = '';
 
     // Tạo bảng công cho mỗi nhóm
@@ -168,29 +171,39 @@ bot.onText(/\/bc/, async (msg) => {
 
       const groupData = groupedByGroupId[groupId];
       const groupName = groupNames[groupId] || `Nhóm ${groupId}`; // Lấy tên nhóm từ bảng tra cứu
-
       response += `Bảng công nhóm ${groupName}:\n\n`;
       
       let totalGroupMoney = 0; // Biến để tính tổng số tiền của nhóm
 
       groupData.forEach((bangCong) => {
-        if (bangCong.tinh_tien !== undefined) { // Kiểm tra trước khi truy cập thuộc tính
+        if (bangCong.tinh_tien !== undefined) {
           const formattedTien = bangCong.tinh_tien.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
           response += `${bangCong.ten}\t\t${bangCong.quay}q +\t${bangCong.keo}c\t${formattedTien}vnđ\n`;
-          totalGroupMoney += bangCong.tinh_tien; // Tính tổng tiền
+          totalGroupMoney += bangCong.tinh_tien;
         }
       });
 
       const formattedTotal = totalGroupMoney.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-      response += `Tổng tiền: ${formattedTotal}vnđ\n\n`; // Hiển thị tổng tiền của nhóm
+      response += `Tổng tiền: ${formattedTotal}vnđ\n\n`;
+
+      // Kiểm tra độ dài tin nhắn để chia nhỏ nếu vượt quá giới hạn
+      if (response.length > MESSAGE_LIMIT) {
+        // Nếu vượt quá giới hạn, gửi tin nhắn và bắt đầu chuỗi mới
+        bot.sendMessage(chatId, response.trim());
+        response = ''; // Đặt lại chuỗi
+      }
     }
 
-    bot.sendMessage(chatId, response.trim());
+    // Gửi tin nhắn cuối cùng nếu còn phần còn lại
+    if (response.trim().length > 0) {
+      bot.sendMessage(chatId, response.trim());
+    }
   } catch (error) {
     console.error('Lỗi khi truy vấn dữ liệu từ MongoDB:', error);
     bot.sendMessage(chatId, 'Đã xảy ra lỗi khi truy vấn dữ liệu từ cơ sở dữ liệu.');
   }
 });
+
 
    
 
