@@ -127,9 +127,10 @@ const groupNames = {
   "-1002039100507": "CỘNG ĐỒNG NẮM BẮT CƠ HỘI",
   "-1002004082575": "KHÔNG NGỪNG PHÁT TRIỂN",
   "-1002123430691": "DẪN LỐI THÀNH CÔNG",
-  "-1002143712364": "CURRENCY SHINING STAR GROUP",
+  "-1002143712364": "TỔNG UY TÍN CHẤT LƯỢNG",
   "-1002128975957": "CỘNG ĐỒNG KHỞI NGHIỆP",
   "-1002129896837": "KHÔNG NGỪNG ĐỔI MỚI",
+  "-1002091101362": "CURRENCY SHINING STAR GROUP", 
 };
 
 // Xử lý lệnh /bc để hiển thị bảng công cho tất cả các nhóm
