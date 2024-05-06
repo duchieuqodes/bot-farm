@@ -136,7 +136,6 @@ const groupNames = {
 // Xử lý lệnh /bc để hiển thị bảng công cho tất cả các nhóm
 bot.onText(/\/bc/, async (msg) => {
   const chatId = msg.chat.id;
-  const MESSAGE_LIMIT = 4000; // Giới hạn độ dài tin nhắn cho Telegram
 
   try {
     const currentDate = new Date().toLocaleDateString(); // Ngày hiện tại
@@ -161,7 +160,6 @@ bot.onText(/\/bc/, async (msg) => {
       groupedByGroupId[groupId].push(bangCong);
     });
 
-    // Chuỗi để giữ nội dung tin nhắn
     let response = '';
 
     // Tạo bảng công cho mỗi nhóm
@@ -172,38 +170,42 @@ bot.onText(/\/bc/, async (msg) => {
 
       const groupData = groupedByGroupId[groupId];
       const groupName = groupNames[groupId] || `Nhóm ${groupId}`; // Lấy tên nhóm từ bảng tra cứu
+
       response += `Bảng công nhóm ${groupName}:\n\n`;
-      
+
       let totalGroupMoney = 0; // Biến để tính tổng số tiền của nhóm
 
       groupData.forEach((bangCong) => {
-        if (bangCong.tinh_tien !== undefined) {
+        if (bangCong.tinh_tien !== undefined) { // Kiểm tra trước khi truy cập thuộc tính
           const formattedTien = bangCong.tinh_tien.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
           response += `${bangCong.ten}\t\t${bangCong.quay}q +\t${bangCong.keo}c\t${formattedTien}vnđ\n`;
-          totalGroupMoney += bangCong.tinh_tien;
+          totalGroupMoney += bangCong.tinh_tien; // Tính tổng tiền
         }
       });
 
       const formattedTotal = totalGroupMoney.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-      response += `Tổng tiền: ${formattedTotal}vnđ\n\n`;
-
-      // Kiểm tra độ dài tin nhắn để chia nhỏ nếu vượt quá giới hạn
-      if (response.length > MESSAGE_LIMIT) {
-        // Nếu vượt quá giới hạn, gửi tin nhắn và bắt đầu chuỗi mới
-        bot.sendMessage(chatId, response.trim());
-        response = ''; // Đặt lại chuỗi
-      }
+      response += `Tổng tiền: ${formattedTotal}vnđ\n\n`; // Hiển thị tổng tiền của nhóm
     }
 
-    // Gửi tin nhắn cuối cùng nếu còn phần còn lại
-    if (response.trim().length > 0) {
-      bot.sendMessage(chatId, response.trim());
+    // Nếu response dài hơn 4000 ký tự, tách thành hai phần
+    if (response.length > 4000) {
+      const middle = Math.floor(response.length / 2);
+      const splitIndex = response.lastIndexOf('\n', middle); // Tìm dấu ngắt dòng gần giữa nhất để chia
+
+      const firstPart = response.substring(0, splitIndex).trim();
+      const secondPart = response.substring(splitIndex).trim();
+
+      bot.sendMessage(chatId, firstPart); // Gửi phần đầu tiên
+      bot.sendMessage(chatId, secondPart); // Gửi phần còn lại
+    } else {
+      bot.sendMessage(chatId, response.trim()); // Nếu không dài quá, gửi bình thường
     }
   } catch (error) {
     console.error('Lỗi khi truy vấn dữ liệu từ MongoDB:', error);
     bot.sendMessage(chatId, 'Đã xảy ra lỗi khi truy vấn dữ liệu từ cơ sở dữ liệu.');
   }
 });
+
 
 
    
