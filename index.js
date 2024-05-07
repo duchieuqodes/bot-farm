@@ -821,6 +821,6 @@ function getDailyWeatherForecast() {
   });
 }
 // Thiết lập cron để gọi hàm vào 7 giờ sáng theo múi giờ Việt Nam
-cron.schedule('0 0 0 0 7 * * *', getDailyWeatherForecast, {
+cron.schedule('0 7 * * *', getDailyWeatherForecast, {
   timezone: "Asia/Ho_Chi_Minh", // Đặt múi giờ cho Việt Nam
 });
