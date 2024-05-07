@@ -1,5 +1,6 @@
 const TelegramBot = require('node-telegram-bot-api');
 const mongoose = require('mongoose');
+const request = require('request');
 const cron = require('node-cron'); // Thư viện để thiết lập cron jobs
 const keep_alive = require('./keep_alive.js')
 
