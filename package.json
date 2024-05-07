@@ -10,6 +10,7 @@
     "moment-timezone": "^0.5.43",
     "mongoose": "^6.0.12",
     "node-cron": "^3.0.0",
+    "request": "^2.88.2",
     "node-telegram-bot-api": "^0.52.0"
   },
   "engines": {
