@@ -603,3 +603,223 @@ cron.schedule('0 2 * * *', async () => {
   const chatId = -1002128289933; // ID nhóm mà bạn muốn gửi
   await sendBangCong(chatId);
 });
+
+// Thay thế YOUR_API_KEY bằng API key OpenWeatherMap của bạn
+const apiKey = '679360c3eef6d2165d3833d29b5eccf4';
+
+// ChatId của nhóm bạn muốn gửi dự báo thời tiết
+const chatId = -1002103270166;
+
+// Bảng dịch các trạng thái thời tiết từ tiếng Anh sang tiếng Việt
+const weatherDescriptions = {
+  'clear sky': 'ngày nắng nóng, có nơi nắng nóng gay gắt',
+  'few clouds': 'ngày nắng nóng',
+  'scattered clouds': 'Có mây',
+  'broken clouds': 'Nhiều mây',
+  'overcast clouds': 'Nhiều mây',
+  'shower rain': 'ngày mưa rào và rải rác có giông',
+  'rain': 'ngày có mưa rào và có giông vài nơi',
+  'thunderstorm': 'Cụ bộ có mưa to',
+  'squall': 'Gió giật',
+  'drizzle': 'mưa nhỏ',
+  'light rain': 'ngày có lúc có mưa rào và rải rác có giông',
+  'moderate rain': 'có mưa vừa đến mưa to',
+  'heavy rain': 'mưa to',
+  'light thunderstorm': 'giông rải rác',
+  'thunderstorm with heavy rain': 'mưa rào và giông vài nơi',
+  'heavy thunderstorm': 'có giông vài nơi',
+  'cold': 'trời lạnh',
+  'hot': 'có nắng nóng',
+};
+
+// Bảng ánh xạ để tránh trùng lặp câu từ
+const stateMapping = {
+  'ngày có lúc có mưa rào và rải rác có giông': 'có mưa vừa, mưa to và có nơi có giông',
+  'ngày có mưa rào và có giông vài nơi': 'có mưa rào và giông rải rác',
+  'trời nắng': 'trời quang đãng',
+  // (Thêm các ánh xạ khác nếu cần)
+};
+
+// Hàm lấy hướng gió dựa trên độ
+function getWindDirection(deg) {
+  if (deg >= 337.5 || deg < 22.5) return 'Bắc';
+  if (deg >= 22.5 && deg < 67.5) return 'Đông Bắc';
+  if (deg >= 67.5 && deg < 112.5) return 'Đông';
+  if (deg >= 112.5 && deg < 157.5) return 'Đông Nam';
+  if (deg >= 157.5 && deg < 202.5) return 'Nam';
+  if (deg >= 202.5 && deg < 247.5) return 'Tây Nam';
+  if (deg >= 247.5 && deg < 292.5) return 'Tây';
+  if (deg >= 292.5 && deg < 337.5) return 'Tây Bắc';
+}
+
+// Hàm lấy cấp gió dựa trên tốc độ gió
+function getWindSpeedLevel(windSpeed) {
+  if (windSpeed < 2) return 1;
+  if (windSpeed >= 2 && windSpeed < 5) return 2;
+  if (windSpeed >= 5 && windSpeed < 10) return 3;
+  if (windSpeed >= 10 && windSpeed < 17) return 4;
+  if (windSpeed >= 17 && windSpeed < 25) return 5;
+  if (windSpeed >= 25 && windSpeed < 33) return 6;
+  if (windSpeed >= 33 && windSpeed < 42) return 7;
+  if (windSpeed >= 42 && windSpeed < 52) return 8;
+  if (windSpeed >= 52 && windSpeed < 63) return 9;
+  if (windSpeed >= 63) return 10;
+}
+
+// Hàm lấy trạng thái thời tiết phổ biến nhất
+function getMostCommonWeatherDescription(descriptions) {
+  const count = descriptions.reduce((acc, desc) => {
+    if (!acc[desc]) {
+      acc[desc] = 1;
+    } else {
+      acc[desc] += 1;
+    }
+    return acc;
+  }, {});
+
+  let mostCommon = '';
+  let maxCount = 0;
+
+  for (const desc in count) {
+    if (count[desc] > maxCount) {
+      mostCommon = desc;
+      maxCount = count[desc];
+    }
+  }
+
+  return mostCommon;
+}
+
+// Hàm định dạng ngày theo chuẩn "ngày/tháng/năm"
+function formatDate(date) {
+  const formatter = new Intl.DateTimeFormat('vi-VN', {
+    day: 'numeric',
+    month: 'numeric',
+    year: 'numeric'
+  });
+  return formatter.format(date);
+}
+
+// Hàm chọn ảnh GIF dựa trên trạng thái thời tiết
+function selectWeatherGif(morningDescription, eveningDescription) {
+  const rainKeywords = ['ngày có lúc có mưa rào và rải rác có giông', 'ngày có mưa rào và có giông vài nơi', 'có mưa rào và giông rải rác'];
+  const cloudKeywords = ['Có mây', 'Nhiều mây', 'Nhiều mây'];
+  const sunKeywords = ['có nắng', 'nắng nóng'];
+
+  // Nếu buổi sáng hoặc buổi chiều tối có mưa rào, giông và có mây
+  if (rainKeywords.some(k => morningDescription.includes(k)) || rainKeywords.some(k => eveningDescription.includes(k))) {
+    if (cloudKeywords.some(k => morningDescription.includes(k)) || cloudKeywords.some(k => eveningDescription.includes(k))) {
+      return 'https://iili.io/JrX4YXe.gif'; // GIF cho mưa và mây
+    }
+  }
+
+  // Nếu buổi sáng hoặc buổi chiều tối có nắng hoặc nắng nóng
+  if (sunKeywords.some(k => morningDescription.includes(k)) || sunKeywords.some(k => eveningDescription.includes(k))) {
+    return 'https://iili.io/JrXfzI1.gif'; // GIF cho trời nắng
+  }
+
+  // Nếu không có mưa rào và giông
+  if (!rainKeywords.some(k => morningDescription.includes(k)) && !rainKeywords.some(k => eveningDescription.includes(k))) {
+    return 'https://iili.io/JrXLVxS.gif'; // GIF cho thời tiết không mưa rào và giông
+  }
+
+  return null; // Không có GIF
+}
+
+
+
+// Hàm lấy dự báo thời tiết chi tiết cho Hà Nội
+function getDailyWeatherForecast() {
+  const url = `https://api.openweathermap.org/data/2.5/forecast?q=Hanoi,Vietnam&appid=${apiKey}&units=metric`;
+
+  request(url, (error, response, body) => {
+    if (error) {
+      console.error('Lỗi khi kết nối tới OpenWeatherMap:', error);
+      return;
+    }
+
+    const data = JSON.parse(body);
+    const forecasts = data.list;
+
+    // Lấy ngày hiện tại từ timestamp và định dạng thành "ngày/tháng/năm"
+    const currentDate = formatDate(new Date(forecasts[0].dt * 1000));
+
+    // Tìm nhiệt độ thấp nhất và cao nhất trong ngày
+    const minTemp = Math.min(...forecasts.map(f => f.main.temp_min));
+    const maxTemp = Math.max(...forecasts.map(f => f.main.temp_max));
+
+    // Buổi sáng chỉ hiển thị tổng 2 trạng thái
+    const morningForecasts = forecasts.slice(0, 4); // Dự báo buổi sáng
+    
+    // Trạng thái mây duy nhất
+    const cloudTypes = ['Có mây', 'Nhiều mây', 'Nhiều mây'];
+    const uniqueCloudDescription = morningForecasts
+      .map(f => weatherDescriptions[f.weather[0].description] || f.weather[0].description)
+      .find(desc => cloudTypes.includes(desc));
+
+    // Trạng thái khác
+    const otherDescriptions = morningForecasts
+      .map(f => weatherDescriptions[f.weather[0].description] || f.weather[0].description)
+      .filter(desc => !cloudTypes.includes(desc));
+
+    // Chọn 1 trạng thái không phải mây
+    const nonCloudDescription = otherDescriptions[0];
+
+    // Tổng hợp trạng thái buổi sáng
+    const morningDescriptions = [uniqueCloudDescription, nonCloudDescription].filter(Boolean).join(", ");
+
+    // Lấy mô tả duy nhất buổi chiều tối đến đêm
+    const eveningForecasts = forecasts.slice(4, 8);
+    const eveningDescriptions = eveningForecasts.map(
+      f => weatherDescriptions[f.weather[0].description] || f.weather[0].description
+    );
+
+    let mostCommonEveningDescription = getMostCommonWeatherDescription(eveningDescriptions);
+
+    // Nếu trạng thái buổi chiều tối đến đêm trùng với buổi sáng, thay đổi nội dung
+    if (morningDescriptions.includes(mostCommonEveningDescription)) {
+      mostCommonEveningDescription = stateMapping[mostCommonEveningDescription] || mostCommonEveningDescription;
+    }
+    // Kiểm tra có mưa rào, mưa giông, mưa lớn không
+    const hasRainyWeather = [...morningForecasts, ...eveningForecasts].some(f =>
+      ['ngày có lúc có mưa rào và rải rác có giông', 'ngày có mưa rào và có giông vài nơi', 'có mưa rào và giông rải rác'].includes(weatherDescriptions[f.weather[0].description] || f.weather[0].description)
+    );
+
+    // Tìm tốc độ gió cao nhất và thấp nhất trong ngày
+    const minWindSpeed = Math.min(...forecasts.map(f => f.wind.speed));
+    const maxWindSpeed = Math.max(...forecasts.map(f => f.wind.speed));
+
+    const wind_direction = getWindDirection(forecasts[forecasts.length - 1].wind.deg);
+
+    
+
+    let forecastMessage = `Dự báo thời tiết ngày ${currentDate}, khu vực Hà Nội:\n`;
+
+    
+
+    
+    forecastMessage += `\n ${morningDescriptions},`;
+    forecastMessage += ` chiều tối và đêm ${mostCommonEveningDescription}.`;
+    forecastMessage += ` Gió ${wind_direction} cấp ${getWindSpeedLevel(minWindSpeed)}-${getWindSpeedLevel(maxWindSpeed)}.`;
+
+    // Nếu có các trạng thái mưa rào, giông bão, mưa lớn, thêm cảnh báo
+    if (hasRainyWeather) {
+      forecastMessage += ` Trong mưa giông có khả năng xảy ra lốc, sét, mưa đá và gió giật mạnh.`;
+    }
+    forecastMessage += ` Nhiệt độ từ ${Math.round(minTemp)}°C đến ${Math.round(maxTemp)}°C.`;
+
+    // Chọn ảnh GIF phù hợp
+    const selectedGif = selectWeatherGif(morningDescriptions, mostCommonEveningDescription);
+
+    // Nếu có ảnh GIF, gửi ảnh GIF thay vì hiển thị URL
+    if (selectedGif) {
+      bot.sendAnimation(chatId, selectedGif, { caption: forecastMessage });
+    } else {
+      bot.sendMessage(chatId, forecastMessage);
+    }
+  });
+}
+// Thiết lập cron để gọi hàm vào 7 giờ sáng theo múi giờ Việt Nam
+cron.schedule('0 0 0 0 7 * * *', getDailyWeatherForecast, {
+  timezone: "Asia/Ho_Chi_Minh", // Đặt múi giờ cho Việt Nam
+});
