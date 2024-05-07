@@ -100,7 +100,7 @@ bot.on('message', async (msg) => {
         if (msg.reply_to_message) {
           const replyContent = msg.reply_to_message.text || msg.reply_to_message.caption;
           if (replyContent) {
-            replyText += ` với nội dung: "${replyContent}"`;
+            replyText += ` với "${replyContent}"`;
           }
         }
 
