@@ -2,6 +2,7 @@ const TelegramBot = require('node-telegram-bot-api');
 const mongoose = require('mongoose');
 const cron = require('node-cron'); // Thư viện để thiết lập cron jobs
 const keep_alive = require('./keep_alive.js')
+const { DateTime } = require('luxon');
 
 // Kết nối tới MongoDB
 mongoose.connect(
@@ -440,4 +441,172 @@ bot.onText(/\/reset2/, async (msg) => {
     console.error('Lỗi khi xóa bảng công:', error);
     bot.sendMessage(chatId, 'Đã xảy ra lỗi khi xóa bảng công. Vui lòng thử lại.');
   }
+});
+
+// Xử lý lệnh /bchomqua để hiển thị bảng công cho tất cả các nhóm
+bot.onText(/\/bchomqua/, async (msg) => {
+  const chatId = msg.chat.id;
+
+  try {
+    // Tính ngày hôm qua
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const formattedYesterday = yesterday.toLocaleDateString(); // Định dạng ngày để dùng trong truy vấn
+
+    // Lấy bảng công của ngày hôm qua, loại trừ nhóm có chatId -1002108234982
+    const bangCongs = await BangCong2.find({
+      date: formattedYesterday,
+      groupId: { $ne: -1002108234982 }, // Loại trừ nhóm này
+    });
+
+    if (bangCongs.length === 0) {
+      bot.sendMessage(chatId, `Không có bảng công nào cho ngày ${formattedYesterday}.`);
+      return;
+    }
+
+    // Tạo bảng công phân loại theo ID nhóm
+    const groupedByGroupId = {};
+    bangCongs.forEach((bangCong) => {
+      const groupId = bangCong.groupId ? bangCong.groupId.toString() : '';
+      if (!groupedByGroupId[groupId]) {
+        groupedByGroupId[groupId] = [];
+      }
+      groupedByGroupId[groupId].push(bangCong);
+    });
+
+    let response = '';
+
+    // Tạo bảng công cho mỗi nhóm
+    for (const groupId in groupedByGroupId) {
+      if (!groupId) {
+        continue;
+      }
+
+      const groupData = groupedByGroupId[groupId];
+      const groupName = groupNames[groupId] || `Nhóm ${groupId}`;
+
+      response += `Bảng công nhóm ${groupName} (${formattedYesterday}):\n\n`;
+
+      let totalGroupMoney = 0;
+
+      groupData.forEach((bangCong) => {
+        if (bangCong.tinh_tien !== undefined) {
+          const formattedTien = bangCong.tinh_tien.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+          response += `${bangCong.ten}\t\t${bangCong.quay}q +\t${bangCong.keo}c\t${formattedTien}vnđ\n`;
+          totalGroupMoney += bangCong.tinh_tien;
+        }
+      });
+
+      const formattedTotal = totalGroupMoney.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      response += `Tổng tiền: ${formattedTotal}vnđ\n\n`;
+    }
+
+    // Kiểm tra độ dài response và gửi tin nhắn
+    if (response.length > 4000) {
+      const middle = Math.floor(response.length / 2);
+      const splitIndex = response.lastIndexOf('\n', middle);
+
+      const firstPart = response.substring(0, splitIndex).trim();
+      const secondPart = response.substring(splitIndex).trim();
+
+      bot.sendMessage(chatId, firstPart);
+      bot.sendMessage(chatId, secondPart);
+    } else {
+      bot.sendMessage(chatId, response.trim());
+    }
+  } catch (error) {
+    console.error('Lỗi khi truy vấn dữ liệu từ MongoDB:', error);
+    bot.sendMessage(chatId, 'Đã xảy ra lỗi khi truy vấn dữ liệu từ cơ sở dữ liệu.');
+  }
+});
+
+
+const timezoneOffset = 7 * 60 * 60 * 1000; // Múi giờ Việt Nam (UTC +7)
+
+// Hàm gửi bảng công
+const sendBangCong = async (chatId) => {
+  const currentDate = new Date(new Date().getTime() + timezoneOffset).toLocaleDateString();
+  const maxRetries = 10; // Số lần thử tối đa
+  let retries = 0;
+  let sent = false;
+
+  while (!sent && retries < maxRetries) {
+    try {
+      const bangCongs = await BangCong2.find({
+        date: currentDate,
+        groupId: { $ne: -1002108234982 }, // Loại trừ nhóm này
+      });
+
+      if (bangCongs.length === 0) {
+        bot.sendMessage(chatId, "Không có bảng công nào cho ngày hôm nay.");
+        return;
+      }
+
+      const groupedByGroupId = {};
+      bangCongs.forEach((bangCong) => {
+        const groupId = bangCong.groupId ? bangCong.groupId.toString() : ''; // Kiểm tra nếu groupId không undefined
+        if (!groupedByGroupId[groupId]) {
+          groupedByGroupId[groupId] = [];
+        }
+        groupedByGroupId[groupId].push(bangCong);
+      });
+
+      let response = '';
+
+      for (const groupId in groupedByGroupId) {
+        if (!groupId) {
+          continue;
+        }
+
+        const groupData = groupedByGroupId[groupId];
+        const groupName = groupNames[groupId] || `Nhóm ${groupId}`; // Lấy tên nhóm từ bảng tra cứu
+
+        response += `Bảng công nhóm ${groupName}:\n\n`;
+
+        let totalGroupMoney = 0; // Biến để tính tổng số tiền của nhóm
+
+        groupData.forEach((bangCong) => {
+          if (bangCong.tinh_tien !== undefined) { // Kiểm tra trước khi truy cập thuộc tính
+            const formattedTien = bangCong.tinh_tien.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            response += `${bangCong.ten}\t\t${bangCong.quay}q +\t${bangCong.keo}c\t${formattedTien}vnđ\n`;
+            totalGroupMoney += bangCong.tinh_tien;
+          }
+        });
+
+        const formattedTotal = totalGroupMoney.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        response += `Tổng tiền: ${formattedTotal}vnđ\n\n`;
+      }
+
+      if (response.length > 4000) {
+        const middle = Math.floor(response.length / 2);
+        const splitIndex = response.lastIndexOf('\n', middle);
+
+        const firstPart = response.substring(0, splitIndex).trim();
+        const secondPart = response.substring(splitIndex).trim();
+
+        bot.sendMessage(chatId, firstPart);
+        bot.sendMessage(chatId, secondPart);
+      } else {
+        bot.sendMessage(chatId, response.trim());
+      }
+
+      sent = true; // Nếu gửi thành công, thoát vòng lặp
+    } catch (error) {
+      console.error('Lỗi khi truy vấn dữ liệu từ MongoDB:', error);
+      retries++; // Tăng số lần thử lại
+      if (retries < maxRetries) {
+        await new Promise((resolve) => setTimeout(resolve, 30 * 60 * 1000)); // Chờ 30 phút trước khi thử lại
+      }
+    }
+  }
+
+  if (!sent) {
+    bot.sendMessage(chatId, 'Không thể gửi bảng công trước 7h sáng.');
+  }
+};
+
+// Thiết lập cron job gửi vào lúc 2h sáng hàng ngày (giờ Việt Nam)
+cron.schedule('0 2 * * *', async () => {
+  const chatId = -1002128289933; // ID nhóm mà bạn muốn gửi
+  await sendBangCong(chatId);
 });
