@@ -91,12 +91,22 @@ bot.on('message', async (msg) => {
         });
       }
 
-      bot.sendMessage(chatId, 'Bài nộp đã được ghi nhận đang chờ kiểm tra ❤🥳', { reply_to_message_id: msg.message_id }).then(async () => {
         const currentDate = new Date().toLocaleDateString();
         const firstName = msg.from.first_name;
         const lastName = msg.from.last_name;
         const fullName = lastName ? `${firstName} ${lastName}` : firstName;
+        let replyText = `Bài nộp của ${fullName} đã được ghi nhận`;
 
+        if (msg.reply_to_message) {
+          const replyContent = msg.reply_to_message.text || msg.reply_to_message.caption;
+          if (replyContent) {
+            replyText += ` với nội dung: "${replyContent}"`;
+          }
+        }
+
+        replyText += ", đang chờ kiểm tra ❤🥳";
+
+        bot.sendMessage(chatId, replyText, { reply_to_message_id: msg.message_id }).then(async () => {
         let bangCong = await BangCong2.findOne({ userId, groupId, date: currentDate });
 
         if (!bangCong) {
