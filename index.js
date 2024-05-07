@@ -355,7 +355,7 @@ bot.on('message', async (msg) => {
 });
 
 // Lệnh /bc2 để xem bảng công từng ngày của nhóm -1002050799248 và bảng tổng số tiền của từng thành viên trong bảng công các ngày
-bot.onText(/\/bc2/, async (msg) => {
+bot.onText(/\/bangcong2/, async (msg) => {
   const chatId = msg.chat.id;
 
   try {
@@ -417,7 +417,7 @@ bot.onText(/\/bc2/, async (msg) => {
 });
 
 // Lệnh /reset2 để xóa bảng công của những ngày trước từ nhóm có chatId -1002050799248
-bot.onText(/\/reset2/, async (msg) => {
+bot.onText(/\/xoa/, async (msg) => {
   const chatId = msg.chat.id;
 
   try {
@@ -437,7 +437,7 @@ bot.onText(/\/reset2/, async (msg) => {
 });
 
 // Xử lý lệnh /bchomqua để hiển thị bảng công cho tất cả các nhóm
-bot.onText(/\/bchomqua/, async (msg) => {
+bot.onText(/\/homqua/, async (msg) => {
   const chatId = msg.chat.id;
 
   try {
