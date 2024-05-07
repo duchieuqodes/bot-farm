@@ -30,15 +30,18 @@ const bot = new TelegramBot(token, { polling: true });
 // Chuỗi cấmm
 const bannedStringsRegex = /(ca\s?1|ca1|ca\s?2|Ca\s?2|Ca\s?1|Ca1|Ca\s?2|Ca2|C1|C2|c\s?1|c\s?2|C\s?1|C\s?2)\s*/gi;
 
-// Thiết lập cron job để xóa dữ liệu bảng công của ngày hôm trước
+// Thiết lập cron job để xóa dữ liệu bảng công của 2 ngày trước, ngoại trừ bảng công có groupId -1002108234982
 cron.schedule('0 0 * * *', async () => {
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const formattedYesterday = new Date(yesterday.toLocaleDateString());
+  const twoDaysAgo = new Date();
+  twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+  const formattedTwoDaysAgo = new Date(twoDaysAgo.toLocaleDateString());
 
   try {
-    const result = await BangCong2.deleteMany({ date: formattedYesterday });
-    console.log(`Đã xóa ${result.deletedCount} bảng công của ngày ${formattedYesterday.toLocaleDateString()}`);
+    const result = await BangCong2.deleteMany({
+      date: formattedTwoDaysAgo,
+      groupId: { $ne: -1002108234982 }, // Loại trừ các bảng công với groupId này
+    });
+    console.log(`Đã xóa ${result.deletedCount} bảng công của ngày ${formattedTwoDaysAgo.toLocaleDateString()}`);
   } catch (error) {
     console.error("Lỗi khi xóa dữ liệu từ MongoDB:", error);
   }
