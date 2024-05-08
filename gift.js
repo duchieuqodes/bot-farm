@@ -36,7 +36,7 @@ const morningGreetings = [
 // Đặt lại trạng thái hàng ngày
 function resetDailyGiftStatus(DailyGiftStatus) {
   cron.schedule(
-    '29 6 * * *',
+    '28 6 * * *',
     async () => {
       await DailyGiftStatus.updateMany(
         {}, 
@@ -51,7 +51,7 @@ function resetDailyGiftStatus(DailyGiftStatus) {
 
 // Gửi tin nhắn chào buổi sáng
 function sendMorningMessage(bot) {
-  const chatId = -1002128289933; // ID nhóm cần gửi tin nhắn
+  const chatId = -1002103270166; // ID nhóm cần gửi tin nhắn
 
   cron.schedule(
     '30 6 * * *',
