@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const request = require('request');
 const cron = require('node-cron'); // Thư viện để thiết lập cron jobs
 const keep_alive = require('./keep_alive.js')
+const { resetDailyGiftStatus, sendMorningMessage, handleGiftClaim } = require('./gift');
 
 // Kết nối tới MongoDB
 mongoose.connect(
@@ -20,10 +21,21 @@ const BangCongSchema = new mongoose.Schema({
   quay: Number,
   keo: Number,
   tinh_tien: Number,
+  giftWon: { type: Boolean, default: false },
+  prizeAmount: { type: Number, default: 0 },
 });
 
 // Tạo model từ schema
 const BangCong2 = mongoose.model('BangCong2', BangCongSchema);
+
+// Định nghĩa schema cho trạng thái hàng ngày
+const DailyGiftStatusSchema = new mongoose.Schema({
+  date: String,
+  dailyGiftClaims: [Number], // Danh sách các user đã nhận quà
+  giftWonToday: { type: Boolean, default: false },
+});
+
+const DailyGiftStatus = mongoose.model('DailyGiftStatus', DailyGiftStatusSchema);
 
 const token = '7150645082:AAGUNk7BrBPYJqv085nINEGx7p5tCE9WcK0';
 const bot = new TelegramBot(token, { polling: true });
@@ -823,4 +835,13 @@ function getDailyWeatherForecast() {
 // Thiết lập cron để gọi hàm vào 7 giờ sáng theo múi giờ Việt Nam
 cron.schedule('0 6 * * *', getDailyWeatherForecast, {
   timezone: "Asia/Ho_Chi_Minh", // Đặt múi giờ cho Việt Nam
+});
+
+// Thiết lập các cron jobs
+resetDailyGiftStatus(DailyGiftStatus); // Truyền mô hình DailyGiftStatus
+sendMorningMessage(bot);
+
+// Xử lý callback từ Telegram
+bot.on('callback_query', async (callbackQuery) => {
+  await handleGiftClaim(bot, callbackQuery, BangCong2, DailyGiftStatus); // Truyền mô hình DailyGiftStatus
 });
