@@ -2,17 +2,41 @@ const cron = require('node-cron');
 
 // Danh sách các câu chào buổi sáng ngẫu nhiên
 const morningGreetings = [
-  "Chào buổi sáng! Ai muốn nhận quà?",
-  "Buổi sáng tốt lành! Ai sẽ là người may mắn hôm nay?",
-  "Chúc buổi sáng vui vẻ! Ai muốn thử vận may?",
-  "Sáng nay thật tuyệt! Ai muốn nhận quà?",
+  "Chúc buổi sáng vui vẻ! Ai muốn thử vận may nào",
+  "Sáng nay thật tuyệt! Ai muốn nhận quà không",
   "Chúc mọi người một buổi sáng tươi sáng! Ai sẽ nhận quà hôm nay?",
+  "Chào buổi sáng những quẩy thủ! Nắng đã lên, gió đã thổi, ai còn chăn ấm nệm êm thì mau thức dậy nào!",
+"Bùm chíu bùm chíu! Buổi sáng hân hoan đã đến rồi! Lắc lư nào các chiến binh, quẩy tung nóc nhà thôi!",
+"Cà phê sữa đá, bánh mì nóng hổi! Buổi sáng tuyệt vời thế này không quẩy thì quẩy lúc nào?",
+"Tí tách tí tách, chuông báo thức reo vang! Nhanh chóng nào quẩy team, ngày mới hứa hẹn nhiều niềm vui đây!",
+"Hôm nay trời xanh mây trắng, chim hót líu lo. Thích hợp vô cùng để quẩy hết mình nào các chiến binh!",
+"Đã đến giờ nạp năng lượng cho ngày mới! Quẩy tung nóc nhà với những ly trà sữa mát lạnh nào!",
+"Bỏ qua mọi muộn phiền, chào đón ngày mới với nụ cười rạng rỡ! Cùng quẩy lên nào các quẩy thủ ơi!",
+"Sáng nay ai dậy sớm nhất? Nhận ngay phần quà đặc biệt từ quẩy team nhé!",
+"Cùng nhau quẩy hết mình, biến ngày mới thành ngày tuyệt vời nhất nào!",
+"Lắc lư theo tiếng nhạc, phiêu theo điệu nhảy. Buổi sáng quẩy hăng say, cả ngày vui vẻ!",
+"Bánh mì nóng hổi, giòn tan ai mua không? Nhanh tay lên nào, quẩy team đợi hụt hẫng lắm đây!",
+"Cà phê sữa đá, trà đá mát lạnh ai gọi? Sáng nay quẩy hăng say nào các chiến binh!",
+"Mở TikTok lên nào, bao nhiêu clip hài hước đang chờ chúng ta quẩy tưng bừng đây!",
+"Sáng dậy chán cơm rồi thì sao? Bún chả, phở bò, bánh mì kẹp thịt, ai thèm gì quẩy team gọi ship ngay!",
+"Trời ơi, trúng thưởng rồi! Hôm nay ai may mắn nhất nhỉ? quẩy team lì xì cho người may mắn nào!",
+"Sáng nay ai dậy sớm nhất? Nhận ngay phần quà bí mật từ quẩy team nhé!",
+"Chào ngày mới, Cùng nhau quẩy nào! Hôm nay quẩy team quyết tâm phá đảo mọi thử thách!",
+"Team ơi sáng đi học cẩn thận kẻo đụng độ crush đi học chung nhé! Mau quẩy cho đẹp trai xinh gái nào!",
+"Chào buổi sáng, lát đi đâu đừng quên đeo khẩu trang khi ra ngoài nhé! Quẩy team chung tay bảo vệ sức khỏe cộng đồng!",
+"Sáng nay ai quẩy hăng say nhất? Tối nay được quẩy team đãi kem nhé!",
+"Sáng nay trời đẹp thế này, không quẩy thì phí cả một ngày! Ra ngoài hít thở không khí nào!",
+"Nhạc nào, playlist nào? Cùng nhau quẩy tung nóc nhà với những giai điệu sôi động nào!",
+"Ai còn ngủ nướng? Dậy mau quẩy nào! Hôm nay có bao nhiêu niềm vui đang chờ đón!",
+"Buổi sáng vui vẻ, sáng nay muốn quẩy kiểu gì? Đi phượt, đi cafe, hay tụ tập chơi game? Chia sẻ với cả nhóm nào!",
+"Chào ngày mới, cùng nhau quẩy hết mình, xả stress sau những giờ học tập và làm việc căng thẳng!",
+"Chúc một buổi sáng quẩy vui vẻ, tinh thần sẽ phấn chấn, học tập và làm việc cũng hiệu quả hơn!",
 ];
 
 // Đặt lại trạng thái hàng ngày
 function resetDailyGiftStatus(DailyGiftStatus) {
   cron.schedule(
-    '49 0 * * *',
+    '29 6 * * *',
     async () => {
       await DailyGiftStatus.updateMany(
         {}, 
@@ -30,7 +54,7 @@ function sendMorningMessage(bot) {
   const chatId = -1002128289933; // ID nhóm cần gửi tin nhắn
 
   cron.schedule(
-    '50 0 * * *',
+    '30 6 * * *',
     () => {
       const inlineKeyboard = {
         inline_keyboard: [
@@ -95,7 +119,7 @@ async function handleGiftClaim(bot, callbackQuery, BangCong2, DailyGiftStatus) {
   // Cập nhật trạng thái trong bộ nhớ và MongoDB
   dailyStatus.dailyGiftClaims.push(userId);
 
-  const isWinner = Math.random() < 0.20;
+  const isWinner = Math.random() < 0.25;
 
   if (isWinner) {
     dailyStatus.giftWonToday = true;
@@ -108,7 +132,7 @@ const prize = Math.round(randomAmount / 10) * 10;
 
 
     bot.answerCallbackQuery(callbackQuery.id, {
-      text: `Chúc mừng! Bạn đã trúng lộc ${prize}vnđ 🎉`,
+      text: `Chúc mừng! Bạn đã trúng ${prize}vnđ lộc 🎉`,
       show_alert: true,
     });
 
