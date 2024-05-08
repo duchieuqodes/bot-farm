@@ -515,7 +515,7 @@ bot.onText(/\/homqua/, async (msg) => {
 });
 
 
-const timezoneOffset = 7 * 60 * 60 * 1000; // Múi giờ Việt Nam (UTC +7)
+const timezoneOffset = 1 * 60 * 60 * 1000; // Múi giờ Việt Nam (UTC +7)
 
 // Hàm gửi bảng công
 const sendBangCong = async (chatId) => {
@@ -600,7 +600,7 @@ const sendBangCong = async (chatId) => {
 };
 
 // Thiết lập cron job gửi vào lúc 2h sáng hàng ngày (giờ Việt Nam)
-cron.schedule('0 2 * * *', async () => {
+cron.schedule('0 0 * * *', async () => {
   const chatId = -1002128289933; // ID nhóm mà bạn muốn gửi
   await sendBangCong(chatId);
 });
@@ -821,6 +821,6 @@ function getDailyWeatherForecast() {
   });
 }
 // Thiết lập cron để gọi hàm vào 7 giờ sáng theo múi giờ Việt Nam
-cron.schedule('0 7 * * *', getDailyWeatherForecast, {
+cron.schedule('0 6 * * *', getDailyWeatherForecast, {
   timezone: "Asia/Ho_Chi_Minh", // Đặt múi giờ cho Việt Nam
 });
