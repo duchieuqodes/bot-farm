@@ -12,7 +12,7 @@ const morningGreetings = [
 // Đặt lại trạng thái hàng ngày
 function resetDailyGiftStatus(DailyGiftStatus) {
   cron.schedule(
-    '29 6 * * *',
+    '49 0 * * *',
     async () => {
       await DailyGiftStatus.updateMany(
         {}, 
@@ -30,7 +30,7 @@ function sendMorningMessage(bot) {
   const chatId = -1002128289933; // ID nhóm cần gửi tin nhắn
 
   cron.schedule(
-    '30 6 * * *',
+    '50 0 * * *',
     () => {
       const inlineKeyboard = {
         inline_keyboard: [
