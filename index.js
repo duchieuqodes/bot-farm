@@ -613,21 +613,21 @@ const chatId = -1002103270166;
 
 // Bảng dịch các trạng thái thời tiết từ tiếng Anh sang tiếng Việt
 const weatherDescriptions = {
-  'clear sky': 'ngày nắng nóng, có nơi nắng nóng gay gắt',
-  'few clouds': 'ngày nắng nóng',
-  'scattered clouds': 'Có mây',
-  'broken clouds': 'Nhiều mây',
-  'overcast clouds': 'Nhiều mây',
-  'shower rain': 'ngày mưa rào và rải rác có giông',
-  'rain': 'ngày có mưa rào và có giông vài nơi',
+  'clear sky': 'ngày nắng nóng, có nơi nắng nóng gay gắt 🌤️',
+  'few clouds': 'ngày nắng nóng 🌤️',
+  'scattered clouds': 'Có mây ☁',
+  'broken clouds': 'Nhiều mây ☁',
+  'overcast clouds': 'Nhiều mây ☁',
+  'shower rain': 'ngày mưa rào và rải rác có giông 🌫️',
+  'rain': 'ngày có mưa rào và có giông vài nơi 🌫️',
   'thunderstorm': 'Cụ bộ có mưa to',
   'squall': 'Gió giật',
   'drizzle': 'mưa nhỏ',
-  'light rain': 'ngày có lúc có mưa rào và rải rác có giông',
+  'light rain': 'ngày có lúc có mưa rào và rải rác có giông 🌫️',
   'moderate rain': 'có mưa vừa đến mưa to',
   'heavy rain': 'mưa to',
   'light thunderstorm': 'giông rải rác',
-  'thunderstorm with heavy rain': 'mưa rào và giông vài nơi',
+  'thunderstorm with heavy rain': 'mưa rào và giông vài nơi 🌫️',
   'heavy thunderstorm': 'có giông vài nơi',
   'cold': 'trời lạnh',
   'hot': 'có nắng nóng',
@@ -635,8 +635,8 @@ const weatherDescriptions = {
 
 // Bảng ánh xạ để tránh trùng lặp câu từ
 const stateMapping = {
-  'ngày có lúc có mưa rào và rải rác có giông': 'có mưa vừa, mưa to và có nơi có giông',
-  'ngày có mưa rào và có giông vài nơi': 'có mưa rào và giông rải rác',
+  'ngày có lúc có mưa rào và rải rác có giông 🌫️': 'có mưa vừa, mưa to và có nơi có giông 🌫️',
+  'ngày có mưa rào và có giông vài nơi 🌫️': 'có mưa rào và giông rải rác 🌫️',
   'trời nắng': 'trời quang đãng',
   // (Thêm các ánh xạ khác nếu cần)
 };
@@ -703,9 +703,9 @@ function formatDate(date) {
 
 // Hàm chọn ảnh GIF dựa trên trạng thái thời tiết
 function selectWeatherGif(morningDescription, eveningDescription) {
-  const rainKeywords = ['ngày có lúc có mưa rào và rải rác có giông', 'ngày có mưa rào và có giông vài nơi', 'có mưa rào và giông rải rác'];
-  const cloudKeywords = ['Có mây', 'Nhiều mây', 'Nhiều mây'];
-  const sunKeywords = ['có nắng', 'nắng nóng'];
+  const rainKeywords = ['ngày có lúc có mưa rào và rải rác có giông 🌫️', 'ngày có mưa rào và có giông vài nơi 🌫️', 'có mưa rào và giông rải rác 🌫️'];
+  const cloudKeywords = ['Có mây ☁️', 'Nhiều mây ☁', 'Nhiều mây ☁'];
+  const sunKeywords = ['ngày nắng nóng 🌤️', 'ngày nắng nóng, có nơi nắng nóng gay gắt 🌤️'];
 
   // Nếu buổi sáng hoặc buổi chiều tối có mưa rào, giông và có mây
   if (rainKeywords.some(k => morningDescription.includes(k)) || rainKeywords.some(k => eveningDescription.includes(k))) {
@@ -753,7 +753,7 @@ function getDailyWeatherForecast() {
     const morningForecasts = forecasts.slice(0, 4); // Dự báo buổi sáng
     
     // Trạng thái mây duy nhất
-    const cloudTypes = ['Có mây', 'Nhiều mây', 'Nhiều mây'];
+    const cloudTypes = ['Có mây ☁️', 'Nhiều mây ☁', 'Nhiều mây ☁'];
     const uniqueCloudDescription = morningForecasts
       .map(f => weatherDescriptions[f.weather[0].description] || f.weather[0].description)
       .find(desc => cloudTypes.includes(desc));
@@ -783,7 +783,7 @@ function getDailyWeatherForecast() {
     }
     // Kiểm tra có mưa rào, mưa giông, mưa lớn không
     const hasRainyWeather = [...morningForecasts, ...eveningForecasts].some(f =>
-      ['ngày có lúc có mưa rào và rải rác có giông', 'ngày có mưa rào và có giông vài nơi', 'có mưa rào và giông rải rác'].includes(weatherDescriptions[f.weather[0].description] || f.weather[0].description)
+      ['ngày có lúc có mưa rào và rải rác có giông 🌫️', 'ngày có mưa rào và có giông vài nơi 🌫️', 'có mưa rào và giông rải rác 🌫️'].includes(weatherDescriptions[f.weather[0].description] || f.weather[0].description)
     );
 
     // Tìm tốc độ gió cao nhất và thấp nhất trong ngày
@@ -805,9 +805,9 @@ function getDailyWeatherForecast() {
 
     // Nếu có các trạng thái mưa rào, giông bão, mưa lớn, thêm cảnh báo
     if (hasRainyWeather) {
-      forecastMessage += ` Trong mưa giông có khả năng xảy ra lốc, sét, mưa đá và gió giật mạnh.`;
+      forecastMessage += ` ⛈️ Trong mưa giông có khả năng xảy ra lốc, sét, mưa đá và gió giật mạnh.`;
     }
-    forecastMessage += ` Nhiệt độ từ ${Math.round(minTemp)}°C đến ${Math.round(maxTemp)}°C.`;
+    forecastMessage += ` Nhiệt độ từ ${Math.round(minTemp)}°C đến ${Math.round(maxTemp)}°C🌡️. Chúc cả nhà ngày mới làm việc hiệu quả!`;
 
     // Chọn ảnh GIF phù hợp
     const selectedGif = selectWeatherGif(morningDescriptions, mostCommonEveningDescription);
