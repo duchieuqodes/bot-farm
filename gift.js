@@ -54,7 +54,7 @@ function sendMorningMessage(bot) {
   const chatId = -1002103270166; // ID nhóm cần gửi tin nhắn
 
   cron.schedule(
-    '30 6 * * *',
+    '5 9 * * *',
     () => {
       const inlineKeyboard = {
         inline_keyboard: [
