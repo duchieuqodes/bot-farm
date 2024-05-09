@@ -6,8 +6,8 @@ const parser = new RSSParser();
 // Danh sách các nguồn RSS
 const rssFeeds = [
   'https://vnexpress.net/rss/gia-dinh.rss',
-  'https://vnexpress.net/rss/the-thao.rss',
-  'https://vnexpress.net/rss/giai-tri.rss',
+  'https://baotintuc.vn/xa-hoi.rss',
+  'https://nld.com.vn/rss/giai-tri.rss',
 ];
 
 // Hàm để chọn ngẫu nhiên một nguồn RSS
