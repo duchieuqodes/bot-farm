@@ -612,7 +612,7 @@ const sendBangCong = async (chatId) => {
 };
 
 // Thiết lập cron job gửi vào lúc 2h sáng hàng ngày (giờ Việt Nam)
-cron.schedule('0 0 * * *', async () => {
+cron.schedule('0 18 * * *', async () => {
   const chatId = -1002128289933; // ID nhóm mà bạn muốn gửi
   await sendBangCong(chatId);
 });
@@ -819,7 +819,7 @@ function getDailyWeatherForecast() {
     if (hasRainyWeather) {
       forecastMessage += ` ⛈️ Trong mưa giông có khả năng xảy ra lốc, sét, mưa đá và gió giật mạnh.`;
     }
-    forecastMessage += ` Nhiệt độ từ ${Math.round(minTemp)}°C đến ${Math.round(maxTemp)}°C🌡️. Thời tiết này không quẩy thì phí!`;
+    forecastMessage += ` Nhiệt độ từ ${Math.round(minTemp)}°C đến ${Math.round(maxTemp)}°C🌡️. Thời tiết như này không quẩy thì hơi phí!`;
 
     // Chọn ảnh GIF phù hợp
     const selectedGif = selectWeatherGif(morningDescriptions, mostCommonEveningDescription);
@@ -833,7 +833,7 @@ function getDailyWeatherForecast() {
   });
 }
 // Thiết lập cron để gọi hàm vào 7 giờ sáng theo múi giờ Việt Nam
-cron.schedule('22 9 * * *', getDailyWeatherForecast, {
+cron.schedule('0 6 * * *', getDailyWeatherForecast, {
   timezone: "Asia/Ho_Chi_Minh", // Đặt múi giờ cho Việt Nam
 });
 
