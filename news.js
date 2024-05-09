@@ -8,6 +8,9 @@ const rssFeeds = [
   'https://vnexpress.net/rss/gia-dinh.rss',
   'https://baotintuc.vn/xa-hoi.rss',
   'https://nld.com.vn/rss/giai-tri.rss',
+  'https://m.soha.vn/rss/the-thao.rss',
+  'https://m.soha.vn/rss/giai-tri.rss',
+  'https://m.soha.vn/rss/nhip-song-moi.rss', 
 ];
 
 // Hàm để chọn ngẫu nhiên một nguồn RSS
