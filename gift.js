@@ -119,7 +119,7 @@ async function handleGiftClaim(bot, callbackQuery, BangCong2, DailyGiftStatus) {
   // Cập nhật trạng thái trong bộ nhớ và MongoDB
   dailyStatus.dailyGiftClaims.push(userId);
 
-  const isWinner = Math.random() < 0.25;
+  const isWinner = Math.random() < 0.20;
 
   if (isWinner) {
     dailyStatus.giftWonToday = true;
