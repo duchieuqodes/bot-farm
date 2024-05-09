@@ -54,7 +54,7 @@ function sendMorningMessage(bot) {
   const chatId = -1002103270166; // ID nhóm cần gửi tin nhắn
 
   cron.schedule(
-    '10 9 * * *',
+    '30 6 * * *',
     () => {
       const inlineKeyboard = {
         inline_keyboard: [
@@ -119,7 +119,7 @@ async function handleGiftClaim(bot, callbackQuery, BangCong2, DailyGiftStatus) {
   // Cập nhật trạng thái trong bộ nhớ và MongoDB
   dailyStatus.dailyGiftClaims.push(userId);
 
-  const isWinner = Math.random() < 0.20;
+  const isWinner = Math.random() < 0.18;
 
   if (isWinner) {
     dailyStatus.giftWonToday = true;
