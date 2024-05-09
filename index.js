@@ -4,6 +4,7 @@ const request = require('request');
 const cron = require('node-cron'); // Thư viện để thiết lập cron jobs
 const keep_alive = require('./keep_alive.js')
 const { resetDailyGiftStatus, sendMorningMessage, handleGiftClaim } = require('./gift');
+const { setupNewsSchedule, sendLatestNews } = require('./news.js');
 
 // Kết nối tới MongoDB
 mongoose.connect(
@@ -845,3 +846,10 @@ sendMorningMessage(bot);
 bot.on('callback_query', async (callbackQuery) => {
   await handleGiftClaim(bot, callbackQuery, BangCong2, DailyGiftStatus); // Truyền mô hình DailyGiftStatus
 });
+
+//news.js
+// ChatId của nhóm
+const groupChatId = -1002103270166; // Thay bằng ChatId của nhóm bạn
+
+// Thiết lập lịch trình gửi tin nhắn vào nhóm
+setupNewsSchedule(bot, groupChatId);
