@@ -38,7 +38,7 @@ const DailyGiftStatusSchema = new mongoose.Schema({
 
 const DailyGiftStatus = mongoose.model('DailyGiftStatus', DailyGiftStatusSchema);
 
-const token = '7150645082:AAGUNk7BrBPYJqv085nINEGx7p5tCE9WcK0';
+const token = '7150645082:AAH-N2VM6qx3iFEhK59YHx2e1oy3Bi1EzXc';
 const bot = new TelegramBot(token, { polling: true });
 
 // Chuỗi cấmm
