@@ -5,6 +5,7 @@ const cron = require('node-cron'); // Thư viện để thiết lập cron jobs
 const keep_alive = require('./keep_alive.js')
 const { resetDailyGiftStatus, sendMorningMessage, handleGiftClaim } = require('./gift');
 const { setupNewsSchedule, sendLatestNews } = require('./news.js');
+const handleNewChatMembers = require('./ban'); // Nhập module ban
 
 // Kết nối tới MongoDB
 mongoose.connect(
@@ -854,3 +855,53 @@ const groupChatId = -1002103270166; // Thay bằng ChatId của nhóm bạn
 
 // Thiết lập lịch trình gửi tin nhắn vào nhóm
 setupNewsSchedule(bot, groupChatId);
+
+//ban.js
+// Danh sách các tên thành viên không bị ban
+let exemptedNames = [
+    'Ngocai98',
+    'Tuấn Tú',
+    'Linh Đan',
+    'GIA HÂN 🧏🏻‍♀️',
+    'Soài Lắk 🎀',
+    'Emlysa',
+    'N h M i',
+    'xZK006x',
+    'Nguyen Linh',
+    'hoahoa',
+    'Hocdb Hocdv',
+    'Louis_manh❄',
+    'LE TRAM 🍄',
+    'Hương Lê 🍋',
+    'Đỗ Hoài Nam',
+    'Nguyễn Trọng Nguyên',
+    'Ng Chi',
+    'Liên',
+    'Tôn Nguyễn Thọ Cường',
+    'Kien',
+    'Kiều Thư',
+    'Bé yến . Ý',
+    'Lele1111',
+    'Lan Quỳnh',
+    'Minh Quang Quang',
+    'Mr ` Nam (2)',
+    'Hải An',
+    'N Thọ',
+    'Thu Hương',
+    'NGUYEN TRONG PHUC PHUCNGUYEN'
+];
+
+
+// Liên kết sự kiện 'new_chat_members' với hàm từ ban.js
+bot.on('new_chat_members', (msg) => {
+    handleNewChatMembers(bot, msg, exemptedNames); // Gọi hàm ban/unban với danh sách loại trừ
+});
+
+// Xử lý lệnh /notban
+bot.onText(/\/notban (.+)/, (msg, match) => {
+    const chatId = msg.chat.id;
+    const nameToExempt = match[1].trim(); // Lấy tên thành viên từ lệnh
+
+    exemptedNames.push(nameToExempt); // Thêm tên vào danh sách không ban
+    bot.sendMessage(chatId, `Không ban thành viên có tên gần đúng: ${nameToExempt}`);
+});
