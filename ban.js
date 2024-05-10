@@ -20,7 +20,7 @@ function handleNewChatMembers(bot, msg, exemptedNames) {
                     console.log(`Đã ban thành viên ${nameToDisplay} từ nhóm ${chatId}`);
 
                     // Gửi tin nhắn thông báo
-                    bot.sendMessage(chatId, `Đã lập tức kick thành viên ${nameToDisplay} vì không phải thành viên của quẩy team mình. Để tránh lôi kéo mọi người hãy cẩn thận với những lời dụ dỗ qua nhóm quẩy từ người lạ!`);
+                    bot.sendMessage(chatId, `Đã kick thành viên ${nameToDisplay} vì không phải thành viên của quẩy team Hieu Gà. Để tránh lôi kéo lừa đảo mọi người hãy cẩn thận với những lời dụ dỗ`);
 
                     // Chờ 1 phút (60 giây) trước khi hủy ban
                     setTimeout(() => {
