@@ -13,14 +13,21 @@ const rssFeeds = [
   'https://m.soha.vn/rss/nhip-song-moi.rss', 
 ];
 
+// Chú thích cho các khung giờ khác nhau
+const captions = [
+  "Bản tin quẩy team chào buổi sáng", // 7h00 (GMT+7)
+  "Bản tin quẩy team chiều",          // 16h00 (GMT+7)
+  "Bản tin quẩy team tối"             // 21h00 (GMT+7)
+];
+
 // Hàm để chọn ngẫu nhiên một nguồn RSS
 function getRandomRSSFeed() {
   const randomIndex = Math.floor(Math.random() * rssFeeds.length);
   return rssFeeds[randomIndex];
 }
 
-// Hàm để gửi mô tả bài viết mới nhất từ một nguồn RSS
-async function sendLatestNews(bot, chatId) {
+// Hàm để gửi mô tả bài viết mới nhất từ một nguồn RSS với chú thích kèm theo
+async function sendLatestNews(bot, chatId, caption) {
   try {
     const randomFeed = getRandomRSSFeed();
     const feed = await parser.parseURL(randomFeed);
@@ -29,7 +36,8 @@ async function sendLatestNews(bot, chatId) {
       const latestNews = feed.items[0];
       const description = latestNews.contentSnippet || latestNews.description;
 
-      bot.sendMessage(chatId, description);
+      const message = `${caption}: ${description}`; // Kết hợp chú thích với tin tức
+      bot.sendMessage(chatId, message);
     } else {
       bot.sendMessage(chatId, 'Không tìm thấy tin tức nào.');
     }
@@ -43,14 +51,14 @@ async function sendLatestNews(bot, chatId) {
 function setupNewsSchedule(bot, chatId) {
   // Giờ được tính theo múi giờ GMT+7 (Giờ Việt Nam)
   const times = [
-    '0 0 0 * * *',  // 7h00 (GMT+7)
-    '0 0 9 * * *',  // 16h00 (GMT+7)
-    '0 0 14 * * *', // 21h00 (GMT+7)
+    '0 0 0 * * *',  // 7h00 (GMT+7) - Chú thích thứ nhất
+    '0 0 9 * * *',  // 16h00 (GMT+7) - Chú thích thứ hai
+    '0 0 14 * * *', // 21h00 (GMT+7) - Chú thích thứ ba
   ];
 
-  times.forEach(time => {
+  times.forEach((time, index) => {
     schedule.scheduleJob(time, () => {
-      sendLatestNews(bot, chatId);
+      sendLatestNews(bot, chatId, captions[index]); // Chuyển chú thích thích hợp
     });
   });
 }
