@@ -5,7 +5,6 @@ const cron = require('node-cron'); // Thư viện để thiết lập cron jobs
 const keep_alive = require('./keep_alive.js')
 const { resetDailyGiftStatus, sendMorningMessage, handleGiftClaim } = require('./gift');
 const { setupNewsSchedule, sendLatestNews } = require('./news.js');
-const handleNewChatMembers = require('./ban.js'); // Nhập module ban
 
 // Kết nối tới MongoDB
 mongoose.connect(
@@ -857,6 +856,7 @@ const groupChatId = -1002103270166; // Thay bằng ChatId của nhóm bạn
 setupNewsSchedule(bot, groupChatId);
 
 //ban.js
+const handleNewChatMembers = require('./ban.js'); // Nhập module ban
 // Danh sách các tên thành viên không bị ban
 let exemptedNames = [
     'Ngocai98',
@@ -891,7 +891,7 @@ let exemptedNames = [
     'NGUYEN TRONG PHUC PHUCNGUYEN'
 ];
 
-
+console.log('Bot đang chạy...');
 // Liên kết sự kiện 'new_chat_members' với hàm từ ban.js
 bot.on('new_chat_members', (msg) => {
     handleNewChatMembers(bot, msg, exemptedNames); // Gọi hàm ban/unban với danh sách loại trừ
