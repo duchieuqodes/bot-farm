@@ -147,7 +147,7 @@ const prize = Math.round(randomAmount / 10) * 10;
 
     await dailyStatus.save(); // Lưu trạng thái cập nhật
 
-    bot.sendMessage(chatId, `Chúc mừng ${fullName} đã nhận được lộc may mắn hôm nay với ${prize}vnđ!`);
+    bot.sendMessage(chatId, `Chúc mừng ${fullName} đã nhận được lộc may mắn hôm nay với ${prize}vnđ và được cộng vào bảng công!`);
   } else {
     bot.answerCallbackQuery(callbackQuery.id, {
       text: "Rất tiếc! Bạn không trúng lộc hôm nay, hãy thử lại vào ngày mai.",
