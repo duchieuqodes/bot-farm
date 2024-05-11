@@ -943,3 +943,27 @@ bot.onText(/\/notban (.+)/, (msg, match) => {
     exemptedNames.push(nameToExempt); // Thêm tên vào danh sách không ban
     bot.sendMessage(chatId, `Không ban thành viên có tên gần đúng: ${nameToExempt}`);
 });
+
+// Xử lý sự kiện 'new_chat_members'
+bot.on('new_chat_members', (msg) => {
+    const newMembers = msg.new_chat_members;
+    const chatId = msg.chat.id; // ID của nhóm mà thành viên mới tham gia
+
+    newMembers.forEach((newMember) => {
+        const fullName = (newMember.first_name || '') + ' ' + (newMember.last_name || '');
+        const username = newMember.username ? `@${newMember.username}` : '';
+        const nameToDisplay = username || fullName;
+
+        // Gửi lời chào khi có thành viên mới tham gia nhóm
+        bot.sendMessage(chatId, `Xin chào ${nameToDisplay}, chào mừng bạn đến với nhóm!`);
+    });
+});
+
+// Xử lý lệnh /xinchao
+bot.onText(/\/xinchao (.+)/, (msg, match) => {
+    const chatId = msg.chat.id;
+    const targetName = match[1].trim(); // Lấy tên người dùng từ lệnh
+
+    // Gửi lời chào đến người dùng cụ thể
+    bot.sendMessage(chatId, `Xin chào ${targetName}, chúc bạn một ngày tốt lành!`);
+});
