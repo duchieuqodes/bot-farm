@@ -967,3 +967,54 @@ bot.onText(/\/xinchao (.+)/, (msg, match) => {
     // Gửi lời chào đến người dùng cụ thể
     bot.sendMessage(chatId, `Xin chào ${targetName}, chúc bạn một ngày tốt lành!`);
 });
+
+bot.onText(/\/tongtru (.+)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const groupIds = match[1].split(',').map(groupId => parseInt(groupId.trim()));
+
+  try {
+    const currentDate = new Date(); // Ngày hôm trước
+    currentDate.setDate(currentDate.getDate() - 1); // Lấy ngày hôm trước
+
+    const aggregatedData = await BangCong2.aggregate([
+      {
+        $match: {
+          date: new Date(currentDate.toLocaleDateString()),
+          groupId: { $nin: groupIds }, // Loại trừ các nhóm đã nhập
+        },
+      },
+      {
+        $group: {
+          _id: {
+            userId: "$userId",
+            ten: "$ten",
+          },
+          totalQuay: { $sum: "$quay" },
+          totalKeo: { $sum: "$keo" },
+          totalTinhTien: { $sum: "$tinh_tien" },
+        },
+      },
+      {
+        $sort: { totalTinhTien: -1 }, // Sắp xếp theo tổng tiền giảm dần
+      },
+    ]);
+
+    if (aggregatedData.length === 0) {
+      bot.sendMessage(chatId, "Không có bảng công nào cho ngày hôm trước.");
+      return;
+    }
+
+    let response = "Bảng công tổng hợp cho ngày hôm trước (ngoại trừ các nhóm đã nhập):\n\n";
+    response += "HỌ TÊN👩‍🎤\t\tQUẨY💃\tCỘNG➕\tTỔNG TIỀN💰\n";
+
+    aggregatedData.forEach((data) => {
+      const formattedTotal = data.totalTinhTien.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      response += `${data._id.ten}\t\t${data.totalQuay}q +\t${data.totalKeo}c\t${formattedTotal}vnđ\n`;
+    });
+
+    bot.sendMessage(chatId, response);
+  } catch (error) {
+    console.error("Lỗi khi truy vấn dữ liệu từ MongoDB:", error);
+    bot.sendMessage(chatId, "Đã xảy ra lỗi khi truy vấn dữ liệu từ cơ sở dữ liệu.");
+  }
+});
