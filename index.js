@@ -96,7 +96,7 @@ async function processMessageQueue() {
     const messageContent = msg.text || msg.caption;
     const matches = messageContent.match(regex);
       const userId = msg.from.id;
-      const groupId = chatId;
+      const groupId = msg.chat.id;
       
     
       // Tìm tất cả số và ký tự sau số
@@ -131,7 +131,7 @@ async function processMessageQueue() {
         const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${quay}q, ${keo}c đang chờ kiểm tra ❤🥳`;
 
         // Gửi thông báo mới và lưu bảng công
-        bot.sendMessage(chatId, responseMessage, { reply_to_message_id: msg.message_id }).then(async () => {
+        bot.sendMessage(groupId, responseMessage, { reply_to_message_id: msg.message_id }).then(async () => {
         let bangCong = await BangCong2.findOne({ userId, groupId, date: currentDate });
 
         if (!bangCong) {
