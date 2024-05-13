@@ -64,7 +64,8 @@ cron.schedule('0 0 * * *', async () => {
             
 // Tìm các số theo sau bởi ký tự hoặc từ khóa xác định hành vi
 const regex = /\d+(q|Q|c|C|quẩy|cộng|acc)/gi;
-
+const messageQueue = [];
+let processingMessage = false;
 
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
@@ -77,6 +78,22 @@ bot.on('message', async (msg) => {
   if (messageContent) {
     // Chỉ thực hiện kiểm tra bảng công nếu tin nhắn chứa chuỗi cấm
     if (regex.test(messageContent)) {
+      messageQueue.push(msg); // Đưa tin nhắn vào hàng đợi
+
+    if (!processingMessage) {
+          processMessageQueue();
+        }
+      }
+    }
+  }
+});
+
+async function processMessageQueue() {
+  if (messageQueue.length > 0) {
+    processingMessage = true; // Đánh dấu đang xử lý tin nhắn
+    
+    const msg = messageQueue[0];
+    const messageContent = msg.text || msg.caption;
     const matches = messageContent.match(regex);
       const userId = msg.from.id;
       const groupId = chatId;
@@ -134,12 +151,19 @@ bot.on('message', async (msg) => {
 
           await bangCong.save();
         }
+          // Xóa tin nhắn đã xử lý khỏi hàng đợi
+      messageQueue.shift();
+      
+      // Đánh dấu rằng không còn xử lý tin nhắn nào
+      processingMessage = false;
+      // Nếu còn tin nhắn trong hàng đợi, tiếp tục xử lý
+      if (messageQueue.length > 0) {
+        setTimeout(processMessageQueue, 5000); // Đợi 4 giây trước khi xử lý tin nhắn tiếp theo
+      }
       });
     
   }
   }
-  }
-});
        
                                              
           
