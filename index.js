@@ -61,11 +61,14 @@ cron.schedule('0 0 * * *', async () => {
   }
 });
 
-            
-// Tìm các số theo sau bởi ký tự hoặc từ khóa xác định hành vi
 const regex = /\d+(q|Q|c|C|quẩy|cộng|acc)/gi;
 const messageQueue = [];
+const keywordCounts = {}; // Đối tượng để theo dõi số lần xuất hiện của từ khóa trong một ngày
 let processingMessage = false;
+
+// Biến để lưu trữ dữ liệu quay và keo từ tin nhắn chứa từ khóa
+let dataMessageCa1 = {};
+let dataMessageCa2 = {};
 
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
@@ -74,13 +77,14 @@ bot.on('message', async (msg) => {
   if (chatId !== -1002103270166) {
     // Kiểm tra nếu tin nhắn chứa chuỗi cấm
     // Kiểm tra cả văn bản và chú thích
-  const messageContent = msg.text || msg.caption;
-  if (messageContent) {
-    // Chỉ thực hiện kiểm tra bảng công nếu tin nhắn chứa chuỗi cấm
-    if (regex.test(messageContent)) {
-      messageQueue.push(msg); // Đưa tin nhắn vào hàng đợi
+    const messageContent = msg.text || msg.caption;
+    if (messageContent) {
+      // Chỉ thực hiện kiểm tra bảng công nếu tin nhắn chứa chuỗi cấm
+      if (regex.test(messageContent)) {
+        messageQueue.push(msg); // Đưa tin nhắn vào hàng đợi
 
-    if (!processingMessage) {
+        // Nếu không có tin nhắn nào đang được xử lý, bắt đầu xử lý
+        if (!processingMessage && messageQueue.length > 0) {
           processMessageQueue();
         }
       }
@@ -91,81 +95,124 @@ bot.on('message', async (msg) => {
 async function processMessageQueue() {
   if (messageQueue.length > 0) {
     processingMessage = true; // Đánh dấu đang xử lý tin nhắn
-    
+
     const msg = messageQueue[0];
     const messageContent = msg.text || msg.caption;
     const matches = messageContent.match(regex);
-      const userId = msg.from.id;
-      const groupId = msg.chat.id;
+    const userId = msg.from.id;
+    const groupId = msg.chat.id;
+
+    let quay = 0;
+    let keo = 0;
+
+    if (matches) {
+      matches.forEach((match) => {
+        const number = parseInt(match); // Lấy số
+        const suffix = match.slice(number.toString().length); // Lấy chữ cái hoặc từ theo sau số
+
+        if (suffix.toLowerCase() === 'q' || suffix.toLowerCase() === '+') {
+          quay += number; // Nếu sau số là "q" hoặc "Q", thêm vào "quay"
+        } else if (suffix.toLowerCase() === 'c' || suffix === 'acc') {
+          keo += number; // Nếu sau số là "c", "C", hoặc "acc", thêm vào "keo"
+        } else if (suffix === 'quẩy') {
+          quay += number; // Nếu sau số là "quẩy", thêm vào "quay"
+        } else if (suffix === 'cộng') {
+          keo += number; // Nếu sau số là "cộng", thêm vào "keo"
+        }
+      });
+    }
+
+    const currentDate = new Date().toLocaleDateString();
+    const firstName = msg.from.first_name;
+    const lastName = msg.from.last_name;
+    const fullName = lastName ? `${firstName} ${lastName}` : firstName;
+
+    // Kiểm tra từ khóa đã xuất hiện bao nhiêu lần trong ngày
+    const ca1Keywords = ['ca1', 'Ca1'];
+    const ca2Keywords = ['ca2', 'Ca2'];
+
+    if (ca1Keywords.some(keyword => messageContent.includes(keyword))) {
+      keywordCounts[userId] = keywordCounts[userId] || { ca1: 0, ca2: 0 };
+      keywordCounts[userId].ca1++;
+
+      // Lưu dữ liệu từ tin nhắn chứa từ khóa ca1
+      dataMessageCa1.quay = quay;
+      dataMessageCa1.keo = keo;
+    }
+
+    if (ca2Keywords.some(keyword => messageContent.includes(keyword))) {
+      keywordCounts[userId] = keywordCounts[userId] || { ca1: 0, ca2: 0 };
+      keywordCounts[userId].ca2++;
+
+      // Lưu dữ liệu từ tin nhắn chứa từ khóa ca2
+      dataMessageCa2.quay = quay;
+      dataMessageCa2.keo = keo;
+    }
+
+    // Kiểm tra nếu từ khóa đã xuất hiện lần thứ hai trong ngày
+    if (keywordCounts[userId].ca1 >= 2) {
       
+      // Xóa bảng công cũ và tạo bảng mới
+      await BangCong2.deleteOne({ userId, groupId, date: currentDate });
+    }
     
-      // Tìm tất cả số và ký tự sau số
-      // Tìm tất cả số theo sau bởi q, c, Q, C, quẩy, cộng, hoặc acc
+
+    if (keywordCounts[userId].ca2 >= 1) {
       
-      let quay = 0;
-      let keo = 0;
+  
 
-      if (matches) {
-        matches.forEach((match) => {
-          const number = parseInt(match); // Lấy số
-          const suffix = match.slice(number.toString().length); // Lấy chữ cái hoặc từ theo sau số
+  // Kiểm tra và đảm bảo rằng quay và keo là số trước khi tính tổng
+  const quayCa1 = dataMessageCa1.quay || 0;
+  const keoCa1 = dataMessageCa1.keo || 0;
+  const quayCa2 = dataMessageCa2.quay || 0;
+  const keoCa2 = dataMessageCa2.keo || 0;
 
-          if (suffix.toLowerCase() === 'q' || suffix.toLowerCase() === 'p') {
-            quay += number; // Nếu sau số là "q" hoặc "Q", thêm vào "quay"
-          } else if (suffix.toLowerCase() === 'c' || suffix === 'acc') {
-            keo += number; // Nếu sau số là "c", "C", hoặc "acc", thêm vào "keo"
-          } else if (suffix === 'quẩy') {
-            quay += number; // Nếu sau số là "quẩy", thêm vào "quay"
-          } else if (suffix === 'cộng') {
-            keo += number; // Nếu sau số là "cộng", thêm vào "keo"
-          }
+  // Tính tổng dữ liệu từ tin nhắn chứa từ khóa ca1 và ca2
+  quay = quayCa1 + quayCa2;
+  keo = keoCa1 + keoCa2;
+
+    }
+
+    // Tạo thông báo mới
+    const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận tổng cả ngày hôm nay với ${quay}q, ${keo}c đang chờ kiểm tra ❤🥳`;
+
+    // Gửi thông báo mới và lưu bảng công
+    bot.sendMessage(groupId, responseMessage, { reply_to_message_id: msg.message_id }).then(async () => {
+      let bangCong = await BangCong2.findOne({ userId, groupId, date: currentDate });
+
+      if (!bangCong) {
+        bangCong = await BangCong2.create({
+          userId,
+          groupId,
+          date: currentDate,
+          ten: fullName,
+          quay,
+          keo,
+          tinh_tien: quay * 500 + keo * 1000,
         });
+      } else {
+        bangCong.quay += quay;
+        bangCong.keo += keo;
+        bangCong.tinh_tien += quay * 500 + keo * 1000;
+
+        await bangCong.save();
       }
 
-        const currentDate = new Date().toLocaleDateString();
-        const firstName = msg.from.first_name;
-        const lastName = msg.from.last_name;
-        const fullName = lastName ? `${firstName} ${lastName}` : firstName;
-        
-        // Tạo thông báo mới
-        const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${quay}q, ${keo}c đang chờ kiểm tra ❤🥳`;
-
-        // Gửi thông báo mới và lưu bảng công
-        bot.sendMessage(groupId, responseMessage, { reply_to_message_id: msg.message_id }).then(async () => {
-        let bangCong = await BangCong2.findOne({ userId, groupId, date: currentDate });
-
-        if (!bangCong) {
-          bangCong = await BangCong2.create({
-            userId,
-            groupId,
-            date: currentDate,
-            ten: fullName,
-            quay,
-            keo,
-            tinh_tien: quay * 500 + keo * 1000,
-          });
-        } else {
-          bangCong.quay += quay;
-          bangCong.keo += keo;
-          bangCong.tinh_tien += quay * 500 + keo * 1000;
-
-          await bangCong.save();
-        }
-          // Xóa tin nhắn đã xử lý khỏi hàng đợi
+      // Xóa tin nhắn đã xử lý khỏi hàng đợi
       messageQueue.shift();
       
       // Đánh dấu rằng không còn xử lý tin nhắn nào
       processingMessage = false;
+      
       // Nếu còn tin nhắn trong hàng đợi, tiếp tục xử lý
       if (messageQueue.length > 0) {
-        setTimeout(processMessageQueue, 5000); // Đợi 4 giây trước khi xử lý tin nhắn tiếp theo
+                setTimeout(processMessageQueue, 3000); // Đợi 4 giây trước khi xử lý tin nhắn tiếp theo
       }
-      });
-    
+
+      
+    });
   }
-  }
-       
-                                             
+}                                                     
           
 // Bảng tra cứu tên nhóm dựa trên ID nhóm
 const groupNames = {
