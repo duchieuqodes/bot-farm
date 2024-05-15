@@ -128,8 +128,8 @@ async function processMessageQueue() {
     const fullName = lastName ? `${firstName} ${lastName}` : firstName;
 
     // Kiểm tra từ khóa đã xuất hiện bao nhiêu lần trong ngày
-    const ca1Keywords = ['ca1', 'Ca1'];
-    const ca2Keywords = ['ca2', 'Ca2'];
+    const ca1Keywords = ['ca1', 'Ca1', 'ca 1', 'Ca 1', 'c1', 'c 1', 'C1', 'C 1'];
+    const ca2Keywords = ['ca2', 'Ca2', 'ca 2', 'Ca 2', 'c2', 'c 2', 'C2', 'C 2'];
 
     if (ca1Keywords.some(keyword => messageContent.includes(keyword))) {
       keywordCounts[userId] = keywordCounts[userId] || { ca1: 0, ca2: 0 };
