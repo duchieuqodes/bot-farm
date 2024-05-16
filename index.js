@@ -815,11 +815,11 @@ function selectWeatherGif(morningDescription, eveningDescription) {
   const sunKeywords = ['ngày nắng nóng 🌤️', 'ngày nắng nóng, có nơi nắng nóng gay gắt 🌤️', 'Có mây, trưa chiều trời hửng nắng ☁'];
 
   // Nếu buổi sáng hoặc buổi chiều tối có mưa rào, giông và có mây
-  if (rainKeywords.some(k => morningDescription.includes(k)) || rainKeywords.some(k => eveningDescription.includes(k))) {
-    if (cloudKeywords.some(k => morningDescription.includes(k)) || cloudKeywords.some(k => eveningDescription.includes(k))) {
+  if (rainKeywords.some(k => morningDescription.includes(k)) && cloudKeywords.some(k => eveningDescription.includes(k))) ||
+     (cloudKeywords.some(k => morningDescription.includes(k)) && cloudKeywords.some(k => eveningDescription.includes(k))) {
       return 'https://iili.io/JrX4YXe.gif'; // GIF cho mưa và mây
     }
-  }
+  
 
   // Nếu buổi sáng hoặc buổi chiều tối có mưa rào, giông và có mây
   if ((rainKeywords.some(k => morningDescription.includes(k)) && sunKeywords.some(k => morningDescription.includes(k))) || 
