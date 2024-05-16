@@ -305,11 +305,29 @@ bot.onText(/\/bc/, async (msg) => {
 
 
 
-   
+// Lập lịch gửi bảng công tổng hợp vào 5h sáng hàng ngày
+cron.schedule('0 21 * * *', async () => {
+  try {
+    // Gửi bảng công tổng hợp
+    await sendAggregatedData();
+  } catch (error) {
+    console.error("Lỗi khi gửi bảng công tổng hợp:", error);
+  }
+});
 
 bot.onText(/\/tong/, async (msg) => {
   const chatId = msg.chat.id;
 
+  try {
+    // Gọi hàm tổng hợp dữ liệu và gửi bảng công tổng hợp
+    await sendAggregatedData(chatId);
+  } catch (error) {
+    console.error("Lỗi khi truy vấn dữ liệu từ MongoDB:", error);
+    bot.sendMessage(chatId, "Đã xảy ra lỗi khi truy vấn dữ liệu từ cơ sở dữ liệu.");
+  }
+});
+
+async function sendAggregatedData(chatId) {
   try {
     const currentDate = new Date(); // Ngày hiện tại
 
@@ -355,7 +373,7 @@ bot.onText(/\/tong/, async (msg) => {
     console.error("Lỗi khi truy vấn dữ liệu từ MongoDB:", error);
     bot.sendMessage(chatId, "Đã xảy ra lỗi khi truy vấn dữ liệu từ cơ sở dữ liệu.");
   }
-});
+}
 
 // Lệnh /reset để xóa bảng công của những ngày trước
 bot.onText(/\/reset/, async (msg) => {
@@ -689,7 +707,7 @@ const sendBangCong = async (chatId) => {
 };
 
 // Thiết lập cron job gửi vào lúc 2h sáng hàng ngày (giờ Việt Nam)
-cron.schedule('0 18 * * *', async () => {
+cron.schedule('0 19 * * *', async () => {
   const chatId = -1002128289933; // ID nhóm mà bạn muốn gửi
   await sendBangCong(chatId);
 });
