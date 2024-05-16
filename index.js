@@ -722,8 +722,8 @@ const chatId = -1002103270166;
 const weatherDescriptions = {
   'clear sky': 'ngày nắng nóng, có nơi nắng nóng gay gắt 🌤️',
   'few clouds': 'ngày nắng nóng 🌤️',
-  'scattered clouds': 'Có mây ☁',
-  'broken clouds': 'Nhiều mây ☁',
+  'scattered clouds': 'Có mây, trưa chiều trời hửng nắng ☁',
+  'broken clouds': 'Có mây, trưa chiều trời hửng nắng ☁',
   'overcast clouds': 'Nhiều mây ☁',
   'shower rain': 'ngày mưa rào và rải rác có giông 🌫️',
   'rain': 'ngày có mưa rào và có giông vài nơi 🌫️',
@@ -745,6 +745,7 @@ const stateMapping = {
   'ngày có lúc có mưa rào và rải rác có giông 🌫️': 'có mưa vừa, mưa to và có nơi có giông 🌫️',
   'ngày có mưa rào và có giông vài nơi 🌫️': 'có mưa rào và giông rải rác 🌫️',
   'trời nắng': 'trời quang đãng',
+  'Có mây, trưa chiều trời hửng nắng ☁': 'trời quang',
   // (Thêm các ánh xạ khác nếu cần)
 };
 
@@ -810,9 +811,9 @@ function formatDate(date) {
 
 // Hàm chọn ảnh GIF dựa trên trạng thái thời tiết
 function selectWeatherGif(morningDescription, eveningDescription) {
-  const rainKeywords = ['ngày có lúc có mưa rào và rải rác có giông 🌫️', 'ngày có mưa rào và có giông vài nơi 🌫️', 'có mưa rào và giông rải rác 🌫️'];
+  const rainKeywords = ['ngày có lúc có mưa rào và rải rác có giông 🌫️', 'ngày có mưa rào và có giông vài nơi 🌫️', 'có mưa rào và giông rải rác 🌫️', 'có mưa vừa đến mưa to' ];
   const cloudKeywords = ['Có mây ☁️', 'Nhiều mây ☁', 'Nhiều mây ☁'];
-  const sunKeywords = ['ngày nắng nóng 🌤️', 'ngày nắng nóng, có nơi nắng nóng gay gắt 🌤️'];
+  const sunKeywords = ['ngày nắng nóng 🌤️', 'ngày nắng nóng, có nơi nắng nóng gay gắt 🌤️', 'Có mây, trưa chiều trời hửng nắng ☁'];
 
   // Nếu buổi sáng hoặc buổi chiều tối có mưa rào, giông và có mây
   if (rainKeywords.some(k => morningDescription.includes(k)) || rainKeywords.some(k => eveningDescription.includes(k))) {
@@ -821,9 +822,15 @@ function selectWeatherGif(morningDescription, eveningDescription) {
     }
   }
 
+  // Nếu buổi sáng hoặc buổi chiều tối có mưa rào, giông và có mây
+  if ((rainKeywords.some(k => morningDescription.includes(k)) && sunKeywords.some(k => morningDescription.includes(k))) || 
+      (rainKeywords.some(k => eveningDescription.includes(k)) && sunKeywords.some(k => eveningDescription.includes(k)))) {
+    return 'https://iili.io/JrXfzI1.gif'; // GIF cho mưa và mây
+  }
+
   // Nếu buổi sáng hoặc buổi chiều tối có nắng hoặc nắng nóng
   if (sunKeywords.some(k => morningDescription.includes(k)) || sunKeywords.some(k => eveningDescription.includes(k))) {
-    return 'https://iili.io/JrXfzI1.gif'; // GIF cho trời nắng
+    return 'https://iili.io/JrXLVxS.gif'; // GIF cho trời nắng
   }
 
   // Nếu không có mưa rào và giông
