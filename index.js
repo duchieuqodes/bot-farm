@@ -111,7 +111,7 @@ async function processMessageQueue() {
 
           if (suffix.toLowerCase() === 'q' || suffix.toLowerCase() === 'p') {
             quay += number; // Nếu sau số là "q" hoặc "Q", thêm vào "quay"
-          } else if (suffix.toLowerCase() === 'c' || suffix === 'acc') {
+          } else if (suffix.toLowerCase() === 'c' || suffix === '+') {
             keo += number; // Nếu sau số là "c", "C", hoặc "acc", thêm vào "keo"
           } else if (suffix === 'quẩy') {
             quay += number; // Nếu sau số là "quẩy", thêm vào "quay"
