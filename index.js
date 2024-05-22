@@ -262,6 +262,93 @@ cron.schedule('0 21 * * *', async () => {
   }
 });
 
+// Lập lịch gửi bảng công tổng hợp vào 9h12 sáng hàng ngày theo giờ Việt Nam
+cron.schedule('30 7 * * *', async () => {
+  try {
+    // Gửi bảng công tổng hợp
+    await sendAggregatedData(-1002128289933);
+  } catch (error) {
+    console.error("Lỗi khi gửi bảng công tổng hợp:", error);
+  }
+}, {
+  scheduled: true,
+  timezone: "Asia/Ho_Chi_Minh"
+});
+
+
+bot.onText(/\/sum/, async (msg) => {
+  const chatId = msg.chat.id;
+
+  try {
+    // Gọi hàm tổng hợp dữ liệu và gửi bảng công tổng hợp
+    await sendAggregatedData(chatId);
+  } catch (error) {
+    console.error("Lỗi khi truy vấn dữ liệu từ MongoDB:", error);
+    bot.sendMessage(chatId, "Đã xảy ra lỗi khi truy vấn dữ liệu từ cơ sở dữ liệu.");
+  }
+});
+
+async function sendAggregatedData(chatId) {
+  try {
+    const currentDate = new Date();
+    currentDate.setDate(currentDate.getDate() - 1); // Ngày hôm qua
+
+    const startOfYesterday = new Date(currentDate.setHours(0, 0, 0, 0)); // Bắt đầu của ngày hôm qua
+    const endOfYesterday = new Date(currentDate.setHours(23, 59, 59, 999)); // Kết thúc của ngày hôm qua
+
+    // Truy vấn để tổng hợp bảng công của các thành viên trong ngày hôm qua
+    const aggregatedData = await BangCong2.aggregate([
+      {
+        $match: { 
+          date: { $gte: startOfYesterday, $lte: endOfYesterday },
+          groupId: { $ne: -1002108234982 } // Loại trừ nhóm -1002108234982
+        },
+      },
+      {
+        $group: {
+          _id: {
+            userId: "$userId",
+            ten: "$ten",
+          },
+          totalQuay: { $sum: "$quay" },
+          totalKeo: { $sum: "$keo" },
+          totalTinhTien: { $sum: "$tinh_tien" },
+        },
+      },
+      {
+        $sort: { totalTinhTien: -1 }, // Sắp xếp theo tổng tiền giảm dần
+      },
+    ]);
+
+    if (aggregatedData.length === 0) {
+      if (chatId) {
+        bot.sendMessage(chatId, "Không có bảng công nào cho ngày hôm qua.");
+      }
+      return;
+    }
+
+    let response = "Bảng công tổng hợp cho ngày hôm qua:\n\n";
+    response += "HỌ TÊN👩‍🎤\t\tQUẨY💃\tCỘNG➕\tTỔNG TIỀN💰\n";
+
+    aggregatedData.forEach((data) => {
+      const formattedTotal = data.totalTinhTien.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      response += `${data._id.ten}\t\t${data.totalQuay}q +\t${data.totalKeo}c\t${formattedTotal}vnđ\n`;
+    });
+
+    if (chatId) {
+      bot.sendMessage(chatId, response);
+    } else {
+      // Bạn có thể thay đổi logic gửi tin nhắn nếu không có chatId
+    }
+  } catch (error) {
+    console.error("Lỗi khi truy vấn dữ liệu từ MongoDB:", error);
+    if (chatId) {
+      bot.sendMessage(chatId, "Đã xảy ra lỗi khi truy vấn dữ liệu từ cơ sở dữ liệu.");
+    }
+  }
+}
+
+
 bot.onText(/\/tong/, async (msg) => {
   const chatId = msg.chat.id;
 
@@ -491,24 +578,42 @@ bot.onText(/\/xoa/, async (msg) => {
   }
 });
 
-// Xử lý lệnh /bchomqua để hiển thị bảng công cho tất cả các nhóm
+
+// Lập lịch gửi bảng công tổng hợp vào 9h12 sáng hàng ngày theo giờ Việt Nam
+cron.schedule('31 7 * * *', async () => {
+  try {
+    // Gửi bảng công tổng hợp vào groupId -1002128289933
+    await sendAggregatedData(-1002128289933);
+  } catch (error) {
+    console.error("Lỗi khi gửi bảng công tổng hợp:", error);
+  }
+}, {
+  scheduled: true,
+  timezone: "Asia/Ho_Chi_Minh"
+});
+
+// Xử lý lệnh /homqua để hiển thị bảng công cho tất cả các nhóm
 bot.onText(/\/homqua/, async (msg) => {
   const chatId = msg.chat.id;
+  await sendAggregatedData(chatId);
+});
 
+async function sendAggregatedData(chatId) {
   try {
     // Tính ngày hôm qua
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    const formattedYesterday = yesterday.toLocaleDateString(); // Định dạng ngày để dùng trong truy vấn
-
+    const startOfYesterday = new Date(yesterday.setHours(0, 0, 0, 0));
+    const endOfYesterday = new Date(yesterday.setHours(23, 59, 59, 999));
+    
     // Lấy bảng công của ngày hôm qua, loại trừ nhóm có chatId -1002108234982
     const bangCongs = await BangCong2.find({
-      date: formattedYesterday,
+      date: { $gte: startOfYesterday, $lte: endOfYesterday },
       groupId: { $ne: -1002108234982 }, // Loại trừ nhóm này
     });
 
     if (bangCongs.length === 0) {
-      bot.sendMessage(chatId, `Không có bảng công nào cho ngày ${formattedYesterday}.`);
+      bot.sendMessage(chatId, `Không có bảng công nào cho ngày ${yesterday.toLocaleDateString()}.`);
       return;
     }
 
@@ -533,7 +638,7 @@ bot.onText(/\/homqua/, async (msg) => {
       const groupData = groupedByGroupId[groupId];
       const groupName = groupNames[groupId] || `Nhóm ${groupId}`;
 
-      response += `Bảng công nhóm ${groupName} (${formattedYesterday}):\n\n`;
+      response += `Bảng công nhóm ${groupName} (${yesterday.toLocaleDateString()}):\n\n`;
 
       let totalGroupMoney = 0;
 
@@ -566,98 +671,9 @@ bot.onText(/\/homqua/, async (msg) => {
     console.error('Lỗi khi truy vấn dữ liệu từ MongoDB:', error);
     bot.sendMessage(chatId, 'Đã xảy ra lỗi khi truy vấn dữ liệu từ cơ sở dữ liệu.');
   }
-});
+}
 
 
-const timezoneOffset = 1 * 60 * 60 * 1000; // Múi giờ Việt Nam (UTC +7)
-
-// Hàm gửi bảng công
-const sendBangCong = async (chatId) => {
-  const currentDate = new Date(new Date().getTime() + timezoneOffset).toLocaleDateString();
-  const maxRetries = 10; // Số lần thử tối đa
-  let retries = 0;
-  let sent = false;
-
-  while (!sent && retries < maxRetries) {
-    try {
-      const bangCongs = await BangCong2.find({
-        date: currentDate,
-        groupId: { $ne: -1002108234982 }, // Loại trừ nhóm này
-      });
-
-      if (bangCongs.length === 0) {
-        bot.sendMessage(chatId, "Không có bảng công nào cho ngày hôm nay.");
-        return;
-      }
-
-      const groupedByGroupId = {};
-      bangCongs.forEach((bangCong) => {
-        const groupId = bangCong.groupId ? bangCong.groupId.toString() : ''; // Kiểm tra nếu groupId không undefined
-        if (!groupedByGroupId[groupId]) {
-          groupedByGroupId[groupId] = [];
-        }
-        groupedByGroupId[groupId].push(bangCong);
-      });
-
-      let response = '';
-
-      for (const groupId in groupedByGroupId) {
-        if (!groupId) {
-          continue;
-        }
-
-        const groupData = groupedByGroupId[groupId];
-        const groupName = groupNames[groupId] || `Nhóm ${groupId}`; // Lấy tên nhóm từ bảng tra cứu
-
-        response += `Bảng công nhóm ${groupName}:\n\n`;
-
-        let totalGroupMoney = 0; // Biến để tính tổng số tiền của nhóm
-
-        groupData.forEach((bangCong) => {
-          if (bangCong.tinh_tien !== undefined) { // Kiểm tra trước khi truy cập thuộc tính
-            const formattedTien = bangCong.tinh_tien.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-            response += `${bangCong.ten}\t\t${bangCong.quay}q +\t${bangCong.keo}c\t${formattedTien}vnđ\n`;
-            totalGroupMoney += bangCong.tinh_tien;
-          }
-        });
-
-        const formattedTotal = totalGroupMoney.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-        response += `Tổng tiền: ${formattedTotal}vnđ\n\n`;
-      }
-
-      if (response.length > 4000) {
-        const middle = Math.floor(response.length / 2);
-        const splitIndex = response.lastIndexOf('\n', middle);
-
-        const firstPart = response.substring(0, splitIndex).trim();
-        const secondPart = response.substring(splitIndex).trim();
-
-        bot.sendMessage(chatId, firstPart);
-        bot.sendMessage(chatId, secondPart);
-      } else {
-        bot.sendMessage(chatId, response.trim());
-      }
-
-      sent = true; // Nếu gửi thành công, thoát vòng lặp
-    } catch (error) {
-      console.error('Lỗi khi truy vấn dữ liệu từ MongoDB:', error);
-      retries++; // Tăng số lần thử lại
-      if (retries < maxRetries) {
-        await new Promise((resolve) => setTimeout(resolve, 30 * 60 * 1000)); // Chờ 30 phút trước khi thử lại
-      }
-    }
-  }
-
-  if (!sent) {
-    bot.sendMessage(chatId, 'Không thể gửi bảng công trước 7h sáng.');
-  }
-};
-
-// Thiết lập cron job gửi vào lúc 2h sáng hàng ngày (giờ Việt Nam)
-cron.schedule('0 19 * * *', async () => {
-  const chatId = -1002128289933; // ID nhóm mà bạn muốn gửi
-  await sendBangCong(chatId);
-});
 
 // Thay thế YOUR_API_KEY bằng API key OpenWeatherMap của bạn
 const apiKey = '679360c3eef6d2165d3833d29b5eccf4';
