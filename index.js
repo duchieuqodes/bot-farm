@@ -761,7 +761,7 @@ async function generateAndSendImages(chatId) {
             }).join('\n');
 
             const imageUrl = await createImage(content, groupName, totalAmount, dateStr);
-            bot.sendPhoto(chatId, imageUrl);
+            await bot.sendPhoto(chatId, imageUrl);
         }
 
         // Tạo bảng tổng số tiền của từng thành viên từ tất cả các nhóm
@@ -770,7 +770,7 @@ async function generateAndSendImages(chatId) {
             totalAmountContent += `<TR><TD ALIGN="LEFT" STYLE="font-weight: bold;">${userName}</TD><TD ALIGN="CENTER">${totalAmount}vnđ</TD></TR>`;
         }
         const totalAmountImageUrl = await createTotalAmountImage(totalAmountContent);
-        bot.sendPhoto(chatId, totalAmountImageUrl);
+        await bot.sendPhoto(chatId, totalAmountImageUrl);
 
         // Gửi tin nhắn ngẫu nhiên và ghim tin nhắn đó
         const messages = [
@@ -793,7 +793,7 @@ async function generateAndSendImages(chatId) {
         console.error('Lỗi khi truy vấn dữ liệu từ MongoDB:', error);
         bot.sendMessage(chatId, 'Failed to create image.');
     }
-}
+    }
 
 async function createImage(content, groupName, totalAmount, dateStr) {
     // Tạo URL cho hình ảnh sử dụng QuickChart
