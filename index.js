@@ -170,7 +170,7 @@ const groupNames = {
   "-1002004082575": "KHÔNG NGỪNG PHÁT TRIỂN",
   "-1002123430691": "DẪN LỐI THÀNH CÔNG",
   "-1002143712364": "THU NHẬP MỖI NGÀY",
-  "-1002128975957": "CỘNG ĐỒNG KHỞI NGHIỆP",
+  "-1002128975957": "HƯỚNG TỚI TƯƠNG LAI",
   "-1002080535296": "TRẢI NGHIỆM KIẾN THỨC",
   "-1002091101362": "TRAO ĐỔI CÔNG VIỆC", 
   "-1002129896837": "GROUP I MẠNH ĐỨC CHIA SẺ", 
@@ -250,17 +250,6 @@ bot.onText(/\/bc/, async (msg) => {
   }
 });
 
-
-
-// Lập lịch gửi bảng công tổng hợp vào 5h sáng hàng ngày
-cron.schedule('0 21 * * *', async () => {
-  try {
-    // Gửi bảng công tổng hợp
-    await sendAggregatedData();
-  } catch (error) {
-    console.error("Lỗi khi gửi bảng công tổng hợp:", error);
-  }
-});
 
 // Lập lịch gửi bảng công tổng hợp vào 9h12 sáng hàng ngày theo giờ Việt Nam
 cron.schedule('30 7 * * *', async () => {
@@ -546,10 +535,16 @@ bot.onText(/\/bangcong2/, async (msg) => {
     });
 
     response += 'Bảng tổng số tiền của từng thành viên:\n\n';
+    let totalSum = 0;
     for (const member in totalByMember) {
       const formattedTotal = totalByMember[member].toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
       response += `${member}: ${formattedTotal}vnđ\n`;
+      totalSum += totalByMember[member];
     }
+
+    // Tính tổng số tiền của tất cả thành viên
+    const formattedTotalSum = totalSum.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    response += `\nTổng số tiền của tất cả thành viên: ${formattedTotalSum}vnđ\n`;
 
     bot.sendMessage(chatId, response.trim());
   } catch (error) {
@@ -577,6 +572,34 @@ bot.onText(/\/xoa/, async (msg) => {
     bot.sendMessage(chatId, 'Đã xảy ra lỗi khi xóa bảng công. Vui lòng thử lại.');
   }
 });
+
+bot.onText(/\/delete(\d+)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+
+  try {
+    // Lấy số ngày từ lệnh
+    const days = parseInt(match[1], 10);
+
+    // Lấy ngày hiện tại
+    const currentDate = new Date();
+    // Trừ số ngày để lấy ngày của (số ngày) trước
+    currentDate.setDate(currentDate.getDate() - days);
+    const targetDate = currentDate.toLocaleDateString();
+
+    // Xóa tất cả bảng công của những ngày từ (số ngày) trước trở đi cho nhóm có chatId -1002050799248
+    const result = await BangCong2.deleteMany({
+      date: { $lt: targetDate },
+      groupId: -1002108234982, // Chỉ xóa bảng công của nhóm này
+    });
+
+    bot.sendMessage(chatId, `Đã xóa ${result.deletedCount} bảng công của những ngày từ ${days} ngày trước từ nhóm -1002050799248.`);
+  } catch (error) {
+    console.error('Lỗi khi xóa bảng công:', error);
+    bot.sendMessage(chatId, 'Đã xảy ra lỗi khi xóa bảng công. Vui lòng thử lại.');
+  }
+});
+
+
 
 
 // Lập lịch gửi bảng công tổng hợp vào 9h12 sáng hàng ngày theo giờ Việt Nam
