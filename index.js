@@ -1,5 +1,6 @@
 const TelegramBot = require('node-telegram-bot-api');
 const mongoose = require('mongoose');
+const axios = require('axios');
 const request = require('request');
 const cron = require('node-cron'); // Thư viện để thiết lập cron jobs
 const keep_alive = require('./keep_alive.js');
@@ -425,58 +426,65 @@ const normalizeName = (name) => {
   return name.replace(/[^\w\s]/gi, '').toLowerCase().trim();
 };
 
-// Lệnh /edit để chỉnh sửa bảng công
+const groupCodes = {
+  "cđnbch": "-1002039100507",
+  "Knpt": "-1002004082575",
+  "dltc": "-1002123430691",
+  "tnmn": "-1002143712364",
+  "httl": "-1002128975957",
+  "ct": "-1002080535296",
+  "tđcv": "-1002091101362",
+  "gimđcs": "-1002129896837"
+};
+
 bot.onText(/\/edit (.+)/, async (msg, match) => {
-  const chatId = msg.chat.id;
-  const text = match[1]; // Phần sau "/edit"
+    const chatId = msg.chat.id;
+    const input = match[1].split(',').map(item => item.trim());
+    const groupCode = input[0];
+    const ten = input[1];
+    const quay = input[2];
+    const keo = input[3];
+    const date = input[4];
 
-  // Phân tích cú pháp để lấy các tham số
-  const parts = text.split(',');
-  if (parts.length !== 4) {
-    bot.sendMessage(chatId, 'Định dạng không hợp lệ. Đúng định dạng là: /edit groupId, ten, quay, keo.');
-    return;
-  }
-
-  const [groupId, rawTen, quayStr, keoStr] = parts.map((p) => p.trim());
-  const quay = parseInt(quayStr, 10); // Chuyển đổi quay thành số nguyên
-  const keo = parseInt(keoStr, 10); // Chuyển đổi keo thành số nguyên
-
-  if (isNaN(quay) || isNaN(keo)) {
-    bot.sendMessage(chatId, 'Quay và Keo phải là số.');
-    return;
-  }
-
-  try {
-    const normalizedRawTen = normalizeName(rawTen); // Chuẩn hóa tên đầu vào
-
-    const currentDate = new Date().toLocaleDateString();
-
-    // Tìm bảng công với tên gần đúng (loại bỏ icon và emoji)
-    const bangCong = await BangCong2.findOne({
-      groupId,
-      date: currentDate,
-      ten: { $regex: normalizedRawTen, $options: 'i' }, // So khớp không phân biệt chữ hoa/thường
-    });
-
-    if (!bangCong) {
-      bot.sendMessage(chatId, `Không tìm thấy bảng công cho thành viên có tên gần đúng với "${rawTen}" trong nhóm ${groupId}.`);
-      return;
+    if (!groupCode || !ten || !quay || !keo || !date) {
+        bot.sendMessage(chatId, 'Sai cú pháp. Vui lòng nhập đúng định dạng: /edit groupId, tên thành viên, số quay, số keo, ngày/tháng');
+        return;
     }
 
-    // Cập nhật quay và keo
-    bangCong.quay = quay;
-    bangCong.keo = keo;
+    const groupId = groupCodes[groupCode];
+    if (!groupId) {
+        bot.sendMessage(chatId, `Mã nhóm không hợp lệ: ${groupCode}`);
+        return;
+    }
 
-    // Cập nhật tổng tiền
-    bangCong.tinh_tien = quay * 500 + keo * 1000;
+    const [day, month] = date.split('/');
+    const year = new Date().getFullYear();
+    const entryDate = new Date(year, month - 1, day);
 
-    await bangCong.save(); // Lưu thay đổi
+    try {
+        // Tìm kiếm thành viên gần đúng
+        const regex = new RegExp(ten.split('').join('.*'), 'i');
+        const bangCong = await BangCong2.findOne({
+            groupId: Number(groupId),
+            ten: { $regex: regex },
+            date: entryDate
+        });
 
-    bot.sendMessage(chatId, `Bảng công cho thành viên có tên gần đúng với "${rawTen}" trong nhóm ${groupId} đã được cập nhật.`);
-  } catch (error) {
-    console.error('Lỗi khi chỉnh sửa bảng công:', error);
-    bot.sendMessage(chatId, 'Đã xảy ra lỗi khi chỉnh sửa bảng công. Vui lòng thử lại.');
-  }
+        if (!bangCong) {
+            bot.sendMessage(chatId, `Không tìm thấy bản ghi để cập nhật cho ${ten.trim()} vào ngày ${date}.`);
+            return;
+        }
+
+        bangCong.quay = Number(quay);
+        bangCong.keo = Number(keo);
+        bangCong.tinh_tien = (Number(quay.trim()) * 500) + (Number(keo.trim()) * 1000); // Giả định tính tiền công là tổng số quay và keo nhân 1000
+        await bangCong.save();
+
+        bot.sendMessage(chatId, `Cập nhật thành công cho ${ten.trim()} vào ngày ${date}.`);
+    } catch (error) {
+        console.error('Lỗi khi cập nhật dữ liệu:', error);
+        bot.sendMessage(chatId, 'Lỗi khi cập nhật dữ liệu.');
+    }
 });
 
 // Các xử lý khác (ví dụ: xử lý message)
@@ -696,6 +704,142 @@ async function sendAggregatedData(chatId) {
   }
 }
 
+
+
+const groups = {
+  "-1002039100507": "BẢNG CÔNG NHÓM CỘNG ĐỒNG NẮM BẮT CƠ HỘI",
+  "-1002004082575": "BẢNG CÔNG NHÓM KHÔNG NGỪNG PHÁT TRIỂN",
+  "-1002123430691": "BẢNG CÔNG NHÓM DẪN LỐI THÀNH CÔNG",
+  "-1002143712364": "BẢNG CÔNG NHÓM THU NHẬP MỖI NGÀY",
+  "-1002128975957": "BẢNG CÔNG NHÓM HƯỚNG TỚI TƯƠNG LAI",
+  "-1002080535296": "BẢNG CÔNG NHÓM CHALLENGE TRADING",
+  "-1002091101362": "BẢNG CÔNG NHÓM TRAO ĐỔI CÔNG VIỆC", 
+  "-1002129896837": "BẢNG CÔNG NHÓM GROUP I MẠNH ĐỨC CHIA SẺ", 
+  
+};
+
+bot.onText(/\/anhbangcong/, async (msg) => {
+    const chatId = msg.chat.id;
+    await generateAndSendImages(chatId);
+});
+
+// Chức năng tự động gửi hình ảnh vào 9h sáng mỗi ngày (theo giờ Việt Nam) vào groupId -1002103270166
+cron.schedule('0 3 * * *', async () => { // 2 giờ UTC là 9 giờ sáng theo giờ Việt Nam
+    const chatId = '-1002103270166';
+    await generateAndSendImages(chatId);
+});
+
+async function generateAndSendImages(chatId) {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const startOfYesterday = new Date(yesterday);
+    startOfYesterday.setHours(0, 0, 0, 0);
+    const endOfYesterday = new Date(yesterday);
+    endOfYesterday.setHours(23, 59, 59, 999);
+    const dateStr = `${yesterday.getDate()}/${yesterday.getMonth() + 1}`;
+
+    try {
+        let totalAmountByUser = {}; // Đối tượng để lưu tổng số tiền của mỗi người dùng
+        for (const [groupId, groupName] of Object.entries(groups)) {
+            // Truy vấn MongoDB để lấy dữ liệu bảng công cho ngày hôm qua và groupId
+            const bangCongs = await BangCong2.find({
+                date: { $gte: startOfYesterday, $lte: endOfYesterday },
+                groupId: Number(groupId)
+            });
+
+            if (bangCongs.length === 0) {
+                bot.sendMessage(chatId, `Không có dữ liệu bảng công cho ngày hôm qua cho nhóm ${groupName}.`);
+                continue;
+            }
+
+            // Tạo content từ dữ liệu bảng công
+            let totalAmount = 0;
+            let content = bangCongs.map(bangCong => {
+                totalAmount += bangCong.tinh_tien;
+                totalAmountByUser[bangCong.ten] = (totalAmountByUser[bangCong.ten] || 0) + bangCong.tinh_tien; // Cập nhật tổng số tiền cho người dùng
+                return `${bangCong.ten}\t${bangCong.quay}\t${bangCong.keo}\t${bangCong.tinh_tien}vnđ`;
+            }).join('\n');
+
+            const imageUrl = await createImage(content, groupName, totalAmount, dateStr);
+            bot.sendPhoto(chatId, imageUrl);
+        }
+
+        // Tạo bảng tổng số tiền của từng thành viên từ tất cả các nhóm
+        let totalAmountContent = '';
+        for (const [userName, totalAmount] of Object.entries(totalAmountByUser)) {
+            totalAmountContent += `<TR><TD ALIGN="LEFT" STYLE="font-weight: bold;">${userName}</TD><TD ALIGN="CENTER">${totalAmount}vnđ</TD></TR>`;
+        }
+        const totalAmountImageUrl = await createTotalAmountImage(totalAmountContent);
+        bot.sendPhoto(chatId, totalAmountImageUrl);
+
+        // Gửi tin nhắn ngẫu nhiên và ghim tin nhắn đó
+        const messages = [
+            `Attention, attention! Bảng công (${dateStr}) nóng hổi vừa ra lò, ai chưa check điểm danh là lỡ mất cơ hội "ăn điểm" với sếp đó nha!`,
+            `Chuông báo thức đã vang! ⏰⏰⏰ Bảng công (${dateStr}) đã có mặt, ai trễ hẹn là "ăn hành" với team trưởng Hieu Gà đó nha!`,           
+`Quà tặng bất ngờ đây! Bảng công (${dateStr}) xinh xắn đã đến tay mọi người, ai check nhanh sẽ có quà ngon đó nha!`,
+`Thám tử bảng công đã xuất hiện! ️‍♀️️‍♂️ Hãy nhanh chóng kiểm tra bảng công (${dateStr}) để tìm ra "bí ẩn" điểm số của bạn nào!`,
+`Vinh danh những chiến binh cống hiến! Bảng công (${dateStr}) là minh chứng cho sự nỗ lực của bạn, hãy tự hào khoe chiến công với mọi người nhé!`,
+`Nhảy đi nào các chiến binh! Bảng công (${dateStr}) sôi động đã có mặt, hãy cùng "phiêu" theo nhịp điệu quẩy nào!`,
+`Học sinh ngoan đâu rồi điểm danh! ‍♀️‍♂️ Bảng công (${dateStr}) chính là bảng điểm "siêu cấp" để bạn đánh giá bản thân đó nha!`,
+`Bếp trưởng đãi bảng công xin mời quý thực khách! Bảng công (${dateStr}) "đậm đà" hương vị thành công, mời mọi người thưởng thức!`,
+`Quà tặng tri ân của Củ Khoai Nóng dành cho "quẩy thủ" xuất sắc! Bảng công (${dateStr}) là lời cảm ơn chân thành của công ty dành cho những ai đã cống hiến hết mình! ❤️❤️❤️`,
+`Bùng nổ niềm vui với bảng công (${dateStr})! Hãy cùng nhau chúc mừng những thành công và tiếp tục tiến bước chinh phục những mục tiêu mới!` 
+
+        ];
+        const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+        const message = await bot.sendMessage(chatId, randomMessage);
+        await bot.pinChatMessage(chatId, message.message_id);
+    } catch (error) {
+        console.error('Lỗi khi truy vấn dữ liệu từ MongoDB:', error);
+        bot.sendMessage(chatId, 'Failed to create image.');
+    }
+}
+
+async function createImage(content, groupName, totalAmount, dateStr) {
+    // Tạo URL cho hình ảnh sử dụng QuickChart
+    const url = 'https://quickchart.io/graphviz?format=png&layout=dot&graph=';
+    const graph = `
+        digraph G {
+            node [shape=plaintext];
+            a [label=<
+                <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" STYLE="font-family: 'Arial', sans-serif; border: 1px solid black;">
+                    <TR><TD COLSPAN="4" ALIGN="CENTER" BGCOLOR="#FFCC00" STYLE="font-size: 16px; font-weight: bold;">${groupName} - ${dateStr}</TD></TR>
+                    <TR STYLE="font-weight: bold; background-color: #FFCC00;">
+                        <TD ALIGN="CENTER">Tên</TD>
+                        <TD ALIGN="CENTER">Quẩy</TD>
+                        <TD ALIGN="CENTER">Cộng</TD>
+                        <TD ALIGN="CENTER">Tiền công</TD>
+                    </TR>
+                    ${content.split('\n').map(line => `<TR><TD ALIGN="LEFT" STYLE="font-weight: bold;">${line.split('\t').join('</TD><TD ALIGN="CENTER">')}</TD></TR>`).join('')}
+                    <TR STYLE="font-weight: bold;">
+                        <TD COLSPAN="3" ALIGN="LEFT">Tổng số tiền</TD>
+                        <TD ALIGN="CENTER">${totalAmount}vnđ</TD>
+                    </TR>
+                </TABLE>
+            >];
+        }
+    `;
+    const imageUrl = `${url}${encodeURIComponent(graph)}`;
+    return imageUrl;
+}
+
+async function createTotalAmountImage(content) {
+    // Tạo URL cho hình ảnh sử dụng QuickChart
+    const url = 'https://quickchart.io/graphviz?format=png&layout=dot&graph=';
+    const graph = `
+        digraph G {
+            node [shape=plaintext];
+            a [label=<
+                <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" STYLE="font-family: 'Arial', sans-serif; border: 1px solid black;">
+                    <TR><TD COLSPAN="2" ALIGN="CENTER" BGCOLOR="#FFCC00" STYLE="font-size: 16px; font-weight: bold;">Tổng số tiền của từng thành viên từ tất cả các nhóm</TD></TR>
+                    ${content}
+                </TABLE>
+            >];
+        }
+    `;
+    const imageUrl = `${url}${encodeURIComponent(graph)}`;
+    return imageUrl;
+}
 
 
 // Thay thế YOUR_API_KEY bằng API key OpenWeatherMap của bạn
