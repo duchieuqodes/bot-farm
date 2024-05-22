@@ -7,6 +7,7 @@
     "start": "node index.js"
   },
   "dependencies": {
+    "axios": "^1.7.2",
     "moment-timezone": "^0.5.43",
     "mongoose": "^6.0.12",
     "node-cron": "^3.0.0",
