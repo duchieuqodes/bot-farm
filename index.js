@@ -882,50 +882,10 @@ async function createTotalAmountImage(content, dateStr) {
   return imageUrl;
 }
 
-// Bắt đầu bot
-bot.onText(/\/hd/, (msg) => {
-  bot.sendMessage(msg.chat.id, 'Hướng dẫn sử dụng bot:
-/tempo - Bỏ qua bảng công các nhóm.
-    
-Cú pháp: /tempo [group_codes]
-/add - Thêm bảng công các nhóm từ ngày/tháng cụ thể.
-
-Cú pháp: /add [group_codes] dd/mm
-/tong - Tổng hợp bảng công cho ngày hiện tại.
-Cú pháp: /tong
-/sum - Tổng hợp bảng công cho ngày hôm qua.
-
-Cú pháp: /sum
-/delete - Xóa bảng công của những ngày từ số ngày trước chỉ định.
-
-Cú pháp: /delete[number_of_days]
-/homqua - Hiển thị bảng công cho tất cả các nhóm trong ngày hôm qua.
-
-Cú pháp: /homqua
-/bangcong2 - Xem bảng công từng ngày của nhóm và bảng tổng số tiền của từng thành viên.
-
-Cú pháp: /bangcong2
-/edit - Chỉnh sửa bảng công cho một thành viên cụ thể.
-
-Cú pháp: /edit groupId, tên thành viên, số quay, số keo, ngày/tháng
-/reset - Xóa các bảng công của những ngày trước.
-
-Cú pháp: /reset
-/xoa - Xóa bảng công của những ngày trước từ nhóm có chatId -1002108234982.
-
-Cú pháp: /xoa ');
-});
-
 bot.onText(/\/anhbangcong/, async (msg) => {
   const chatId = msg.chat.id;
   await generateAndSendImages(chatId);
 });
-
-// Các hàm trợ giúp khác và cài đặt có thể được thêm vào đây...
-
-
-// Các hàm trợ giúp khác và cài đặt có thể được thêm vào đây...
-
 
 
 // Thay thế YOUR_API_KEY bằng API key OpenWeatherMap của bạn
