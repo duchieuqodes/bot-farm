@@ -176,7 +176,7 @@ const groupNames = {
   "-1002091101362": "TRAO ĐỔI CÔNG VIỆC", 
   "-1002129896837": "GROUP I MẠNH ĐỨC CHIA SẺ", 
   "-1002228252389": "TRAO ĐỔI CÔNG VIỆC 2",
-  
+  "-1002228252389": "BẢNG CÔNG NHÓM BƯỚC ĐI KHỞI NGHIỆP", 
 };
 
 // Xử lý lệnh /bc để hiển thị bảng công cho tất cả các nhóm
@@ -438,6 +438,7 @@ const groupCodes = {
   "gimđcs": "-1002129896837",
   "tđcv2": "-1002228252389",
   "fc": "-1002108234982",
+  "bđkn": "-1002228252389", 
 };
 
 bot.onText(/\/edit (.+)/, async (msg, match) => {
@@ -718,7 +719,7 @@ const groups = {
   "-1002080535296": "BẢNG CÔNG NHÓM CHALLENGE TRADING",
   "-1002091101362": "BẢNG CÔNG NHÓM TRAO ĐỔI CÔNG VIỆC", 
   "-1002129896837": "BẢNG CÔNG NHÓM GROUP I MẠNH ĐỨC CHIA SẺ", 
-  
+  "-1002228252389": "BẢNG CÔNG NHÓM BƯỚC ĐI KHỞI NGHIỆP", 
 };
 
 
