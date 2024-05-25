@@ -18,13 +18,13 @@ const MessageSchema = new mongoose.Schema({
 const Message = mongoose.model('Message', MessageSchema);
 
 const keywordRegex = /(ca\s?1|Ca\s?1|C\s?1|c\s?1|ca1|Ca1|C1|c1|ca\s?2|Ca\s?2|C\s?2|c\s?2|ca2|Ca2|C2|c2)\s*/gi;
-const warningGroupId = -1002128289933;
+const warningGroupId = -1002103270166;
 
 function normalizeKeyword(keyword) {
   if (/ca\s?1|Ca\s?1|C\s?1|c\s?1|ca1|Ca1|C1|c1/gi.test(keyword)) {
-    return 'ca 1';
+    return 'Ca 1';
   } else if (/ca\s?2|Ca\s?2|C\s?2|c\s?2|ca2|Ca2|C2|c2/gi.test(keyword)) {
-    return 'ca 2';
+    return 'Ca 2';
   }
   return keyword;
 }
