@@ -6,6 +6,7 @@ const cron = require('node-cron'); // Thư viện để thiết lập cron jobs
 const keep_alive = require('./keep_alive.js');
 const { resetDailyGiftStatus, sendMorningMessage, handleGiftClaim } = require('./gift');
 const { setupNewsSchedule, sendLatestNews } = require('./news.js');
+const { handleMessage, resetKeywords } = require('./warningMember');
 
 // Kết nối tới MongoDB
 mongoose.connect(
@@ -173,7 +174,7 @@ const groupNames = {
   "-1002143712364": "CÙNG NHAU CHIA SẺ",
   "-1002128975957": "HƯỚNG TỚI TƯƠNG LAI",
   "-1002080535296": "TRAO ĐỔI CÔNG VIỆC 2",
-  "-1002091101362": "TRAO ĐỔI CÔNG VIỆC", 
+  "-1002091101362": "TRAO ĐỔI CÔNG VIỆC 1", 
   "-1002129896837": "GROUP I MẠNH ĐỨC CHIA SẺ", 
   "-1002228252389": "BƯỚC ĐI KHỞI NGHIỆP", 
 };
@@ -433,10 +434,9 @@ const groupCodes = {
   "cncs": "-1002143712364",
   "httl": "-1002128975957",
   "tđcv2": "-1002080535296",
-  "tđcv": "-1002091101362",
+  "tđcv1": "-1002091101362",
   "gimđcs": "-1002129896837",
-  "tđcv2": "-1002228252389",
-  "fc": "-1002108234982",
+  "cf": "-1002108234982",
   "bđkn": "-1002228252389", 
 };
 
@@ -716,7 +716,7 @@ const groups = {
   "-1002143712364": "BẢNG CÔNG NHÓM CÙNG NHAU CHIA SẺ",
   "-1002128975957": "BẢNG CÔNG NHÓM HƯỚNG TỚI TƯƠNG LAI",
   "-1002080535296": "BẢNG CÔNG NHÓM TRAO ĐỔI CÔNG VIỆC 2",
-  "-1002091101362": "BẢNG CÔNG NHÓM TRAO ĐỔI CÔNG VIỆC", 
+  "-1002091101362": "BẢNG CÔNG NHÓM TRAO ĐỔI CÔNG VIỆC 1", 
   "-1002129896837": "BẢNG CÔNG NHÓM GROUP I MẠNH ĐỨC CHIA SẺ", 
   "-1002228252389": "BẢNG CÔNG NHÓM BƯỚC ĐI KHỞI NGHIỆP", 
 };
@@ -1125,3 +1125,18 @@ const groupChatId = -1002103270166; // Thay bằng ChatId của nhóm bạn
 // Thiết lập lịch trình gửi tin nhắn vào nhóm
 setupNewsSchedule(bot, groupChatId);
 
+//warningMember.js
+bot.on('message', (msg) => {
+  handleMessage(bot, msg, groupNames);
+});
+
+cron.schedule('50 6 * * *', async () => {
+  await resetKeywords();
+}, {
+  timezone: "Asia/Ho_Chi_Minh"
+});
+
+bot.onText(/\/reset/, async (msg) => {
+  await resetKeywords();
+  bot.sendMessage(msg.chat.id, "Đã reset trường keyword của tất cả các tin nhắn.");
+});
