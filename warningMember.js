@@ -67,7 +67,7 @@ async function handleMessage(bot, msg, groupNames) {
 }
 
 async function resetKeywords() {
-  await Message.updateMany({}, { $unset: { keyword: 1 } });
+  await Message.deleteMany({});
 }
 
 module.exports = {
