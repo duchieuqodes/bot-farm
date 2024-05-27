@@ -1488,25 +1488,68 @@ cron.schedule('0 0 * * *', () => {
   calculateAndUpdateLevel();
 });
 
-// Xử lý sự kiện khi nút "Xem tài khoản" được nhấn
-bot.on('message', async (msg) => {
-  if (msg.text === 'Xem tài khoản') {
-    const userId = msg.from.id;
-    const fullname = `${msg.from.first_name} ${msg.from.last_name || ''}`.trim();
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(today.getDate() - 1);
-    
-    // Đặt giờ phút giây của hôm nay về đầu ngày (00:00:00)
-    today.setHours(0, 0, 0, 0);
-    const endOfToday = new Date(today);
-    endOfToday.setHours(23, 59, 59, 999);
+// Tạo ngẫu nhiên nhiệm vụ
+function generateDailyTasks() {
+  const quayTask = Math.floor(Math.random() * 30) + 5; // 5-50 quay
+  const keoTask = Math.floor(Math.random() * 10) + 3; // 3-20 keo
+  const billTask = Math.floor(Math.random() * 3) + 1; // 1-10 nhận ảnh bill
+  return {
+    quayTask,
+    keoTask,
+    billTask
+  };
+}
 
-    // Đặt giờ phút giây của yesterday về đầu ngày (00:00:00)
+async function checkAndUpdateBillCount(userId, text) {
+  const match = text.match(/(\d+)\s*(ảnh|bill)/i);
+  if (match) {
+    let count = parseInt(match[1], 10);
+    if (isNaN(count)) {
+      count = 0; // Default to 0 if NaN
+    }
+    if (count > 0) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const endOfToday = new Date(today);
+      endOfToday.setHours(23, 59, 59, 999);
+
+      let bangCong = await BangCong2.findOne({ userId, date: { $gte: today, $lt: endOfToday } });
+      if (!bangCong) {
+        bangCong = new BangCong2({ userId, date: new Date(), quay: 0, keo: 0, tinh_tien: 0, nhan_anh_bill: 0 });
+      }
+      bangCong.nhan_anh_bill = (bangCong.nhan_anh_bill || 0) + count; // Ensure nhan_anh_bill is a number
+      await bangCong.save();
+    }
+  }
+}
+
+
+// Xử lý sự kiện khi nút "Xem tài khoản" hoặc "Nhiệm vụ hôm nay" được nhấn
+bot.on('message', async (msg) => {
+  const userId = msg.from.id;
+  const fullname = `${msg.from.first_name} ${msg.from.last_name || ''}`.trim();
+  const today = new Date();
+  const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+      
+  // Đặt giờ phút giây của hôm nay về đầu ngày (00:00:00)
+  today.setHours(0, 0, 0, 0);
+  const endOfToday = new Date(today);
+  endOfToday.setHours(23, 59, 59, 999);
+
+// Đặt giờ phút giây của yesterday về đầu ngày (00:00:00)
     yesterday.setHours(0, 0, 0, 0);
     const endOfYesterday = new Date(yesterday);
     endOfYesterday.setHours(23, 59, 59, 999); // Đặt giờ phút giây của endOfYesterday về cuối ngày (23:59:59.999)
 
+  // Kiểm tra và cập nhật số lượng nhan_anh_bill nếu tin nhắn chứa từ khóa phù hợp
+  if (msg.text) {
+    await checkAndUpdateBillCount(userId, msg.text);
+  } else if (msg.caption) {
+    await checkAndUpdateBillCount(userId, msg.caption);
+  }
+
+  if (msg.text === 'Xem tài khoản' || msg.text === 'Nhiệm vụ hôm nay') {
     try {
       // Kiểm tra xem thành viên đã tồn tại chưa
       let member = await Member.findOne({ userId });
@@ -1529,7 +1572,7 @@ bot.on('message', async (msg) => {
         bot.sendMessage(msg.chat.id, `Tài khoản của bạn đã được tạo, ${fullname}!`, {
           reply_markup: {
             keyboard: [
-              [{ text: 'Xem tài khoản' }]
+              [{ text: 'Xem tài khoản' }, { text: 'Nhiệm vụ hôm nay' }]
             ],
             resize_keyboard: true,
             one_time_keyboard: false
@@ -1537,49 +1580,119 @@ bot.on('message', async (msg) => {
         });
       }
 
+      
       // Lấy thông tin từ BangCong2
-      const bangCongRecordsYesterday = await BangCong2.find({ userId: userId, date: { $gte: yesterday, $lt: endOfYesterday } });
+      const bangCongRecordsYesterday = await BangCong2.find({ userId: userId, date: { $gte: yesterday, $lt: endOfYesterday } });     
       const bangCongRecordsToday = await BangCong2.find({ userId: userId, date: { $gte: today, $lt: endOfToday } });
       const totalQuayYesterday = bangCongRecordsYesterday.reduce((acc, record) => acc + (record.quay || 0), 0);
-      const totalKeoYesterday = bangCongRecordsYesterday.reduce((acc, record) => acc + (record.keo || 0), 0);
+      const totalKeoYesterday = bangCongRecordsYesterday.reduce((acc, record) => acc + (record.keo || 0), 0);    
       const totalQuayToday = bangCongRecordsToday.reduce((acc, record) => acc + (record.quay || 0), 0);
       const totalKeoToday = bangCongRecordsToday.reduce((acc, record) => acc + (record.keo || 0), 0);
+      const totalBillToday = bangCongRecordsToday.reduce((acc, record) => acc + (record.nhan_anh_bill || 0), 0);
 
-      // Lấy thông tin từ Member sau khi chắc chắn rằng thành viên tồn tại
-      const rankEmoji = getRankEmoji(member.level);
-      const starEmoji = getStarEmoji(member.levelPercent);
+      if (msg.text === 'Xem tài khoản') {
+        const rankEmoji = getRankEmoji(member.level);
+        const starEmoji = getStarEmoji(member.levelPercent);
 
-      const responseMessage = `
+const responseMessage = `
         Thông tin tài khoản 🩴:
-        Quẩy thủ: ${member.fullname} 👹
+        Quẩy thủ 👹: ${member.fullname}
         Level: ${member.level} ${rankEmoji} + ${member.levelPercent.toFixed(2)}% 
         ${starEmoji}
         
         🎒 Tài sản quẩy của bạn ngày hôm qua:
         Tổng Quẩy: ${totalQuayYesterday} 🥨
         Tổng Kẹo: ${totalKeoYesterday} 🍬
-        Tổng Tính Tiền 🍚: ${bangCongRecordsYesterday.reduce((acc, record) => acc + (record.tinh_tien || 0), 0)} 🅥🅽🅓
+        Tổng tính tiền: ${bangCongRecordsYesterday.reduce((acc, record) => acc + (record.tinh_tien || 0), 0)} VNĐ
 
         🎒 Tài sản quẩy của bạn ngày hôm nay:
         Tổng Quẩy: ${totalQuayToday} 🥨
         Tổng Kẹo: ${totalKeoToday} 🍬
-        Tổng Tính Tiền 🍚: ${bangCongRecordsToday.reduce((acc, record) => acc + (record.tinh_tien || 0), 0) 🅥🅽🅓    
+        Tổng tính tiền: ${bangCongRecordsToday.reduce((acc, record) => acc + (record.tinh_tien || 0), 0)} VNĐ    
       `;
-      bot.sendMessage(msg.chat.id, responseMessage, {
-        reply_markup: {
-          keyboard: [
-            [{ text: 'Xem tài khoản' }]
-          ],
-          resize_keyboard: true,
-          one_time_keyboard: false
+        bot.sendMessage(msg.chat.id, responseMessage, {
+          reply_markup: {
+            keyboard: [
+              [{ text: 'Xem tài khoản' }, { text: 'Nhiệm vụ hôm nay' }]
+              ],
+              resize_keyboard: true,
+              one_time_keyboard: false
+            }
+          });
+      } else if (msg.text === 'Nhiệm vụ hôm nay') {
+        // Kiểm tra xem nhiệm vụ hàng ngày đã tồn tại chưa
+        let dailyTask = await DailyTask.findOne({ userId, date: today });
+
+        if (!dailyTask) {
+          // Tạo mới nhiệm vụ hàng ngày nếu chưa tồn tại
+          const tasks = generateDailyTasks();
+          dailyTask = new DailyTask({
+            userId,
+            date: today,
+            quayTask: tasks.quayTask,
+            keoTask: tasks.keoTask,
+            billTask: tasks.billTask
+          });
+          await dailyTask.save();
         }
-      });
+
+        // Lấy thông tin từ BangCong2 cho hôm nay
+        const bangCongRecordsToday = await BangCong2.find({ userId, date: { $gte: today, $lt: endOfToday } });
+        const totalQuayToday = bangCongRecordsToday.reduce((acc, record) => acc + (record.quay || 0), 0);
+        const totalKeoToday = bangCongRecordsToday.reduce((acc, record) => acc + (record.keo || 0), 0);
+        const totalBillToday = bangCongRecordsToday.reduce((acc, record) => acc + (record.nhan_anh_bill || 0), 0);
+
+        let taskMessage `Nhiệm vụ hôm nay của ${fullname}:\n\n`;
+        const tasks = [
+          { name: 'Quẩy🥨', completed: dailyTask.completedQuay, total: totalQuayToday, goal: dailyTask.quayTask },
+          { name: 'Kẹo🍬', completed: dailyTask.completedKeo, total: totalKeoToday, goal: dailyTask.keoTask },
+          { name: 'Nộp bài chú thích số ảnh hoặc số bill đã nhận để bot ghi nhận)', completed: dailyTask.completedBill, total: totalBillToday, goal: dailyTask.billTask }
+        ];
+
+        for (let task of tasks) {
+          if (!task.completed && task.total >= task.goal) {
+            // Hoàn thành nhiệm vụ
+            task.completed = true;
+            const exp = Math.floor(Math.random() * 41) + 10; // Random 10-50 điểm exp
+            member.levelPercent += exp * 0.1;
+
+            // Kiểm tra nếu levelPercent >= 100 thì tăng level
+            if (member.levelPercent >= 100) {
+              member.level += Math.floor(member.levelPercent / 100);
+              member.levelPercent %= 100;
+            }
+            await member.save();
+
+            if (task.name === 'Quẩy🥨') {
+              dailyTask.completedQuay = true;
+            } else if (task.name === 'Kẹo🍬') {
+              dailyTask.completedKeo = true;
+            } else if (task.name === 'nhận ảnh quẩy, bill (Nộp bài chú thích số ảnh hoặc số bill đã nhận để bot ghi nhận)') {
+              dailyTask.completedBill = true;
+            }
+            await dailyTask.save();
+
+            bot.sendMessage(msg.chat.id, `Chúc mừng ${fullname} 🥳 đã hoàn thành nhiệm vụ ${task.name} và nhận được ${exp} điểm kinh nghiệm!👺`);
+          }
+          taskMessage += `Hoàn thành ${task.name}: ${task.total}/${task.goal} (Phần thường: điểm kinh nghiệm)\n\n`;
+        }
+
+        bot.sendMessage(msg.chat.id, taskMessage, {
+          reply_markup: {
+            keyboard: [
+              [{ text: 'Xem tài khoản' }, { text: 'Nhiệm vụ hôm nay' }]
+            ],
+            resize_keyboard: true,
+            one_time_keyboard: false
+          }
+        });
+      }
     } catch (error) {
       console.error('Lỗi khi truy vấn dữ liệu:', error);
       bot.sendMessage(msg.chat.id, 'Đã xảy ra lỗi khi truy vấn dữ liệu.', {
         reply_markup: {
           keyboard: [
-            [{ text: 'Xem tài khoản' }]
+            [{ text: 'Xem tài khoản' }, { text: 'Nhiệm vụ hôm nay' }]
           ],
           resize_keyboard: true,
           one_time_keyboard: false
@@ -1588,6 +1701,9 @@ bot.on('message', async (msg) => {
     }
   }
 });
+
+
+
 
 // Xử lý lệnh "/bup" để xóa hết dữ liệu trong schema Member
 bot.onText(/\/bup/, async (msg) => {
@@ -1598,7 +1714,7 @@ bot.onText(/\/bup/, async (msg) => {
     // Thêm điều kiện kiểm tra quyền hạn ở đây nếu cần thiết
 
     // Xóa hết dữ liệu từ schema Member
-    await Member.deleteMany({});
+    await Message.deleteMany({});
     bot.sendMessage(msg.chat.id, 'Đã xóa hết dữ liệu từ schema Member.');
   } catch (error) {
     console.error('Lỗi khi xóa dữ liệu từ schema Member:', error);
