@@ -62,7 +62,7 @@ const DailyGiftStatusSchema = new mongoose.Schema({
 });
 
 const DailyGiftStatus = mongoose.model('DailyGiftStatus', DailyGiftStatusSchema);
-Tạo model từ schema
+//Tạo model từ schema
 const Member = mongoose.model('Member', MemberSchema);
 const Message = mongoose.model('Message', MessageSchema);
 
