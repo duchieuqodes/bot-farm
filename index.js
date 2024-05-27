@@ -28,6 +28,29 @@ const BangCongSchema = new mongoose.Schema({
   prizeAmount: { type: Number, default: 0 },
 });
 
+//Định nghĩa schema cho thành viên
+const MemberSchema = new mongoose.Schema({
+  userId: { type: Number, unique: true },
+  fullname: String,
+  level: Number,
+  levelPercent: Number,
+  assets: {
+    quay: Number,
+    keo: Number,
+    vnd: Number
+  }
+});
+
+// Định nghĩa schema cho tin nhắn
+const MessageSchema = new mongoose.Schema({
+  messageId: Number,
+  userId: Number,
+  chatId: Number,
+  text: String,
+  date: { type: Date, default: Date.now }
+});
+
+
 // Tạo model từ schema
 const BangCong2 = mongoose.model('BangCong2', BangCongSchema);
 
@@ -39,6 +62,10 @@ const DailyGiftStatusSchema = new mongoose.Schema({
 });
 
 const DailyGiftStatus = mongoose.model('DailyGiftStatus', DailyGiftStatusSchema);
+Tạo model từ schema
+const Member = mongoose.model('Member', MemberSchema);
+const Message = mongoose.model('Message', MessageSchema);
+
 
 const token = '7150645082:AAH-N2VM6qx3iFEhK59YHx2e1oy3Bi1EzXc';
 const bot = new TelegramBot(token, { polling: true });
@@ -1139,4 +1166,379 @@ cron.schedule('50 6 * * *', async () => {
 bot.onText(/\/reset/, async (msg) => {
   await resetKeywords();
   bot.sendMessage(msg.chat.id, "Đã reset trường keyword của tất cả các tin nhắn.");
+});
+
+
+
+
+
+
+
+
+//forum.js
+// Lịch trình để xóa hết dữ liệu từ schema vào 0h00 hàng ngày
+cron.schedule('0 0 * * *', async () => {
+  try {
+    // Xóa hết dữ liệu từ schema
+    await Message.deleteMany({});
+    console.log('Đã xóa hết dữ liệu từ schema Message.');
+  } catch (error) {
+    console.error('Lỗi khi xóa dữ liệu từ schema Message:', error);
+  }
+});
+
+// Hàm lấy emoji rank dựa theo level
+function getRankEmoji(level) {
+  if (level >= 1 && level <= 10) return '🥚';
+  if (level >= 11 && level <= 15) return '🐣';
+  if (level >= 16 && level <= 20) return '🐓';
+  if (level >= 21 && level <= 30) return '🥉';
+  if (level >= 31 && level <= 40) return '🥈';
+  if (level >= 41 && level <= 55) return '🏅';
+  if (level >= 56 && level <= 60) return '⚜️';
+if (level >= 61 && level <= 65) return '🪽';
+  if (level >= 66 && level <= 70) return '🏵️';
+  if (level >= 71 & level <= 75) return '🧊';
+  if (level >= 76 && level <= 80) return '💠';
+  if (level >= 81 && level <= 85) return '💎VIP';
+  if (level >= 86 && level <= 90) return '🪩VIP';
+  if (level >= 91 && level <= 95) return '🩻VIP';
+  if (level >= 91 && level >= 100) return 'ﮩ٨ـﮩﮩ٨ـ🫀ﮩ٨ـﮩﮩ٨ـADMIN🔑';
+  return '';
+}
+
+// Hàm lấy emoji sao dựa theo phần trăm level
+function getStarEmoji(levelPercent) {
+  if (levelPercent >= 0 && levelPercent <= 25) return '✮';
+  if (levelPercent >= 26 && levelPercent <= 50) return '✮✮';
+  if (levelPercent >= 51 && levelPercent <= 75) return '✮✮✮';
+  if (levelPercent >= 76 && levelPercent <= 90) return '✮✮✮✮';
+  if (levelPercent >= 91 && levelPercent <= 100) return '✮✮✮✮✮';
+  if (levelPercent >= 101 && levelPercent <= 1000) return '✪✪✪✪✪';
+  return '';
+}
+
+// Lệnh /start để tham gia bot
+bot.onText(/\/start/, async (msg) => {
+  const userId = msg.from.id;
+  const fullname = `${msg.from.first_name} ${msg.from.last_name || ''}`.trim();
+  const opts = {
+    reply_markup: {
+      keyboard: [
+        [{ text: 'Xem tài khoản' }]
+      ],
+      resize_keyboard: true,
+      one_time_keyboard: false
+    }
+  };
+
+  try {
+    // Kiểm tra xem thành viên đã tồn tại chưa
+    let member = await Member.findOne({ userId });
+
+    if (!member) {
+      // Tạo mới thành viên nếu chưa tồn tại
+      member = new Member({
+        userId,
+        fullname,
+        level: 1,
+        levelPercent: 0,
+        assets: {
+          quay: 0,
+          keo: 0,
+          vnd: 0
+        }
+      });
+
+      await member.save();
+      bot.sendMessage(msg.chat.id, `Chào mừng ${fullname} đã tham gia bot!`, opts);
+     
+    } else {
+      bot.sendMessage(msg.chat.id, `${fullname}, bạn đã tham gia bot trước đó.`, opts);
+    }
+  } catch (error) {
+    console.error('Lỗi khi thêm thành viên:', error);
+    bot.sendMessage(msg.chat.id, 'Đã xảy ra lỗi khi thêm bạn vào hệ thống.');
+  }
+});
+
+// Xử lý tin nhắn và hiển thị theo định dạng yêu cầu
+bot.on('message', async (msg) => {
+  // Kiểm tra nếu tin nhắn không phải từ cuộc trò chuyện cá nhân (chat riêng tư) thì bỏ qua
+  if (msg.chat.type !== 'private') return;
+
+  if (msg.text && (msg.text.startsWith('/') || msg.text.startsWith('Xem tài khoản'))) return; // Bỏ qua lệnh bot và "Xem tài khoản"
+
+
+  const userId = msg.from.id;
+
+  try {
+    const member = await Member.findOne({ userId });
+
+    if (!member) {
+      bot.sendMessage(msg.chat.id, 'Bạn cần nhập /start để tham gia bot trước.');
+      return;
+    }
+
+    const replyOpts = {
+      reply_markup: {
+        keyboard: [
+          [{ text: 'Xem tài khoản' }]
+        ],
+        resize_keyboard: true,
+        one_time_keyboard: false
+      },
+      parse_mode: 'HTML'
+    };
+
+    const fullname = member.fullname;
+    const level = member.level;
+    const levelPercent = member.levelPercent;
+
+    const rankEmoji = getRankEmoji(level);
+    const starEmoji = getStarEmoji(levelPercent);
+
+    const captionText = msg.caption || 'hình ảnh'; 
+    const responseMessage = `Quẩy thủ: <a href="tg://user?id=${userId}">${fullname}</a> ${rankEmoji} (Level: ${level})\n${starEmoji} (${levelPercent}%)\n\n${msg.text || captionText}`;
+
+    // Lưu tin nhắn gốc vào database
+    const originalMessage = new Message({
+      messageId: msg.message_id,
+      userId: msg.from.id,
+      chatId: msg.chat.id,
+      text: msg.text || captionText
+   
+    });
+
+    await originalMessage.save();
+
+    // Xóa tin nhắn gốc
+    bot.deleteMessage(msg.chat.id, msg.message_id.toString());
+
+    // Gửi tin nhắn theo định dạng yêu cầu cho chính người gửi
+    if (msg.photo) {
+      const photoId = msg.photo[msg.photo.length - 1].file_id;
+      await bot.sendPhoto(msg.chat.id, photoId, replyOpts, { caption: responseMessage, parse_mode: 'HTML' });
+    } else {
+      await bot.sendMessage(msg.chat.id, responseMessage, replyOpts, { parse_mode: 'HTML' });
+    }
+
+    // Tạo inline keyboard
+    const opts = {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: 'Trả lời tin nhắn này', callback_data: `reply_${msg.message_id}` }
+          ]
+        ]
+      }
+    };
+    
+    
+       // Gửi tin nhắn tới tất cả thành viên khác kèm inline keyboard (bỏ qua phần này nếu là tin nhắn trả lời)
+    if (!msg.reply_to_message) {
+      const members = await Member.find({});
+      for (let member of members) {
+        if (member.userId !== userId) {
+          if (msg.photo) {
+            const photoId = msg.photo[msg.photo.length - 1].file_id;
+            await bot.sendPhoto(member.userId, photoId, { caption: responseMessage, parse_mode: 'HTML', ...opts });
+          } else {
+            await bot.sendMessage(member.userId, responseMessage, { parse_mode: 'HTML', ...opts });
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Lỗi khi gửi tin nhắn:', error);
+    bot.sendMessage(msg.chat.id, 'Đã xảy ra lỗi khi gửi tin nhắn.');
+  }
+});
+
+// Xử lý callback query từ inline keyboard
+bot.on('callback_query', async (callbackQuery) => {
+  const msg = callbackQuery.message;
+  const data = callbackQuery.data;
+
+  if (data.startsWith('reply_')) {
+    const originalMessageId = data.split('_')[1];
+
+    // Yêu cầu nhập nội dung tin nhắn
+    bot.sendMessage(callbackQuery.from.id, 'Vui lòng nhập nội dung tin nhắn trả lời:', {
+      reply_markup: {
+        force_reply: true
+      }
+    }).then((sentMessage) => {
+      bot.onReplyToMessage(sentMessage.chat.id, sentMessage.message_id, async (replyMsg) => {
+        try {
+          // Lấy thông tin tin nhắn gốc từ database
+          const originalMessage = await Message.findOne({ messageId: originalMessageId });
+          const originalUser = await Member.findOne({ userId: originalMessage.userId });
+          const replyUser = await Member.findOne({ userId: replyMsg.from.id });
+
+          const originalTag = originalUser.fullname || `@${originalMessage.from.username}`;
+          const replyTag = replyUser.fullname || `@${replyMsg.from.username}`;
+
+          const rankEmoji = getRankEmoji(replyUser.level);
+          const starEmoji = getStarEmoji(replyUser.levelPercent);
+
+          const replyContent = `
+            Quẩy thủ: <a href="tg://user?id=${replyMsg.from.id}">${replyTag}</a> ${rankEmoji} (Level: ${replyUser.level}):
+            ${starEmoji}
+            "Trích dẫn <a href="tg://user?id=${originalMessage.userId}">${originalTag}</a>: ${originalMessage.text}"
+
+            ${replyTag} đã trả lời rằng: ${replyMsg.text}`;
+
+          // Tạo inline keyboard cho tin nhắn trả lời
+          const opts = {
+            parse_mode: 'HTML',
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  { text: 'Trả lời tin nhắn này', callback_data: `reply_${replyMsg.message_id}` }
+                ]
+              ]
+            }
+          };         
+
+          // Gửi tin nhắn trả lời dưới dạng HTML cho tất cả thành viên
+          const members = await Member.find({});
+          for (let member of members) {
+            if (member.userId !== replyMsg.from.id && member.userId !== originalMessage.userId) {
+              await bot.sendMessage(member.userId, replyContent, opts);
+            }
+          }
+
+          
+          // Gửi lại tin nhắn trả lời cho người dùng gốc và người trả lời kèm bàn phím reply
+          const replyOpts = {
+            reply_markup: {
+              keyboard: [
+                [{ text: 'Xem tài khoản' }]
+              ],
+              resize_keyboard: true,
+              one_time_keyboard: false
+            },
+            parse_mode: 'HTML'
+          };
+          await bot.sendMessage(originalMessage.userId, replyContent, opts, replyOpts);
+          await bot.sendMessage(replyMsg.from.id, replyContent, opts, replyOpts); 
+        } catch (error) {
+          console.error('Lỗi khi xử lý trả lời tin nhắn:', error);
+          bot.sendMessage(callbackQuery.from.id, 'Đã xảy ra lỗi khi trả lời tin nhắn.');
+        }
+      });
+    });
+  }
+});
+
+// Chức năng tính toán và cập nhật level và levelPercent
+const calculateAndUpdateLevel = async () => {
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  // Đặt giờ phút giây của yesterday về đầu ngày (00:00:00)
+  yesterday.setHours(0, 0, 0, 0);
+  const endOfYesterday = new Date(yesterday);
+  endOfYesterday.setHours(23, 59, 59, 999); // Đặt giờ phút giây của endOfYesterday về cuối ngày (23:59:59.999)
+
+  try {
+    const members = await Member.find({});
+
+    for (let member of members) {
+      const userId = member.userId;
+
+      // Lấy thông tin từ BangCong2
+      const bangCongRecords = await BangCong2.find({ userId: userId, date: { $gte: yesterday, $lt: endOfYesterday } }); 
+      const totalQuay = bangCongRecords.reduce((acc, record) => acc + (record.quay || 0), 0);
+      const totalKeo = bangCongRecords.reduce((acc, record) => acc + (record.keo || 0), 0);
+      const uniqueGroupIds = [...new Set(bangCongRecords.map(record => record.groupId))];
+
+      // Tính toán levelPercent
+      let levelPercentIncrease = 0;
+      levelPercentIncrease += totalQuay * (Math.random() * (0.07 - 0.05) + 0.05);
+      levelPercentIncrease += totalKeo * (Math.random() * (0.015 - 0.009) + 0.009);
+      levelPercentIncrease += uniqueGroupIds.length * (Math.random() * (0.015 - 0.01) + 0.01);
+
+      if (isNaN(levelPercentIncrease)) {
+        console.error(`NaN detected for userId ${userId}: levelPercentIncrease is NaN`);
+        continue; // Bỏ qua cập nhật cho userId này nếu levelPercentIncrease là NaN
+      }
+
+      member.levelPercent = (member.levelPercent || 0) + levelPercentIncrease;
+      if (member.levelPercent >= 100) {
+        member.level += 1;
+        member.levelPercent = 0;
+      }
+      await member.save();
+    }
+  } catch (error) {
+    console.error('Lỗi khi cập nhật level và levelPercent:', error);
+  }
+};
+
+// Lịch trình để chạy hàm calculateAndUpdateLevel mỗi 30 phút một lần
+cron.schedule('0 0 * * *', () => {
+  console.log('Chạy cập nhật level và levelPercent');
+  calculateAndUpdateLevel();
+});
+
+// Xử lý sự kiện khi nút "Xem tài khoản" được nhấn
+bot.on('message', async (msg) => {
+  if (msg.text === 'Xem tài khoản') {
+    const userId = msg.from.id;
+    const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  
+  // Đặt giờ phút giây của yesterday về đầu ngày (00:00:00)
+  yesterday.setHours(0, 0, 0, 0);
+  const endOfYesterday = new Date(yesterday);
+  endOfYesterday.setHours(23, 59, 59, 999); // Đặt giờ phút giây của endOfYesterday về cuối ngày (23:59:59.999)
+
+    try {
+      // Lấy thông tin từ BangCong2
+      const bangCongRecords = await BangCong2.find({ userId: userId, date: { $gte: yesterday, $lt: endOfYesterday } });        
+      const totalQuay = bangCongRecords.reduce((acc, record) => acc + (record.quay || 0), 0);
+      const totalKeo = bangCongRecords.reduce((acc, record) => acc + (record.keo || 0), 0);
+
+      // Lấy thông tin từ Member
+      const member = await Member.findOne({ userId: userId });
+      if (member) {
+      const responseMessage = `
+          Thông tin tài khoản:
+          Tên: ${member.fullname}
+          Level: ${member.level} + ${member.levelPercent.toFixed(2)}%
+          
+          Tài sản quẩy của bạn ngày hôm qua:
+          Tổng Quẩy: ${totalQuay}
+          Tổng Kẹo: ${totalKeo}
+          Tổng Tính Tiền: ${bangCongRecords.reduce((acc, record) => acc + (record.tinh_tien || 0), 0)} VNĐ
+        `;
+        bot.sendMessage(msg.chat.id, responseMessage);
+      } else {
+        bot.sendMessage(msg.chat.id, 'Không tìm thấy thông tin thành viên.');
+      }
+    } catch (error) {
+      console.error('Lỗi khi truy vấn dữ liệu:', error);
+      bot.sendMessage(msg.chat.id, 'Đã xảy ra lỗi khi truy vấn dữ liệu.');
+    }
+  }
+});
+
+// Xử lý lệnh "/bup" để xóa hết dữ liệu trong schema Member
+bot.onText(/\/bup/, async (msg) => {
+  const userId = msg.from.id;
+
+  try {
+    // Kiểm tra quyền hạn của người dùng
+    // Thêm điều kiện kiểm tra quyền hạn ở đây nếu cần thiết
+
+    // Xóa hết dữ liệu từ schema Member
+    await Member.deleteMany({});
+    bot.sendMessage(msg.chat.id, 'Đã xóa hết dữ liệu từ schema Member.');
+  } catch (error) {
+    console.error('Lỗi khi xóa dữ liệu từ schema Member:', error);
+    bot.sendMessage(msg.chat.id, 'Đã xảy ra lỗi khi xóa dữ liệu từ schema Member.');
+  }
 });
