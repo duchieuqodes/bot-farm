@@ -1209,14 +1209,15 @@ if (level >= 61 && level <= 65) return '🪽';
 
 // Hàm lấy emoji sao dựa theo phần trăm level
 function getStarEmoji(levelPercent) {
-  if (levelPercent >= 0 && levelPercent <= 25) return '✮';
-  if (levelPercent >= 26 && levelPercent <= 50) return '✮✮';
-  if (levelPercent >= 51 && levelPercent <= 75) return '✮✮✮';
-  if (levelPercent >= 76 && levelPercent <= 90) return '✮✮✮✮';
-  if (levelPercent >= 91 && levelPercent <= 100) return '✮✮✮✮✮';
-  if (levelPercent >= 101 && levelPercent <= 1000) return '✪✪✪✪✪';
+  if (levelPercent < 25) return '★☆☆☆☆';
+  if (levelPercent < 50) return '★★☆☆☆';
+  if (levelPercent < 75) return '★★★☆☆';
+  if (levelPercent < 90) return '★★★★☆';
+  if (levelPercent < 100) return '★★★★★';
+  if (levelPercent >= 100) return '✪✪✪✪✪';
   return '';
 }
+
 
 // Lệnh /start để tham gia bot
 bot.onText(/\/start/, async (msg) => {
@@ -1299,7 +1300,10 @@ bot.on('message', async (msg) => {
     const starEmoji = getStarEmoji(levelPercent);
 
     const captionText = msg.caption || 'hình ảnh'; 
-    const responseMessage = `Quẩy thủ: <a href="tg://user?id=${userId}">${fullname}</a> ${rankEmoji} (Level: ${level})\n${starEmoji} (${levelPercent}%)\n\n${msg.text || captionText}`;
+    const responseMessage = `Quẩy thủ: <a href="tg://user?id=${userId}">${fullname}</a> ${rankEmoji} (Level: ${level}):
+    ${starEmoji}
+    
+    Lời nhắn: ${msg.text || captionText}`;
 
     // Lưu tin nhắn gốc vào database
     const originalMessage = new Message({
@@ -1385,7 +1389,7 @@ bot.on('callback_query', async (callbackQuery) => {
           const replyContent = `
             Quẩy thủ: <a href="tg://user?id=${replyMsg.from.id}">${replyTag}</a> ${rankEmoji} (Level: ${replyUser.level}):
             ${starEmoji}
-            "Trích dẫn <a href="tg://user?id=${originalMessage.userId}">${originalTag}</a>: ${originalMessage.text}"
+            "<a href="tg://user?id=${replyMsg.from.id}">${replyTag}</a> Trích dẫn <a href="tg://user?id=${originalMessage.userId}">${originalTag}</a>: ${originalMessage.text}"
 
             ${replyTag} đã trả lời rằng: ${replyMsg.text}`;
 
