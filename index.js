@@ -1550,20 +1550,20 @@ bot.on('message', async (msg) => {
       const starEmoji = getStarEmoji(member.levelPercent);
 
       const responseMessage = `
-        Thông tin tài khoản:
+        Thông tin tài khoản 🩴:
         Quẩy thủ: ${member.fullname}
         Level: ${member.level} ${rankEmoji} + ${member.levelPercent.toFixed(2)}% 
         ${starEmoji}
         
-        Tài sản quẩy của bạn ngày hôm qua:
-        Tổng Quẩy: ${totalQuayYesterday}
-        Tổng Cộng: ${totalKeoYesterday}
-        Tổng Tiền: ${bangCongRecordsYesterday.reduce((acc, record) => acc + (record.tinh_tien || 0), 0)} VNĐ
+        🎒 Tài sản quẩy của bạn ngày hôm qua:
+        Tổng Quẩy: ${totalQuayYesterday} 🥨
+        Tổng Kẹo: ${totalKeoYesterday} 🍬
+        🍚 Tổng Tính Tiền: ${bangCongRecordsYesterday.reduce((acc, record) => acc + (record.tinh_tien || 0), 0)} VNĐ
 
-        Tài sản quẩy của bạn ngày hôm nay:
-        Tổng Quẩy: ${totalQuayToday}
-        Tổng Cộng: ${totalKeoToday}
-        Tổng Tiền: ${bangCongRecordsToday.reduce((acc, record) => acc + (record.tinh_tien || 0), 0)} VNĐ
+        🎒 Tài sản quẩy của bạn ngày hôm nay:
+        Tổng Quẩy: ${totalQuayToday} 🥨
+        Tổng Kẹo: ${totalKeoToday} 🍬
+        🍚 Tổng Tính Tiền: ${bangCongRecordsToday.reduce((acc, record) => acc + (record.tinh_tien || 0), 0)} VNĐ
       `;
       bot.sendMessage(msg.chat.id, responseMessage, {
         reply_markup: {
