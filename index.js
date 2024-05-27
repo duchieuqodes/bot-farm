@@ -1492,41 +1492,82 @@ cron.schedule('0 0 * * *', () => {
 bot.on('message', async (msg) => {
   if (msg.text === 'Xem tài khoản') {
     const userId = msg.from.id;
+    const fullname = `${msg.from.first_name} ${msg.from.last_name || ''}`.trim();
     const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
-  
-  // Đặt giờ phút giây của yesterday về đầu ngày (00:00:00)
-  yesterday.setHours(0, 0, 0, 0);
-  const endOfYesterday = new Date(yesterday);
-  endOfYesterday.setHours(23, 59, 59, 999); // Đặt giờ phút giây của endOfYesterday về cuối ngày (23:59:59.999)
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    
+    // Đặt giờ phút giây của yesterday về đầu ngày (00:00:00)
+    yesterday.setHours(0, 0, 0, 0);
+    const endOfYesterday = new Date(yesterday);
+    endOfYesterday.setHours(23, 59, 59, 999); // Đặt giờ phút giây của endOfYesterday về cuối ngày (23:59:59.999)
 
     try {
+      // Kiểm tra xem thành viên đã tồn tại chưa
+      let member = await Member.findOne({ userId });
+
+      if (!member) {
+        // Tạo mới thành viên nếu chưa tồn tại
+        member = new Member({
+          userId,
+          fullname,
+          level: 1,
+          levelPercent: 0,
+          assets: {
+            quay: 0,
+            keo: 0,
+            vnd: 0
+          }
+        });
+
+        await member.save();
+        bot.sendMessage(msg.chat.id, `Tài khoản của bạn đã được tạo, ${fullname}!`, {
+          reply_markup: {
+            keyboard: [
+              [{ text: 'Xem tài khoản' }]
+            ],
+            resize_keyboard: true,
+            one_time_keyboard: false
+          }
+        });
+      }
+
       // Lấy thông tin từ BangCong2
-      const bangCongRecords = await BangCong2.find({ userId: userId, date: { $gte: yesterday, $lt: endOfYesterday } });        
+      const bangCongRecords = await BangCong2.find({ userId: userId, date: { $gte: yesterday, $lt: endOfYesterday } });
       const totalQuay = bangCongRecords.reduce((acc, record) => acc + (record.quay || 0), 0);
       const totalKeo = bangCongRecords.reduce((acc, record) => acc + (record.keo || 0), 0);
 
-      // Lấy thông tin từ Member
-      const member = await Member.findOne({ userId: userId });
-      if (member) {
+      // Lấy thông tin từ Member sau khi chắc chắn rằng thành viên tồn tại
       const responseMessage = `
-          Thông tin tài khoản:
-          Tên: ${member.fullname}
-          Level: ${member.level} + ${member.levelPercent.toFixed(2)}%
-          
-          Tài sản quẩy của bạn ngày hôm qua:
-          Tổng Quẩy: ${totalQuay}
-          Tổng Kẹo: ${totalKeo}
-          Tổng Tính Tiền: ${bangCongRecords.reduce((acc, record) => acc + (record.tinh_tien || 0), 0)} VNĐ
-        `;
-        bot.sendMessage(msg.chat.id, responseMessage);
-      } else {
-        bot.sendMessage(msg.chat.id, 'Không tìm thấy thông tin thành viên.');
-      }
+        Thông tin tài khoản:
+        Tên: ${member.fullname}
+        Level: ${member.level} + ${member.levelPercent.toFixed(2)}%
+        
+        Tài sản quẩy của bạn ngày hôm qua:
+        Tổng Quẩy: ${totalQuay}
+        Tổng Kẹo: ${totalKeo}
+        Tổng Tính Tiền: ${bangCongRecords.reduce((acc, record) => acc + (record.tinh_tien || 0), 0)} VNĐ
+      `;
+      bot.sendMessage(msg.chat.id, responseMessage, {
+        reply_markup: {
+          keyboard: [
+            [{ text: 'Xem tài khoản' }]
+          ],
+          resize_keyboard: true,
+          one_time_keyboard: false
+        }
+      });
     } catch (error) {
       console.error('Lỗi khi truy vấn dữ liệu:', error);
-      bot.sendMessage(msg.chat.id, 'Đã xảy ra lỗi khi truy vấn dữ liệu.');
+      bot.sendMessage(msg.chat.id, 'Đã xảy ra lỗi khi truy vấn dữ liệu.', {
+        reply_markup: {
+          keyboard: [
+            [{ text: 'Xem tài khoản' }]
+          ],
+          resize_keyboard: true,
+          one_time_keyboard: false
+        }
+      });
     }
   }
 });
