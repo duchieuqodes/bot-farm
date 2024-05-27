@@ -1516,8 +1516,8 @@ bot.on('message', async (msg) => {
         member = new Member({
           userId,
           fullname,
-          level: 100,
-          levelPercent: 101,
+          level: 1,
+          levelPercent: 0,
           assets: {
             quay: 0,
             keo: 0,
@@ -1558,12 +1558,12 @@ bot.on('message', async (msg) => {
         🎒 Tài sản quẩy của bạn ngày hôm qua:
         Tổng Quẩy: ${totalQuayYesterday} 🥨
         Tổng Kẹo: ${totalKeoYesterday} 🍬
-        🍚 Tổng Tính Tiền: ${bangCongRecordsYesterday.reduce((acc, record) => acc + (record.tinh_tien || 0), 0)} VNĐ
+        Tổng Tính Tiền 🍚: ${bangCongRecordsYesterday.reduce((acc, record) => acc + (record.tinh_tien || 0), 0)} 🅥🅽🅓
 
         🎒 Tài sản quẩy của bạn ngày hôm nay:
         Tổng Quẩy: ${totalQuayToday} 🥨
         Tổng Kẹo: ${totalKeoToday} 🍬
-        🍚 Tổng Tính Tiền: ${bangCongRecordsToday.reduce((acc, record) => acc + (record.tinh_tien || 0), 0)} VNĐ
+        Tổng Tính Tiền 🍚: ${bangCongRecordsToday.reduce((acc, record) => acc + (record.tinh_tien || 0), 0) 🅥🅽🅓    
       `;
       bot.sendMessage(msg.chat.id, responseMessage, {
         reply_markup: {
