@@ -1546,3 +1546,38 @@ bot.onText(/\/bup/, async (msg) => {
     bot.sendMessage(msg.chat.id, 'Đã xảy ra lỗi khi xóa dữ liệu từ schema Member.');
   }
 });
+
+
+
+
+
+// Lắng nghe lệnh /thongbao
+bot.onText(/\/thongbao (.+) (.+)/, (msg, match) => {
+  const chatId = msg.chat.id;
+  const username = msg.from.username;
+
+  // Chỉ cho phép username @duchieu287 thực hiện lệnh này
+  if (username !== 'duchieu287') {
+    bot.sendMessage(chatId, 'Bạn không có quyền sử dụng lệnh này.');
+    return;
+  }
+// Định nghĩa groupId mà thông báo sẽ được gửi đến
+const groupId = -1002103270166;
+  // Lấy tên tính năng và nội dung thông báo từ lệnh
+  const featureName = match[1];
+  const notificationContent = match[2];
+  const currentDate = moment().format('DD/MM/YYYY');
+
+  // Định dạng thông báo
+  const message = `TÍNH NĂNG MỚI 🔵:\nLần cập nhật gần đây: ${currentDate}\n${featureName}\nNội dung cập nhật:\n${notificationContent}`;
+
+  // Gửi thông báo đến groupId
+  bot.sendMessage(groupId, message)
+    .then(() => {
+      bot.sendMessage(chatId, 'Thông báo đã được gửi thành công.');
+    })
+    .catch((error) => {
+      console.error('Lỗi khi gửi thông báo:', error);
+      bot.sendMessage(chatId, 'Có lỗi xảy ra khi gửi thông báo.');
+    });
+});
