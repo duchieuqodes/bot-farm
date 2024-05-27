@@ -1497,6 +1497,11 @@ bot.on('message', async (msg) => {
     const yesterday = new Date(today);
     yesterday.setDate(today.getDate() - 1);
     
+    // Đặt giờ phút giây của hôm nay về đầu ngày (00:00:00)
+    today.setHours(0, 0, 0, 0);
+    const endOfToday = new Date(today);
+    endOfToday.setHours(23, 59, 59, 999);
+
     // Đặt giờ phút giây của yesterday về đầu ngày (00:00:00)
     yesterday.setHours(0, 0, 0, 0);
     const endOfYesterday = new Date(yesterday);
@@ -1533,20 +1538,32 @@ bot.on('message', async (msg) => {
       }
 
       // Lấy thông tin từ BangCong2
-      const bangCongRecords = await BangCong2.find({ userId: userId, date: { $gte: yesterday, $lt: endOfYesterday } });
-      const totalQuay = bangCongRecords.reduce((acc, record) => acc + (record.quay || 0), 0);
-      const totalKeo = bangCongRecords.reduce((acc, record) => acc + (record.keo || 0), 0);
+      const bangCongRecordsYesterday = await BangCong2.find({ userId: userId, date: { $gte: yesterday, $lt: endOfYesterday } });
+      const bangCongRecordsToday = await BangCong2.find({ userId: userId, date: { $gte: today, $lt: endOfToday } });
+      const totalQuayYesterday = bangCongRecordsYesterday.reduce((acc, record) => acc + (record.quay || 0), 0);
+      const totalKeoYesterday = bangCongRecordsYesterday.reduce((acc, record) => acc + (record.keo || 0), 0);
+      const totalQuayToday = bangCongRecordsToday.reduce((acc, record) => acc + (record.quay || 0), 0);
+      const totalKeoToday = bangCongRecordsToday.reduce((acc, record) => acc + (record.keo || 0), 0);
 
       // Lấy thông tin từ Member sau khi chắc chắn rằng thành viên tồn tại
+      const rankEmoji = getRankEmoji(member.level);
+      const starEmoji = getStarEmoji(member.levelPercent);
+
       const responseMessage = `
         Thông tin tài khoản:
-        Tên: ${member.fullname}
-        Level: ${member.level} + ${member.levelPercent.toFixed(2)}%
+        Quẩy thủ: ${member.fullname}
+        Level: ${member.level} ${rankEmoji} + ${member.levelPercent.toFixed(2)}% 
+        ${starEmoji}
         
         Tài sản quẩy của bạn ngày hôm qua:
-        Tổng Quẩy: ${totalQuay}
-        Tổng Kẹo: ${totalKeo}
-        Tổng Tính Tiền: ${bangCongRecords.reduce((acc, record) => acc + (record.tinh_tien || 0), 0)} VNĐ
+        Tổng Quẩy: ${totalQuayYesterday}
+        Tổng Cộng: ${totalKeoYesterday}
+        Tổng Tiền: ${bangCongRecordsYesterday.reduce((acc, record) => acc + (record.tinh_tien || 0), 0)} VNĐ
+
+        Tài sản quẩy của bạn ngày hôm nay:
+        Tổng Quẩy: ${totalQuayToday}
+        Tổng Cộng: ${totalKeoToday}
+        Tổng Tiền: ${bangCongRecordsToday.reduce((acc, record) => acc + (record.tinh_tien || 0), 0)} VNĐ
       `;
       bot.sendMessage(msg.chat.id, responseMessage, {
         reply_markup: {
