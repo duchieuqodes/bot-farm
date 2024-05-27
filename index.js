@@ -1553,7 +1553,7 @@ bot.onText(/\/bup/, async (msg) => {
 
 
 // Lắng nghe lệnh /thongbao
-bot.onText(/\/thongbao (.+) (.+)/, (msg, match) => {
+bot.onText(/\/thongbao "(.*)" "(.*)"/, (msg, match) => {
   const chatId = msg.chat.id;
   const username = msg.from.username;
 
@@ -1562,7 +1562,7 @@ bot.onText(/\/thongbao (.+) (.+)/, (msg, match) => {
     bot.sendMessage(chatId, 'Bạn không có quyền sử dụng lệnh này.');
     return;
   }
-// Định nghĩa groupId mà thông báo sẽ được gửi đến
+  // Định nghĩa groupId mà thông báo sẽ được gửi đến
 const groupId = -1002103270166;
   // Lấy tên tính năng và nội dung thông báo từ lệnh
   const featureName = match[1];
