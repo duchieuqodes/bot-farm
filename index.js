@@ -27,6 +27,7 @@ const BangCongSchema = new mongoose.Schema({
   tinh_tien: Number,
   giftWon: { type: Boolean, default: false },
   prizeAmount: { type: Number, default: 0 },
+  nhan_anh_bill: { type: Number, default: 0 } // Ensure default is 0
 });
 
 //Định nghĩa schema cho thành viên
@@ -51,6 +52,18 @@ const MessageSchema = new mongoose.Schema({
   date: { type: Date, default: Date.now }
 });
 
+// Định nghĩa schema cho nhiệm vụ hàng ngày
+const DailyTaskSchema = new mongoose.Schema({
+  userId: Number,
+  date: Date,
+  quayTask: Number,
+  keoTask: Number,
+  billTask: Number,
+  completedQuay: { type: Boolean, default: false },
+  completedKeo: { type: Boolean, default: false },
+  completedBill: { type: Boolean, default: false }
+});
+
 
 // Tạo model từ schema
 const BangCong2 = mongoose.model('BangCong2', BangCongSchema);
@@ -66,7 +79,7 @@ const DailyGiftStatus = mongoose.model('DailyGiftStatus', DailyGiftStatusSchema)
 //Tạo model từ schema
 const Member = mongoose.model('Member', MemberSchema);
 const Message = mongoose.model('Message', MessageSchema);
-
+const DailyTask = mongoose.model('DailyTask', DailyTaskSchema);
 
 const token = '7150645082:AAH-N2VM6qx3iFEhK59YHx2e1oy3Bi1EzXc';
 const bot = new TelegramBot(token, { polling: true });
@@ -197,7 +210,7 @@ async function processMessageQueue() {
 // Bảng tra cứu tên nhóm dựa trên ID nhóm
 const groupNames = {
   "-1002039100507": "CỘNG ĐỒNG NẮM BẮT CƠ HỘI",
-  "-1002004082575": "KHÔNG NGỪNG PHÁT TRIỂN",
+  "-1002004082575": "Hội Nhóm",
   "-1002123430691": "DẪN LỐI THÀNH CÔNG",
   "-1002143712364": "CÙNG NHAU CHIA SẺ",
   "-1002128975957": "HƯỚNG TỚI TƯƠNG LAI",
@@ -457,7 +470,7 @@ const normalizeName = (name) => {
 
 const groupCodes = {
   "cđnbch": "-1002039100507",
-  "knpt": "-1002004082575",
+  "hn": "-1002004082575",
   "dltc": "-1002123430691",
   "cncs": "-1002143712364",
   "httl": "-1002128975957",
@@ -739,7 +752,7 @@ async function sendAggregatedData(chatId) {
 
 const groups = {
   "-1002039100507": "BẢNG CÔNG NHÓM CỘNG ĐỒNG NẮM BẮT CƠ HỘI",
-  "-1002004082575": "BẢNG CÔNG NHÓM KHÔNG NGỪNG PHÁT TRIỂN",
+  "-1002004082575": "BẢNG CÔNG NHÓM HỘI NHÓM",
   "-1002123430691": "BẢNG CÔNG NHÓM DẪN LỐI THÀNH CÔNG",
   "-1002143712364": "BẢNG CÔNG NHÓM CÙNG NHAU CHIA SẺ",
   "-1002128975957": "BẢNG CÔNG NHÓM HƯỚNG TỚI TƯƠNG LAI",
@@ -1642,7 +1655,7 @@ const responseMessage = `
         const totalKeoToday = bangCongRecordsToday.reduce((acc, record) => acc + (record.keo || 0), 0);
         const totalBillToday = bangCongRecordsToday.reduce((acc, record) => acc + (record.nhan_anh_bill || 0), 0);
 
-        let taskMessage `Nhiệm vụ hôm nay của ${fullname}:\n\n`;
+        let taskMessage = `Nhiệm vụ hôm nay của ${fullname}:\n\n`;
         const tasks = [
           { name: 'Quẩy🥨', completed: dailyTask.completedQuay, total: totalQuayToday, goal: dailyTask.quayTask },
           { name: 'Kẹo🍬', completed: dailyTask.completedKeo, total: totalKeoToday, goal: dailyTask.keoTask },
