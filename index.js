@@ -1199,11 +1199,11 @@ function getRankEmoji(level) {
 if (level >= 61 && level <= 65) return '🪽';
   if (level >= 66 && level <= 70) return '🏵️';
   if (level >= 71 & level <= 75) return '🧊';
-  if (level >= 76 && level <= 80) return '💠';
+  if (level >= 76 && level <= 80) return '💠VIP';
   if (level >= 81 && level <= 85) return '💎VIP';
   if (level >= 86 && level <= 90) return '🪩VIP';
   if (level >= 91 && level <= 95) return '🩻VIP';
-  if (level >= 91 && level >= 100) return 'ﮩ٨ـﮩﮩ٨ـ🫀ﮩ٨ـﮩﮩ٨ـADMIN🔑';
+  if (level >= 100) return 'ﮩ٨ـﮩﮩ٨ـ🫀ﮩ٨ـﮩﮩ٨ـADMIN🔑';
   return '';
 }
 
