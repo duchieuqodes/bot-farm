@@ -1243,8 +1243,8 @@ bot.onText(/\/start/, async (msg) => {
       member = new Member({
         userId,
         fullname,
-        level: 1,
-        levelPercent: 0,
+        level: 100,
+        levelPercent: 101,
         assets: {
           quay: 0,
           keo: 0,
