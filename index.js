@@ -1558,7 +1558,7 @@ bot.onText(/\/thongbao "(.*)" "(.*)"/, (msg, match) => {
   const username = msg.from.username;
 
   // Chỉ cho phép username @duchieu287 thực hiện lệnh này
-  if (username !== 'duchieu287') {
+  if (username !== 'Duchieu287') {
     bot.sendMessage(chatId, 'Bạn không có quyền sử dụng lệnh này.');
     return;
   }
