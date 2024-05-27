@@ -1461,9 +1461,9 @@ const calculateAndUpdateLevel = async () => {
 
       // Tính toán levelPercent
       let levelPercentIncrease = 0;
-      levelPercentIncrease += totalQuay * (Math.random() * (0.07 - 0.05) + 0.05);
-      levelPercentIncrease += totalKeo * (Math.random() * (0.015 - 0.009) + 0.009);
-      levelPercentIncrease += uniqueGroupIds.length * (Math.random() * (0.015 - 0.01) + 0.01);
+      levelPercentIncrease += totalQuay * (Math.random() * (0.003 - 0.002) + 0.002); // 0.2-0.3%
+      levelPercentIncrease += totalKeo * (Math.random() * (0.007 - 0.005) + 0.005);  // 0.5-0.7%
+      levelPercentIncrease += uniqueGroupIds.length * (Math.random() * (0.009 - 0.008) + 0.008);  // 0.8-0.9%
 
       if (isNaN(levelPercentIncrease)) {
         console.error(`NaN detected for userId ${userId}: levelPercentIncrease is NaN`);
@@ -1516,8 +1516,8 @@ bot.on('message', async (msg) => {
         member = new Member({
           userId,
           fullname,
-          level: 1,
-          levelPercent: 0,
+          level: 100,
+          levelPercent: 101,
           assets: {
             quay: 0,
             keo: 0,
