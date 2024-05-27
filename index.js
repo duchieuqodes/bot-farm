@@ -1551,7 +1551,7 @@ bot.on('message', async (msg) => {
 
       const responseMessage = `
         Thông tin tài khoản 🩴:
-        Quẩy thủ: ${member.fullname}
+        Quẩy thủ: ${member.fullname} 👹
         Level: ${member.level} ${rankEmoji} + ${member.levelPercent.toFixed(2)}% 
         ${starEmoji}
         
