@@ -1479,7 +1479,7 @@ const updateLevelPercent = async (userId) => {
     if (totalQuay > previousQuay || totalKeo > previousKeo) {
       
       let levelPercentIncrease = 0;
-      levelPercentIncrease += (totalQuay - previousQuay) * 0.35
+      levelPercentIncrease += (totalQuay - previousQuay) * 0.3
       levelPercentIncrease += (totalKeo - previousKeo) * 0.4
 
       member.levelPercent =  (member.levelPercent || 0) + levelPercentIncrease
