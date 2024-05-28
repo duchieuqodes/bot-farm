@@ -1482,17 +1482,19 @@ const updateLevelPercent = async (userId) => {
       levelPercentIncrease += (totalQuay - previousQuay) * 0.3
       levelPercentIncrease += (totalKeo - previousKeo) * 0.4
 
-      member.levelPercent =  (member.levelPercent || 0) + levelPercentIncrease
-      if (member.levelPercent >= 100) {
+      member.levelPercent = (member.levelPercent || 0) + levelPercentIncrease;
+
+      while (member.levelPercent >= 100) {
         member.level += 1;
-        member.levelPercent = 0;
+        member.levelPercent -= 100; // Chỉ trừ đi 100, giữ lại phần dư
       }
+    }
       member.previousQuay = totalQuay;
       member.previousKeo = totalKeo;
 
       await member.save();
     }
-  } catch (error) {
+      catch (error) {
     console.error('Lỗi khi cập nhật levelPercent:', error);
   }
 };
