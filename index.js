@@ -35,6 +35,8 @@ const MemberSchema = new mongoose.Schema({
   userId: { type: Number, unique: true },
   fullname: String,
   level: Number,
+  previousQuay: Number,
+  previousKeo: Number,
   levelPercent: Number,
   assets: {
     quay: Number,
@@ -1479,8 +1481,8 @@ const updateLevelPercent = async (userId) => {
     if (totalQuay > previousQuay || totalKeo > previousKeo) {
       
       let levelPercentIncrease = 0;
-      levelPercentIncrease += (totalQuay - previousQuay) * 0.3
-      levelPercentIncrease += (totalKeo - previousKeo) * 0.4
+      levelPercentIncrease += (totalQuay - previousQuay) * 0.7
+      levelPercentIncrease += (totalKeo - previousKeo) * 1.4
 
       member.levelPercent = (member.levelPercent || 0) + levelPercentIncrease;
 
@@ -1515,9 +1517,9 @@ const deleteMemberByFullname = async (fullname) => {
 
 // Tạo ngẫu nhiên nhiệm vụ
 function generateDailyTasks() {
-  const quayTask = Math.floor(Math.random() * 30) + 5; // 5-50 quay
-  const keoTask = Math.floor(Math.random() * 10) + 3; // 3-20 keo
-  const billTask = Math.floor(Math.random() * 3) + 1; // 1-10 nhận ảnh bill
+  const quayTask = Math.floor(Math.random() * 30) + 10; // 5-50 quay
+  const keoTask = Math.floor(Math.random() * 15) + 6; // 3-20 keo
+  const billTask = Math.floor(Math.random() * 2) + 1; // 1-10 nhận ảnh bill
   return {
     quayTask,
     keoTask,
