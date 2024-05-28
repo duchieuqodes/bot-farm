@@ -1208,21 +1208,34 @@ cron.schedule('0 0 * * *', async () => {
 
 // Hàm lấy emoji rank dựa theo level
 function getRankEmoji(level) {
-  if (level >= 1 && level <= 4) return '🥚';
-  if (level >= 5 && level <= 9) return '🐣';
-  if (level >= 10 && level <= 15) return '🐓';
-  if (level >= 16 && level <= 20) return '🥉';
-  if (level >= 21 && level <= 25) return '🥈';
-  if (level >= 41 && level <= 55) return '🏅';
-  if (level >= 56 && level <= 60) return '⚜️';
-if (level >= 61 && level <= 65) return '🪽';
-  if (level >= 66 && level <= 70) return '🏵️';
-  if (level >= 71 & level <= 75) return '🧊';
-  if (level >= 76 && level <= 80) return '💠VIP';
-  if (level >= 81 && level <= 85) return '💎VIP';
-  if (level >= 86 && level <= 90) return '🪩VIP';
-  if (level >= 91 && level <= 95) return '🩻VIP';
-  if (level >= 100) return 'ﮩ٨ـﮩﮩ٨ـ🫀ﮩ٨ـﮩﮩ٨ـADMIN🔑';
+  if (level >= 1 && level <= 2) return '🥚';
+  if (level >= 3 && level < 5) return '🐣';
+  if (level >= 5 && level < 7) return '🐥';
+  if (level >= 8 && level <= 9) return '🐦';
+  if (level >= 10 && level <= 11) return '🦜';
+  if (level >= 12 && level <= 13) return '🦄';
+  if (level >= 14 && level <= 15) return '🖤⃝🤍';
+  if (level >= 16 && level <= 18) return '🤰🏻';
+  if (level >= 19 && level <= 20) return '👶🏻';
+  if (level >= 21 && level <= 23) return '🧛🏻';
+  if (level >= 24 && level <= 26) return '🥷';
+  if (level >= 27 && level <= 29) return '🧙‍♂️';
+  if (level >= 30 && level <= 33) return '💀';
+  if (level >= 34 && level <= 37) return '🕯🪦🕯';
+  if (level >= 38 && level <= 41) return '🧟‍♀️🦇';
+  if (level >= 42 && level <= 46) return '👹';
+  if (level >= 47 && level <= 52) return '˚˖𓍢ִִ໋🌊🦈˚˖𓍢ִ✧˚';
+  if (level >= 53 && level <= 55) return '💠VIP💠';
+  if (level >= 56 && level <= 59) return '💎VIP💎';
+  if (level >= 60 && level <= 64) return '🪩VIP🪩';
+  if (level >= 65 && level <= 67) return '🩻VIP🩻';
+  if (level >= 68 && level <= 70) return '🪬VIP🪬୧⍤⃝💐';
+  if (level >= 71 & level <= 73) return '🥉CHIẾN THẦN⚔️🛡';
+  if (level >= 74 & level <= 76) return '🥈Á THẦN🐉⚜️';
+  if (level >= 77 & level <= 79) return '🪙VÔ ĐỊCH🐲👸';
+  if (level >= 80) return '👑 HUYỀN THOẠI🦋⃟🥀™️';
+
+  if (level >= 100) return 'ﮩ٨ـﮩﮩ٨ـ🫀ﮩ٨ـﮩﮩ٨ـ🔑';
   return '';
 }
 
