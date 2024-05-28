@@ -193,8 +193,11 @@ async function processMessageQueue() {
 
           await bangCong.save();
         }
+          await updateLevelPercent(userId);
           // Xóa tin nhắn đã xử lý khỏi hàng đợi
       messageQueue.shift();
+      
+
       
       // Đánh dấu rằng không còn xử lý tin nhắn nào
       processingMessage = false;
@@ -1450,56 +1453,62 @@ bot.on('callback_query', async (callbackQuery) => {
   }
 });
 
-// Chức năng tính toán và cập nhật level và levelPercent
-const calculateAndUpdateLevel = async () => {
+
+// Chức năng tính toán và cập nhật levelPercent cho thành viên
+const updateLevelPercent = async (userId) => {
   const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
-  // Đặt giờ phút giây của yesterday về đầu ngày (00:00:00)
-  yesterday.setHours(0, 0, 0, 0);
-  const endOfYesterday = new Date(yesterday);
-  endOfYesterday.setHours(23, 59, 59, 999); // Đặt giờ phút giây của endOfYesterday về cuối ngày (23:59:59.999)
+  today.setHours(0, 0, 0, 0);
+  const endOfToday = new Date(today);
+  endOfToday.setHours(23, 59, 59, 999);
 
   try {
-    const members = await Member.find({});
+    let member = await Member.findOne({ userId });
 
-    for (let member of members) {
-      const userId = member.userId;
+    if (!member) {
+      console.error(`Không tìm thấy thành viên với userId: ${userId}`);
+      return;
+    }
 
-      // Lấy thông tin từ BangCong2
-      const bangCongRecords = await BangCong2.find({ userId: userId, date: { $gte: yesterday, $lt: endOfYesterday } }); 
-      const totalQuay = bangCongRecords.reduce((acc, record) => acc + (record.quay || 0), 0);
-      const totalKeo = bangCongRecords.reduce((acc, record) => acc + (record.keo || 0), 0);
-      const uniqueGroupIds = [...new Set(bangCongRecords.map(record => record.groupId))];
+    const bangCongRecords = await BangCong2.find({ userId: userId, date: { $gte: today, $lt: endOfToday } });
+    const totalQuay = bangCongRecords.reduce((acc, record) => acc + (record.quay || 0), 0);
+    const totalKeo = bangCongRecords.reduce((acc, record) => acc + (record.keo || 0), 0);
 
-      // Tính toán levelPercent
+    const previousQuay = member.previousQuay || 0;
+    const previousKeo = member.previousKeo || 0;
+
+    if (totalQuay > previousQuay || totalKeo > previousKeo) {
+      
       let levelPercentIncrease = 0;
-      levelPercentIncrease += totalQuay * (Math.random() * (0.003 - 0.002) + 0.002); // 0.2-0.3%
-      levelPercentIncrease += totalKeo * (Math.random() * (0.007 - 0.005) + 0.005);  // 0.5-0.7%
-      levelPercentIncrease += uniqueGroupIds.length * (Math.random() * (0.009 - 0.008) + 0.008);  // 0.8-0.9%
+      levelPercentIncrease += (totalQuay - previousQuay) * 0.35
+      levelPercentIncrease += (totalKeo - previousKeo) * 0.4
 
-      if (isNaN(levelPercentIncrease)) {
-        console.error(`NaN detected for userId ${userId}: levelPercentIncrease is NaN`);
-        continue; // Bỏ qua cập nhật cho userId này nếu levelPercentIncrease là NaN
-      }
-
-      member.levelPercent = (member.levelPercent || 0) + levelPercentIncrease;
+      member.levelPercent =  (member.levelPercent || 0) + levelPercentIncrease
       if (member.levelPercent >= 100) {
         member.level += 1;
         member.levelPercent = 0;
       }
+      member.previousQuay = totalQuay;
+      member.previousKeo = totalKeo;
+
       await member.save();
     }
   } catch (error) {
-    console.error('Lỗi khi cập nhật level và levelPercent:', error);
+    console.error('Lỗi khi cập nhật levelPercent:', error);
   }
 };
 
-// Lịch trình để chạy hàm calculateAndUpdateLevel mỗi 30 phút một lần
-cron.schedule('0 0 * * *', () => {
-  console.log('Chạy cập nhật level và levelPercent');
-  calculateAndUpdateLevel();
-});
+const deleteMemberByFullname = async (fullname) => {
+  try {
+    const result = await Member.deleteOne({ fullname: fullname });
+    if (result.deletedCount > 0) {
+      console.log(`Thành viên với fullname '${fullname}' đã bị xóa`);
+    } else {
+      console.log(`Không tìm thấy thành viên với fullname '${fullname}'`);
+    }
+  } catch (error) {
+    console.error('Lỗi khi xóa thành viên:', error);
+  }
+};
 
 // Tạo ngẫu nhiên nhiệm vụ
 function generateDailyTasks() {
