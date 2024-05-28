@@ -7,7 +7,7 @@ const cron = require('node-cron'); // Thư viện để thiết lập cron jobs
 const keep_alive = require('./keep_alive.js');
 const { resetDailyGiftStatus, sendMorningMessage, handleGiftClaim } = require('./gift');
 const { setupNewsSchedule, sendLatestNews } = require('./news.js');
-//const { handleMessage, resetKeywords } = require('./warningMember');
+const { handleMessage, resetKeywords } = require('./warningMember');
 
 // Kết nối tới MongoDB
 mongoose.connect(
