@@ -1206,11 +1206,11 @@ cron.schedule('0 0 * * *', async () => {
 
 // Hàm lấy emoji rank dựa theo level
 function getRankEmoji(level) {
-  if (level >= 1 && level <= 10) return '🥚';
-  if (level >= 11 && level <= 15) return '🐣';
-  if (level >= 16 && level <= 20) return '🐓';
-  if (level >= 21 && level <= 30) return '🥉';
-  if (level >= 31 && level <= 40) return '🥈';
+  if (level >= 1 && level <= 4) return '🥚';
+  if (level >= 5 && level <= 9) return '🐣';
+  if (level >= 10 && level <= 15) return '🐓';
+  if (level >= 16 && level <= 20) return '🥉';
+  if (level >= 21 && level <= 25) return '🥈';
   if (level >= 41 && level <= 55) return '🏅';
   if (level >= 56 && level <= 60) return '⚜️';
 if (level >= 61 && level <= 65) return '🪽';
@@ -1488,12 +1488,13 @@ const updateLevelPercent = async (userId) => {
         member.level += 1;
         member.levelPercent -= 100; // Chỉ trừ đi 100, giữ lại phần dư
       }
-    }
+    
       member.previousQuay = totalQuay;
       member.previousKeo = totalKeo;
 
       await member.save();
     }
+  }
       catch (error) {
     console.error('Lỗi khi cập nhật levelPercent:', error);
   }
