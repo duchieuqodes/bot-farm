@@ -1854,6 +1854,15 @@ bot.on('message', async (msg) => {
   // Xử lý các tin nhắn khác
 });
 
+const replyKeyboard = {
+  reply_markup: {
+    keyboard: [
+            [{ text: 'Xem tài khoản' }, { text: 'Nhiệm vụ hôm nay' }, { text: 'Túi đồ'}]
+          ],
+    resize_keyboard: true,
+    one_time_keyboard: false
+  }
+};
 
 
 
