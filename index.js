@@ -68,10 +68,10 @@ const DailyTaskSchema = new mongoose.Schema({
 
 // Add this to your schema definitions
 const VipCardSchema = new mongoose.Schema({
-  userId: Number,
-  issueDate: { type: Date, default: Date.now },
-  validFrom: Date,
-  validUntil: Date
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  validFrom: { type: Date, required: true },
+  validUntil: { type: Date, required: true },
+  issueDate: { type: Date, default: Date.now }
 });
 
 // Create a model from the schema
@@ -1540,11 +1540,17 @@ const issueVipCard = async (userId, level) => {
   const member = await Member.findOne({ userId });
   if (!member) return;
 
+  // Tính số ngày sử dụng dựa trên level
+  let daysValid = (level % 20) / 5;
+  if (daysValid === 0) {
+    daysValid = 4; // Nếu level là bội số của 20, thẻ có thời hạn 4 ngày
+  }
+  
   const now = new Date();
   const validFrom = new Date(now.setDate(now.getDate() + 1)); // Hiệu lực từ ngày mai
   validFrom.setHours(0, 0, 0, 0); // Bắt đầu từ 00:00:00 ngày mai
   const validUntil = new Date(validFrom);
-  validUntil.setDate(validFrom.getDate() + 1); // Hiệu lực trong 1 ngày
+  validUntil.setDate(validFrom.getDate() + daysValid); // Hiệu lực trong 1 ngày
   validUntil.setHours(23, 59, 59, 999); // Kết thúc vào 23:59:59 ngày sau đó
 
   const vipCard = new VipCard({
@@ -1556,9 +1562,9 @@ const issueVipCard = async (userId, level) => {
   await vipCard.save();
 
   const groupId = -1002128289933;
-  const message = `Chúc mừng quẩy thủ ${member.fullname} đã đạt level ${level} và nhận được 1 thẻ Vip có hiệu lực từ ngày ${validFrom.toLocaleDateString()}, hạn sử dụng 1 ngày. Ưu đãi thẻ: Tăng 600đ/quẩy.`;
+  const formattedValidFrom = `${validFrom.getDate()}/${validFrom.getMonth() + 1}/${validFrom.getFullYear()}`;
+  const message = `Chúc mừng quẩy thủ ${member.fullname} đã đạt level ${level} và nhận được 1 thẻ Vip có hiệu lực từ ngày ${formattedValidFrom}, hạn sử dụng ${daysValid} ngày. Ưu đãi thẻ: Tăng 600đ/quẩy.`;
   const gifUrl = 'https://iili.io/JQSRkrv.gif'; // Thay thế bằng URL của ảnh GIF
-
   bot.sendAnimation(groupId, gifUrl, { caption: message });
 };
   
@@ -1825,7 +1831,9 @@ const handleInventory = async (msg) => {
   if (inventory.vipCards.length > 0) {
     responseMessage += 'Thẻ VIP:\n';
     inventory.vipCards.forEach((card, index) => {
-      responseMessage += `${index + 1}. Có hiệu lực từ: ${card.validFrom.toLocaleDateString()}, Hết hạn: ${card.validUntil.toLocaleDateString()}\n`;
+      t validFromFormatted = `${card.validFrom.getDate()}/${card.validFrom.getMonth() + 1}/${card.validFrom.getFullYear()}`;
+      const validUntilFormatted = `${card.validUntil.getDate()}/${card.validUntil.getMonth() + 1}/${card.validUntil.getFullYear()}`;
+      responseMessage += `${index + 1}. Có hiệu lực từ: ${validFromFormatted}, Hết hạn: ${validUntilFormatted}\n`;
     });
     responseMessage += '\n';
   }
@@ -1834,7 +1842,9 @@ const handleInventory = async (msg) => {
   if (inventory.specialItems.length > 0) {
     responseMessage += 'Các vật phẩm đặc biệt:\n';
     inventory.specialItems.forEach((item, index) => {
-      responseMessage += `${index + 1}. Tên vật phẩm: ${item.name}, Số lượng: ${item.quantity}, Ngày sử dụng: ${item.usedDate ? item.usedDate.toLocaleDateString() : 'Chưa sử dụng'}, Hết hạn: ${item.expiryDate.toLocaleDateString()}\n`;
+      t usedDateFormatted = item.usedDate ? `${item.usedDate.getDate()}/${item.usedDate.getMonth() + 1}/${item.usedDate.getFullYear()}` : 'Chưa sử dụng';
+      const expiryDateFormatted = `${item.expiryDate.getDate()}/${item.expiryDate.getMonth() + 1}/${item.expiryDate.getFullYear()}`;
+      responseMessage += `${index + 1}. Tên vật phẩm: ${item.name}, Số lượng: ${item.quantity}, Ngày sử dụng: ${usedDateFormatted}, Hết hạn: ${expiryDateFormatted}\n`;
     });
     responseMessage += '\n';
   }
