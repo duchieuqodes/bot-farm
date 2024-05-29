@@ -239,7 +239,7 @@ const groupNames = {
   "-1002080535296": "TRAO ĐỔI CÔNG VIỆC 2",
   "-1002091101362": "TRAO ĐỔI CÔNG VIỆC 1", 
   "-1002129896837": "GROUP I MẠNH ĐỨC CHIA SẺ", 
-  "-1002228252389": "BƯỚC ĐI KHỞI NGHIỆP", 
+  "-1002228252389": "ORMARKET community", 
 };
 
 // Xử lý lệnh /bc để hiển thị bảng công cho tất cả các nhóm
@@ -500,7 +500,7 @@ const groupCodes = {
   "tđcv1": "-1002091101362",
   "gimđcs": "-1002129896837",
   "cf": "-1002108234982",
-  "bđkn": "-1002228252389", 
+  "oc": "-1002228252389", 
 };
 
 bot.onText(/\/edit (.+)/, async (msg, match) => {
@@ -781,7 +781,7 @@ const groups = {
   "-1002080535296": "BẢNG CÔNG NHÓM TRAO ĐỔI CÔNG VIỆC 2",
   "-1002091101362": "BẢNG CÔNG NHÓM TRAO ĐỔI CÔNG VIỆC 1", 
   "-1002129896837": "BẢNG CÔNG NHÓM GROUP I MẠNH ĐỨC CHIA SẺ", 
-  "-1002228252389": "BẢNG CÔNG NHÓM BƯỚC ĐI KHỞI NGHIỆP", 
+  "-1002228252389": "BẢNG CÔNG NHÓM OMARKET Comunity", 
 };
 
 
@@ -1485,6 +1485,20 @@ bot.on('callback_query', async (callbackQuery) => {
   }
 });
 
+const groupNames2 = {
+  "-1002039100507": "CỘNG ĐỒNG NẮM BẮT CƠ HỘI",
+  "-1002004082575": "Hội Nhóm",
+  "-1002123430691": "DẪN LỐI THÀNH CÔNG",
+  "-1002143712364": "CÙNG NHAU CHIA SẺ",
+  "-1002128975957": "HƯỚNG TỚI TƯƠNG LAI",
+  "-1002080535296": "TRAO ĐỔI CÔNG VIỆC 2",
+  "-1002091101362": "TRAO ĐỔI CÔNG VIỆC 1", 
+  "-1002129896837": "GROUP I MẠNH ĐỨC CHIA SẺ", 
+  "-1002228252389": "BƯỚC ĐI KHỞI NGHIỆP", 
+  "-1002108234982": "Community free, be truly rich",
+
+};
+
 
 const updateLevelPercent = async (userId) => {
   const today = new Date();
@@ -1500,7 +1514,11 @@ const updateLevelPercent = async (userId) => {
       return;
     }
 
-    const bangCongRecords = await BangCong2.find({ userId: userId, date: { $gte: today, $lt: endOfToday } });
+    const bangCongRecords = await BangCong2.find({
+      userId: userId,
+      date: { $gte: today, $lt: endOfToday },
+      groupId: { $in: Object.keys(groupNames2) }
+    });
     const totalQuay = bangCongRecords.reduce((acc, record) => acc + (record.quay || 0), 0);
     const totalKeo = bangCongRecords.reduce((acc, record) => acc + (record.keo || 0), 0);
 
@@ -1703,7 +1721,9 @@ const responseMessage = `
         🎒 Tài sản quẩy của bạn ngày hôm nay:
         Tổng Quẩy: ${totalQuayToday} 🥨
         Tổng Kẹo: ${totalKeoToday} 🍬
-        Tổng tính tiền: ${bangCongRecordsToday.reduce((acc, record) => acc + (record.tinh_tien || 0), 0)} VNĐ    
+        Tổng tính tiền: ${bangCongRecordsToday.reduce((acc, record) => acc + (record.tinh_tien || 0), 0)} VNĐ   
+
+        Lưu ý: Tổng tài sản trên là bao gồm cả nhóm quẩy Comunity free và Be truly rich nếu có.
       `;
         bot.sendMessage(msg.chat.id, responseMessage, {
           reply_markup: {
