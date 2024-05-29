@@ -66,6 +66,16 @@ const DailyTaskSchema = new mongoose.Schema({
   completedBill: { type: Boolean, default: false }
 });
 
+// Add this to your schema definitions
+const VipCardSchema = new mongoose.Schema({
+  userId: Number,
+  issueDate: { type: Date, default: Date.now },
+  validFrom: Date,
+  validUntil: Date
+});
+
+// Create a model from the schema
+const VipCard = mongoose.model('VipCard', VipCardSchema);
 
 // Tạo model từ schema
 const BangCong2 = mongoose.model('BangCong2', BangCongSchema);
@@ -105,6 +115,29 @@ cron.schedule('0 0 * * *', async () => {
     console.error("Lỗi khi xóa dữ liệu từ MongoDB:", error);
   }
 });
+
+ async function issueVipCard(userId, level) {
+  const member = await Member.findOne({ userId });
+  if (!member) return;
+
+  const now = new Date();
+  const validFrom = new Date(now.setDate(now.getDate() + 1)); // Valid from tomorrow
+  const validUntil = new Date(validFrom);
+  validUntil.setDate(validFrom.getDate() + 1); // Valid for 1 day
+
+  const vipCard = new VipCard({
+    userId,
+    validFrom,
+    validUntil
+  });
+
+  await vipCard.save();
+
+  const groupId = -1002128289933;
+  const message = `Chúc mừng quẩy thủ ${member.fullname} đã đạt level ${level} và nhận được 1 thẻ Vip có hiệu lực từ ngày ${validFrom.toLocaleDateString()}, hạn sử dụng 1 ngày. Ưu đãi thẻ: Tăng 600đ/quẩy.`;
+
+  bot.sendMessage(groupId, message);
+ }
 
 // Tìm các số theo sau bởi ký tự hoặc từ khóa xác định hành vi
 const regex = /\d+(q|Q|c|C|quẩy|cộng|acc)/gi;
@@ -170,7 +203,14 @@ async function processMessageQueue() {
         const firstName = msg.from.first_name;
         const lastName = msg.from.last_name;
         const fullName = lastName ? `${firstName} ${lastName}` : firstName;
-        
+
+        const vipCard = await VipCard.findOne({
+      userId,
+      validFrom: { $lte: new Date() },
+      validUntil: { $gte: new Date() }
+    });
+       const pricePerQuay = vipCard ? 600 : 500;
+
         // Tạo thông báo mới
         const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${quay}q, ${keo}c đang chờ kiểm tra ❤🥳`;
 
@@ -186,12 +226,12 @@ async function processMessageQueue() {
             ten: fullName,
             quay,
             keo,
-            tinh_tien: quay * 500 + keo * 1000,
+            tinh_tien: quay * pricePerQuay + keo * 1000,
           });
         } else {
           bangCong.quay += quay;
           bangCong.keo += keo;
-          bangCong.tinh_tien += quay * 500 + keo * 1000;
+          bangCong.tinh_tien += quay * pricePerQuay + keo * 1000;
 
           await bangCong.save();
         }
@@ -1469,7 +1509,6 @@ bot.on('callback_query', async (callbackQuery) => {
 });
 
 
-// Chức năng tính toán và cập nhật levelPercent cho thành viên
 const updateLevelPercent = async (userId) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -1494,26 +1533,57 @@ const updateLevelPercent = async (userId) => {
     if (totalQuay > previousQuay || totalKeo > previousKeo) {
       
       let levelPercentIncrease = 0;
-      levelPercentIncrease += (totalQuay - previousQuay) * 0.7
-      levelPercentIncrease += (totalKeo - previousKeo) * 1.4
+      levelPercentIncrease += (totalQuay - previousQuay) * 0.7;
+      levelPercentIncrease += (totalKeo - previousKeo) * 1.4;
 
       member.levelPercent = (member.levelPercent || 0) + levelPercentIncrease;
 
+      let levelIncreased = false;
       while (member.levelPercent >= 100) {
         member.level += 1;
         member.levelPercent -= 100; // Chỉ trừ đi 100, giữ lại phần dư
+        levelIncreased = true;
       }
-    
+
       member.previousQuay = totalQuay;
       member.previousKeo = totalKeo;
 
       await member.save();
+
+      if (levelIncreased && member.level % 5 === 0) {
+        await issueVipCard(userId, member.level);
+      }
     }
-  }
-      catch (error) {
+  } catch (error) {
     console.error('Lỗi khi cập nhật levelPercent:', error);
   }
 };
+
+const issueVipCard = async (userId, level) => {
+  const member = await Member.findOne({ userId });
+  if (!member) return;
+
+  const now = new Date();
+  const validFrom = new Date(now.setDate(now.getDate() + 1)); // Hiệu lực từ ngày mai
+  validFrom.setHours(0, 0, 0, 0); // Bắt đầu từ 00:00:00 ngày mai
+  const validUntil = new Date(validFrom);
+  validUntil.setDate(validFrom.getDate() + 1); // Hiệu lực trong 1 ngày
+  validUntil.setHours(23, 59, 59, 999); // Kết thúc vào 23:59:59 ngày sau đó
+
+  const vipCard = new VipCard({
+    userId,
+    validFrom,
+    validUntil
+  });
+
+  await vipCard.save();
+
+  const groupId = -1002128289933;
+  const message = `Chúc mừng quẩy thủ ${member.fullname} đã đạt level ${level} và nhận được 1 thẻ Vip có hiệu lực từ ngày ${validFrom.toLocaleDateString()}, hạn sử dụng 1 ngày. Ưu đãi thẻ: Tăng 600đ/quẩy.`;
+
+  bot.sendMessage(groupId, message);
+};
+
 
 const deleteMemberByFullname = async (fullname) => {
   try {
