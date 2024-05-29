@@ -116,29 +116,6 @@ cron.schedule('0 0 * * *', async () => {
   }
 });
 
- async function issueVipCard(userId, level) {
-  const member = await Member.findOne({ userId });
-  if (!member) return;
-
-  const now = new Date();
-  const validFrom = new Date(now.setDate(now.getDate() + 1)); // Valid from tomorrow
-  const validUntil = new Date(validFrom);
-  validUntil.setDate(validFrom.getDate() + 1); // Valid for 1 day
-
-  const vipCard = new VipCard({
-    userId,
-    validFrom,
-    validUntil
-  });
-
-  await vipCard.save();
-
-  const groupId = -1002128289933;
-  const message = `Chúc mừng quẩy thủ ${member.fullname} đã đạt level ${level} và nhận được 1 thẻ Vip có hiệu lực từ ngày ${validFrom.toLocaleDateString()}, hạn sử dụng 1 ngày. Ưu đãi thẻ: Tăng 600đ/quẩy.`;
-
-  bot.sendMessage(groupId, message);
- }
-
 // Tìm các số theo sau bởi ký tự hoặc từ khóa xác định hành vi
 const regex = /\d+(q|Q|c|C|quẩy|cộng|acc)/gi;
 const messageQueue = [];
