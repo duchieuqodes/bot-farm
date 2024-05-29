@@ -1638,7 +1638,7 @@ bot.on('message', async (msg) => {
     await checkAndUpdateBillCount(userId, msg.caption);
   }
 
-  if (msg.text === 'Xem tài khoản' || msg.text === 'Nhiệm vụ hôm nay') {
+  if (msg.text === 'Xem tài khoản' || msg.text === 'Nhiệm vụ hôm nay' || msg.text === 'Túi đồ') {
     try {
       // Kiểm tra xem thành viên đã tồn tại chưa
       let member = await Member.findOne({ userId });
@@ -1661,7 +1661,7 @@ bot.on('message', async (msg) => {
         bot.sendMessage(msg.chat.id, `Tài khoản của bạn đã được tạo, ${fullname}!`, {
           reply_markup: {
             keyboard: [
-              [{ text: 'Xem tài khoản' }, { text: 'Nhiệm vụ hôm nay' }]
+              [{ text: 'Xem tài khoản' }, { text: 'Nhiệm vụ hôm nay' }, { text: 'Túi đồ'}]
             ],
             resize_keyboard: true,
             one_time_keyboard: false
@@ -1702,7 +1702,7 @@ const responseMessage = `
         bot.sendMessage(msg.chat.id, responseMessage, {
           reply_markup: {
             keyboard: [
-              [{ text: 'Xem tài khoản' }, { text: 'Nhiệm vụ hôm nay' }]
+              [{ text: 'Xem tài khoản' }, { text: 'Nhiệm vụ hôm nay' }, { text: 'Túi đồ'}]
               ],
               resize_keyboard: true,
               one_time_keyboard: false
@@ -1772,7 +1772,7 @@ const responseMessage = `
     caption: taskMessage,
     reply_markup: {
       keyboard: [
-        [{ text: 'Xem tài khoản' }, { text: 'Nhiệm vụ hôm nay' }]
+        [{ text: 'Xem tài khoản' }, { text: 'Nhiệm vụ hôm nay' }, { text: 'Túi đồ'}]
       ],
       resize_keyboard: true,
       one_time_keyboard: false
@@ -1784,7 +1784,7 @@ const responseMessage = `
       bot.sendMessage(msg.chat.id, 'Đã xảy ra lỗi khi truy vấn dữ liệu.', {
         reply_markup: {
           keyboard: [
-            [{ text: 'Xem tài khoản' }, { text: 'Nhiệm vụ hôm nay' }]
+            [{ text: 'Xem tài khoản' }, { text: 'Nhiệm vụ hôm nay' }, { text: 'Túi đồ'}]
           ],
           resize_keyboard: true,
           one_time_keyboard: false
@@ -1793,6 +1793,67 @@ const responseMessage = `
     }
   }
 });
+
+const getInventory = async (userId) => {
+  const vipCards = await VipCard.find({ userId, validUntil: { $gte: new Date() } });
+  // Thêm các loại vật phẩm khác nếu có
+  const specialItems = []; // Ví dụ nếu có
+
+  return {
+    vipCards,
+    specialItems
+  };
+};
+
+const handleInventory = async (msg) => {
+  const userId = msg.from.id;
+  const groupId = msg.chat.id;
+  const firstName = msg.from.first_name;
+  const lastName = msg.from.last_name;
+  const fullName = lastName ? `${firstName} ${lastName}` : firstName;
+
+  const inventory = await getInventory(userId);
+
+  if (inventory.vipCards.length === 0 && inventory.specialItems.length === 0) {
+    const responseMessage = `Túi đồ của ${fullName} đang trống!\n\nMẹo: Đạt các mốc level 5, 10, 15, 20,... để nhận được các vật phẩm quà tặng có giá trị.`;
+    bot.sendMessage(groupId, responseMessage, replyKeyboard);
+    return;
+  }
+
+  let responseMessage = `Túi đồ của ${fullName}:\n\n`;
+
+  if (inventory.vipCards.length > 0) {
+    responseMessage += 'Thẻ VIP:\n';
+    inventory.vipCards.forEach((card, index) => {
+      responseMessage += `${index + 1}. Có hiệu lực từ: ${card.validFrom.toLocaleDateString()}, Hết hạn: ${card.validUntil.toLocaleDateString()}\n`;
+    });
+    responseMessage += '\n';
+  }
+
+  // Thêm phần hiển thị các vật phẩm khác nếu có
+  if (inventory.specialItems.length > 0) {
+    responseMessage += 'Các vật phẩm đặc biệt:\n';
+    inventory.specialItems.forEach((item, index) => {
+      responseMessage += `${index + 1}. Tên vật phẩm: ${item.name}, Số lượng: ${item.quantity}, Ngày sử dụng: ${item.usedDate ? item.usedDate.toLocaleDateString() : 'Chưa sử dụng'}, Hết hạn: ${item.expiryDate.toLocaleDateString()}\n`;
+    });
+    responseMessage += '\n';
+  }
+
+  bot.sendMessage(groupId, responseMessage, replyKeyboard);
+};
+
+// Xử lý khi nhận được tin nhắn từ người dùng
+bot.on('message', async (msg) => {
+  const messageContent = msg.text;
+
+  if (messageContent === 'Túi đồ') {
+    await handleInventory(msg);
+    return;
+  }
+
+  // Xử lý các tin nhắn khác
+});
+
 
 
 
