@@ -68,10 +68,10 @@ const DailyTaskSchema = new mongoose.Schema({
 
 // Add this to your schema definitions
 const VipCardSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  validFrom: { type: Date, required: true },
-  validUntil: { type: Date, required: true },
-  issueDate: { type: Date, default: Date.now }
+  userId: Number,
+  issueDate: { type: Date, default: Date.now },
+  validFrom: Date,
+  validUntil: Date
 });
 
 // Create a model from the schema
