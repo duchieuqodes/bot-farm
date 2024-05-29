@@ -1557,9 +1557,11 @@ const issueVipCard = async (userId, level) => {
 
   const groupId = -1002128289933;
   const message = `Chúc mừng quẩy thủ ${member.fullname} đã đạt level ${level} và nhận được 1 thẻ Vip có hiệu lực từ ngày ${validFrom.toLocaleDateString()}, hạn sử dụng 1 ngày. Ưu đãi thẻ: Tăng 600đ/quẩy.`;
+  const gifUrl = 'https://iili.io/JQSRkrv.gif'; // Thay thế bằng URL của ảnh GIF
 
-  bot.sendMessage(groupId, message);
+  bot.sendAnimation(groupId, gifUrl, { caption: message });
 };
+  
 
 
 const deleteMemberByFullname = async (fullname) => {
@@ -1764,15 +1766,18 @@ const responseMessage = `
           taskMessage += `Hoàn thành ${task.name}: ${task.total}/${task.goal} (Phần thường: điểm kinh nghiệm)\n\n`;
         }
 
-        bot.sendMessage(msg.chat.id, taskMessage, {
-          reply_markup: {
-            keyboard: [
-              [{ text: 'Xem tài khoản' }, { text: 'Nhiệm vụ hôm nay' }]
-            ],
-            resize_keyboard: true,
-            one_time_keyboard: false
-          }
-        });
+        const gifUrl = 'https://iili.io/JQSaM6g.gif'; // Thay thế bằng URL của ảnh GIF
+
+  bot.sendAnimation(msg.chat.id, gifUrl, {
+    caption: taskMessage,
+    reply_markup: {
+      keyboard: [
+        [{ text: 'Xem tài khoản' }, { text: 'Nhiệm vụ hôm nay' }]
+      ],
+      resize_keyboard: true,
+      one_time_keyboard: false
+    }
+  });
       }
     } catch (error) {
       console.error('Lỗi khi truy vấn dữ liệu:', error);
