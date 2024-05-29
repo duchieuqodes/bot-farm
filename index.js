@@ -1831,7 +1831,7 @@ const handleInventory = async (msg) => {
   if (inventory.vipCards.length > 0) {
     responseMessage += 'Thẻ VIP:\n';
     inventory.vipCards.forEach((card, index) => {
-      t validFromFormatted = `${card.validFrom.getDate()}/${card.validFrom.getMonth() + 1}/${card.validFrom.getFullYear()}`;
+      const validFromFormatted = `${card.validFrom.getDate()}/${card.validFrom.getMonth() + 1}/${card.validFrom.getFullYear()}`;
       const validUntilFormatted = `${card.validUntil.getDate()}/${card.validUntil.getMonth() + 1}/${card.validUntil.getFullYear()}`;
       responseMessage += `${index + 1}. Có hiệu lực từ: ${validFromFormatted}, Hết hạn: ${validUntilFormatted}\n`;
     });
@@ -1842,7 +1842,7 @@ const handleInventory = async (msg) => {
   if (inventory.specialItems.length > 0) {
     responseMessage += 'Các vật phẩm đặc biệt:\n';
     inventory.specialItems.forEach((item, index) => {
-      t usedDateFormatted = item.usedDate ? `${item.usedDate.getDate()}/${item.usedDate.getMonth() + 1}/${item.usedDate.getFullYear()}` : 'Chưa sử dụng';
+      const usedDateFormatted = item.usedDate ? `${item.usedDate.getDate()}/${item.usedDate.getMonth() + 1}/${item.usedDate.getFullYear()}` : 'Chưa sử dụng';
       const expiryDateFormatted = `${item.expiryDate.getDate()}/${item.expiryDate.getMonth() + 1}/${item.expiryDate.getFullYear()}`;
       responseMessage += `${index + 1}. Tên vật phẩm: ${item.name}, Số lượng: ${item.quantity}, Ngày sử dụng: ${usedDateFormatted}, Hết hạn: ${expiryDateFormatted}\n`;
     });
