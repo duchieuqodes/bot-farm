@@ -1316,13 +1316,15 @@ bot.onText(/\/start/, async (msg) => {
   const fullname = `${msg.from.first_name} ${msg.from.last_name || ''}`.trim();
   const opts = {
     reply_markup: {
-      keyboard: [
-        [{ text: 'Xem tài khoản' }]
-      ],
-      resize_keyboard: true,
-      one_time_keyboard: false
-    }
-  };
+    keyboard: [
+      [{ text: 'Xem tài khoản 🧾' }, { text: 'Nhiệm vụ hàng ngày 🪂' }],
+      [{ text: 'Túi đồ 🎒' }, { text: 'Nhiệm vụ nguyệt trường kỳ 📜' }]
+    ],
+    resize_keyboard: true,
+    one_time_keyboard: false
+  }
+};
+      
 
   try {
     // Kiểm tra xem thành viên đã tồn tại chưa
@@ -1375,8 +1377,9 @@ bot.on('message', async (msg) => {
     const replyOpts = {
       reply_markup: {
         keyboard: [
-          [{ text: 'Xem tài khoản' }]
-        ],
+      [{ text: 'Xem tài khoản 🧾' }, { text: 'Nhiệm vụ hàng ngày 🪂' }],
+      [{ text: 'Túi đồ 🎒' }, { text: 'Nhiệm vụ nguyệt trường kỳ 📜' }]
+    ],
         resize_keyboard: true,
         one_time_keyboard: false
       },
