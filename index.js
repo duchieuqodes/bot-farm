@@ -41,6 +41,7 @@ const MemberSchema = new mongoose.Schema({
   exp: { type: Number, default: 0 },
   consecutiveDays: { type: Number, default: 0 },
   lastSubmissionDate: { type: Date, default: null },
+  lastConsecutiveUpdate: { type: Date, default: null }, // Thêm trường này
   assets: {
     quay: Number,
     keo: Number,
@@ -1702,31 +1703,43 @@ const issueMonthlyVipCard = async (userId) => {
 const updateMissionProgress = async (userId) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const endOfToday = new Date(today);
+  endOfToday.setHours(23, 59, 59, 999);
 
-  const member = await Member.findOne({ userId });
+  try {
+    let member = await Member.findOne({ userId });
 
-  if (!member) {
-    console.error(`Không tìm thấy thành viên với userId: ${userId}`);
-    return;
-  }
+    if (!member) {
+      console.error(`Không tìm thấy thành viên với userId: ${userId}`);
+      return;
+    }
 
-  if (!member.lastSubmissionDate || (today - member.lastSubmissionDate) / (1000 * 60 * 60 * 24) > 1) {
-    member.consecutiveDays = 1;
-  } else {
-    member.consecutiveDays += 1;
-  }
+    const bangCongRecords = await BangCong2.find({
+      userId: userId,
+      date: { $gte: today, $lt: endOfToday }
+    });
 
-  member.lastSubmissionDate = today;
-  await member.save();
+    if (bangCongRecords.length > 0) {
+      if (!member.lastConsecutiveUpdate || member.lastConsecutiveUpdate < today) {
+        member.consecutiveDays += 1;
+        member.lastConsecutiveUpdate = today;
 
-  if (member.consecutiveDays === 7) {
-    await issueWeeklyVipCard(userId);
-  }
+        if (member.consecutiveDays === 7) {
+          await issueWeeklyVipCard(userId);
+        } else if (member.consecutiveDays === 30) {
+          await issueMonthlyVipCard(userId);
+        }
+      }
+    } else {
+      member.consecutiveDays = 0;
+    }
 
-  if (member.consecutiveDays === 30) {
-    await issueMonthlyVipCard(userId);
+    await member.save();
+  } catch (error) {
+    console.error('Lỗi khi cập nhật tiến độ nhiệm vụ:', error);
   }
 };
+
 
 const deleteMemberByFullname = async (fullname) => {
   try {
@@ -1825,8 +1838,8 @@ bot.on('message', async (msg) => {
         bot.sendMessage(msg.chat.id, `Tài khoản của bạn đã được tạo, ${fullname}!`, {
           reply_markup: {
             keyboard: [
-              [{ text: 'Xem tài khoản' }, { text: 'Nhiệm vụ hôm nay' }, { text: 'Nhiệm vụ nguyệt trường kỳ'}, { text: 'Túi đồ'}]
-            ],
+              [{ text: 'Xem tài khoản 🧾' }, { text: 'Nhiệm vụ hàng ngày 🪂' }], [ { text: 'Túi đồ 🎒'}, { text: 'Nhiệm vụ nguyệt trường kỳ 📜'}],
+          ],
             resize_keyboard: true,
             one_time_keyboard: false
           }
@@ -1868,8 +1881,8 @@ const responseMessage = `
         bot.sendMessage(msg.chat.id, responseMessage, {
           reply_markup: {
             keyboard: [
-              [{ text: 'Xem tài khoản' }, { text: 'Nhiệm vụ hôm nay' }, { text: 'Nhiệm vụ nguyệt trường kỳ'}, { text: 'Túi đồ'}]
-              ],
+              [{ text: 'Xem tài khoản 🧾' }, { text: 'Nhiệm vụ hàng ngày 🪂' }], [ { text: 'Túi đồ 🎒'}, { text: 'Nhiệm vụ nguyệt trường kỳ 📜'}],
+          ],
               resize_keyboard: true,
               one_time_keyboard: false
             }
@@ -1938,8 +1951,8 @@ const responseMessage = `
     caption: taskMessage,
     reply_markup: {
       keyboard: [
-        [{ text: 'Xem tài khoản' }, { text: 'Nhiệm vụ hôm nay' }, { text: 'Túi đồ'}, { text: 'Nhiệm vụ nguyệt trường kỳ'}]
-      ],
+        [{ text: 'Xem tài khoản 🧾' }, { text: 'Nhiệm vụ hàng ngày 🪂' }], [ { text: 'Túi đồ 🎒'}, { text: 'Nhiệm vụ nguyệt trường kỳ 📜'}],
+          ],
       resize_keyboard: true,
       one_time_keyboard: false
     }
@@ -1950,7 +1963,7 @@ const responseMessage = `
       bot.sendMessage(msg.chat.id, 'Đã xảy ra lỗi khi truy vấn dữ liệu.', {
         reply_markup: {
           keyboard: [
-            [{ text: 'Xem tài khoản' }, { text: 'Nhiệm vụ hôm nay' }, { text: 'Túi đồ'}, { text: 'Nhiệm vụ nguyệt trường kỳ'}]
+            [{ text: 'Xem tài khoản 🧾' }, { text: 'Nhiệm vụ hàng ngày 🪂' }], [ { text: 'Túi đồ 🎒'}, { text: 'Nhiệm vụ nguyệt trường kỳ 📜'}],
           ],
           resize_keyboard: true,
           one_time_keyboard: false
@@ -1983,9 +1996,11 @@ bot.on('message', async (msg) => {
       return;
     }
 
-    const message = `Tiến độ nhiệm vụ của bạn:
+    const message = `Tiến độ nhiệm vụ của bạn 📜:
+    
 - Bạn Đã quẩy 🥨🥯 được liên tiếp: ${member.consecutiveDays} ngày.
-phần thưởng 🛍️ nhiệm vụ Nguyệt Trường Kỳ: 
+
+phần thưởng nhiệm vụ Nguyệt Trường Kỳ: 
         Quẩy 7 ngày liên tiếp 📅: Nhận 1 thẻ VIP tuần 🎟️.
         Quẩy 30 ngày liên tiếp 📅: Nhận thẻ VIP tháng 💳.
 
@@ -2026,7 +2041,7 @@ Mẹo 💡: Đạt các mốc level 5, 10, 15, 20,... và làm các nhiệm vụ
 const replyKeyboard = {
   reply_markup: {
     keyboard: [
-            [{ text: 'Xem tài khoản' }, { text: 'Nhiệm vụ hôm nay' }, { text: 'Túi đồ'}]
+            [{ text: 'Xem tài khoản 🧾' }, { text: 'Nhiệm vụ hàng ngày 🪂' }], [ { text: 'Túi đồ 🎒'}, { text: 'Nhiệm vụ nguyệt trường kỳ 📜'}],
           ],
     resize_keyboard: true,
     one_time_keyboard: false
