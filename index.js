@@ -1326,12 +1326,12 @@ bot.onText(/\/update/, async (msg) => {
   try {
     const members = await Member.find({});
     if (!members.length) {
-      bot.sendMessage(-1002103270166, 'Không tìm thấy thành viên nào.');
+      bot.sendMessage(chatId, 'Không tìm thấy thành viên nào.');
       return;
     }
 
     for (let member of members) {
-      bot.sendMessage(member.chatId, 'Cập nhật thông tin của bạn:', replyKeyboard4);
+      bot.sendMessage(member.userId, 'Cập nhật thông tin của bạn:', replyKeyboard4);
     }
 
     bot.sendMessage(chatId, 'Đã gửi thông báo cập nhật cho tất cả thành viên.');
