@@ -284,6 +284,147 @@ const groupNames = {
   "-1002228252389": "ORMARKET community", 
 };
 
+// Xử lý lệnh /homqua để hiển thị bảng công cho tất cả các nhóm
+bot.onText(/\/homqua/, async (msg) => {
+  const chatId = msg.chat.id;
+  await sendAggregatedData(chatId);
+});
+
+async function sendAggregatedData(chatId) {
+  try {
+    // Tính ngày hôm qua
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const startOfYesterday = new Date(yesterday.setHours(0, 0, 0, 0));
+    const endOfYesterday = new Date(yesterday.setHours(23, 59, 59, 999));
+    
+    // Lấy bảng công của ngày hôm qua, loại trừ nhóm có chatId -1002108234982
+    const bangCongs = await BangCong2.find({
+      date: { $gte: startOfYesterday, $lte: endOfYesterday },
+      groupId: { $ne: -1002108234982 }, // Loại trừ nhóm này
+    });
+
+    if (bangCongs.length === 0) {
+      bot.sendMessage(chatId, `Không có bảng công nào cho ngày ${yesterday.toLocaleDateString()}.`);
+      return;
+    }
+
+    // Tạo bảng công phân loại theo ID nhóm
+    const groupedByGroupId = {};
+    bangCongs.forEach((bangCong) => {
+      const groupId = bangCong.groupId ? bangCong.groupId.toString() : '';
+      if (!groupedByGroupId[groupId]) {
+        groupedByGroupId[groupId] = [];
+      }
+      groupedByGroupId[groupId].push(bangCong);
+    });
+
+    let response = '';
+
+    // Tạo bảng công cho mỗi nhóm
+    for (const groupId in groupedByGroupId) {
+      if (!groupId) {
+        continue;
+      }
+
+      const groupData = groupedByGroupId[groupId];
+      const groupName = groupNames[groupId] || `Nhóm ${groupId}`;
+
+      response += `Bảng công nhóm ${groupName} (${yesterday.toLocaleDateString()}):\n\n`;
+
+      let totalGroupMoney = 0;
+
+      groupData.forEach((bangCong) => {
+        if (bangCong.tinh_tien !== undefined) {
+          const formattedTien = bangCong.tinh_tien.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+          response += `${bangCong.ten}\t\t${bangCong.quay}q +\t${bangCong.keo}c\t${formattedTien}vnđ\n`;
+          totalGroupMoney += bangCong.tinh_tien;
+        }
+      });
+
+      const formattedTotal = totalGroupMoney.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      response += `Tổng tiền: ${formattedTotal}vnđ\n\n`;
+    }
+
+    // Kiểm tra độ dài response và gửi tin nhắn
+    if (response.length > 4000) {
+      const middle = Math.floor(response.length / 2);
+      const splitIndex = response.lastIndexOf('\n', middle);
+
+      const firstPart = response.substring(0, splitIndex).trim();
+      const secondPart = response.substring(splitIndex).trim();
+
+      bot.sendMessage(chatId, firstPart);
+      bot.sendMessage(chatId, secondPart);
+    } else {
+      bot.sendMessage(chatId, response.trim());
+    }
+  } catch (error) {
+    console.error('Lỗi khi truy vấn dữ liệu từ MongoDB:', error);
+    bot.sendMessage(chatId, 'Đã xảy ra lỗi khi truy vấn dữ liệu từ cơ sở dữ liệu.');
+  }
+}
+
+bot.onText(/\/tong/, async (msg) => {
+  const chatId = msg.chat.id;
+
+  try {
+    // Gọi hàm tổng hợp dữ liệu và gửi bảng công tổng hợp
+    await sendAggregatedData(chatId);
+  } catch (error) {
+    console.error("Lỗi khi truy vấn dữ liệu từ MongoDB:", error);
+    bot.sendMessage(chatId, "Đã xảy ra lỗi khi truy vấn dữ liệu từ cơ sở dữ liệu.");
+  }
+});
+
+async function sendAggregatedData(chatId) {
+  try {
+    const currentDate = new Date(); // Ngày hiện tại
+
+    // Truy vấn để tổng hợp bảng công của các thành viên trong ngày hiện tại
+    const aggregatedData = await BangCong2.aggregate([
+      {
+        $match: { date: new Date(currentDate.toLocaleDateString()),
+        groupId: { $ne: -1002108234982 }, // Loại trừ nhóm -1002050799248 // Lọc theo ngày hiện tại
+      },
+      },
+
+      {
+        $group: {
+          _id: {
+            userId: "$userId",
+            ten: "$ten",
+          },
+          totalQuay: { $sum: "$quay" },
+          totalKeo: { $sum: "$keo" },
+          totalTinhTien: { $sum: "$tinh_tien" },
+        },
+      },
+      {
+        $sort: { totalTinhTien: -1 }, // Sắp xếp theo tổng tiền giảm dần
+      },
+    ]);
+
+    if (aggregatedData.length === 0) {
+      bot.sendMessage(chatId, "Không có bảng công nào cho ngày hôm nay.");
+      return;
+    }
+
+    let response = "Bảng công tổng hợp cho ngày hôm nay:\n\n";
+    response += "HỌ TÊN👩‍🎤\t\tQUẨY💃\tCỘNG➕\tTỔNG TIỀN💰\n";
+
+    aggregatedData.forEach((data) => {
+      const formattedTotal = data.totalTinhTien.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      response += `${data._id.ten}\t\t${data.totalQuay}q +\t${data.totalKeo}c\t${formattedTotal}vnđ\n`;
+    });
+
+    bot.sendMessage(chatId, response);
+  } catch (error) {
+    console.error("Lỗi khi truy vấn dữ liệu từ MongoDB:", error);
+    bot.sendMessage(chatId, "Đã xảy ra lỗi khi truy vấn dữ liệu từ cơ sở dữ liệu.");
+  }
+}
+
 // Xử lý lệnh /bc để hiển thị bảng công cho tất cả các nhóm
 bot.onText(/\/bc/, async (msg) => {
   const chatId = msg.chat.id;
