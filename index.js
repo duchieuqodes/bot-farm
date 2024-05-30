@@ -1309,7 +1309,7 @@ function getStarEmoji(levelPercent) {
   return '';
 }
 
-const replyKeyboard = {
+const replyKeyboard4 = {
   reply_markup: {
     keyboard: [
       [{ text: 'Xem tài khoản 🧾' }, { text: 'Nhiệm vụ hàng ngày 🪂' }],
@@ -1331,7 +1331,7 @@ bot.onText(/\/update/, async (msg) => {
     }
 
     for (let member of members) {
-      bot.sendMessage(member.chatId, 'Cập nhật thông tin của bạn:', replyKeyboard);
+      bot.sendMessage(member.chatId, 'Cập nhật thông tin của bạn:', replyKeyboard4);
     }
 
     bot.sendMessage(chatId, 'Đã gửi thông báo cập nhật cho tất cả thành viên.');
