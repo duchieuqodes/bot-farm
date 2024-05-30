@@ -203,13 +203,15 @@ async function processMessageQueue() {
       if (vipCard) {
       if (vipCard.type === 'level_up') {
         pricePerQuay = 600;
+        pricePerKeo = 1100;
+
       } else if (vipCard.type === 'week') {
         pricePerQuay = 600;
-        pricePerKeo = 1300;
+        pricePerKeo = 1100;
         exp = vipCard.expBonus;
       } else if (vipCard.type === 'month') {
         pricePerQuay = 600;
-        pricePerKeo = 1500;
+        pricePerKeo = 1100;
         exp = vipCard.expBonus;
       }
 
@@ -217,13 +219,13 @@ async function processMessageQueue() {
       if (vipCard.keoLimit && keo > vipCard.keoLimit) {
         const remainingKeo = keo - vipCard.keoLimit;
         keo = vipCard.keoLimit;
-        bangCong.tinh_tien += remainingKeo * 1000;
+        pricePerKeo += remainingKeo * 1000;
       }
 
       if (vipCard.quayLimit && quay > vipCard.quayLimit) {
         const remainingQuay = quay - vipCard.quayLimit;
         quay = vipCard.quayLimit;
-        bangCong.tinh_tien += remainingQuay * 500;
+        pricePerQuay += remainingQuay * 1000;
       }
     }
         // Tạo thông báo mới
