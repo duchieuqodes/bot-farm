@@ -445,65 +445,7 @@ async function sendAggregatedData(chatId) {
 }
 
 
-bot.onText(/\/tong/, async (msg) => {
-  const chatId = msg.chat.id;
 
-  try {
-    // Gọi hàm tổng hợp dữ liệu và gửi bảng công tổng hợp
-    await sendAggregatedData(chatId);
-  } catch (error) {
-    console.error("Lỗi khi truy vấn dữ liệu từ MongoDB:", error);
-    bot.sendMessage(chatId, "Đã xảy ra lỗi khi truy vấn dữ liệu từ cơ sở dữ liệu.");
-  }
-});
-
-async function sendAggregatedData(chatId) {
-  try {
-    const currentDate = new Date(); // Ngày hiện tại
-
-    // Truy vấn để tổng hợp bảng công của các thành viên trong ngày hiện tại
-    const aggregatedData = await BangCong2.aggregate([
-      {
-        $match: { date: new Date(currentDate.toLocaleDateString()),
-        groupId: { $ne: -1002108234982 }, // Loại trừ nhóm -1002050799248 // Lọc theo ngày hiện tại
-      },
-      },
-
-      {
-        $group: {
-          _id: {
-            userId: "$userId",
-            ten: "$ten",
-          },
-          totalQuay: { $sum: "$quay" },
-          totalKeo: { $sum: "$keo" },
-          totalTinhTien: { $sum: "$tinh_tien" },
-        },
-      },
-      {
-        $sort: { totalTinhTien: -1 }, // Sắp xếp theo tổng tiền giảm dần
-      },
-    ]);
-
-    if (aggregatedData.length === 0) {
-      bot.sendMessage(chatId, "Không có bảng công nào cho ngày hôm nay.");
-      return;
-    }
-
-    let response = "Bảng công tổng hợp cho ngày hôm nay:\n\n";
-    response += "HỌ TÊN👩‍🎤\t\tQUẨY💃\tCỘNG➕\tTỔNG TIỀN💰\n";
-
-    aggregatedData.forEach((data) => {
-      const formattedTotal = data.totalTinhTien.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-      response += `${data._id.ten}\t\t${data.totalQuay}q +\t${data.totalKeo}c\t${formattedTotal}vnđ\n`;
-    });
-
-    bot.sendMessage(chatId, response);
-  } catch (error) {
-    console.error("Lỗi khi truy vấn dữ liệu từ MongoDB:", error);
-    bot.sendMessage(chatId, "Đã xảy ra lỗi khi truy vấn dữ liệu từ cơ sở dữ liệu.");
-  }
-}
 
 // Lệnh /reset để xóa bảng công của những ngày trước
 bot.onText(/\/reset/, async (msg) => {
