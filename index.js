@@ -199,24 +199,21 @@ async function processMessageQueue() {
        let pricePerQuay = 500;
     let pricePerKeo = 1000;
     let exp = 0;
-  
-      if (vipCard) {
+
+    if (vipCard) {
       if (vipCard.type === 'level_up') {
         pricePerQuay = 600;
-        pricePerKeo = 1100;
-
       } else if (vipCard.type === 'week') {
         pricePerQuay = 600;
-        pricePerKeo = 1100;
+        pricePerKeo = 1500;
         exp = vipCard.expBonus;
       } else if (vipCard.type === 'month') {
         pricePerQuay = 600;
-        pricePerKeo = 1100;
+        pricePerKeo = 1500;
         exp = vipCard.expBonus;
       }
 
-      
-       // Giới hạn số lượng keo và quay theo loại thẻ
+      // Giới hạn số lượng keo và quay theo loại thẻ
       if (vipCard.keoLimit && keo > vipCard.keoLimit) {
         const remainingKeo = keo - vipCard.keoLimit;
         keo = vipCard.keoLimit;
@@ -272,9 +269,7 @@ async function processMessageQueue() {
       });
     
   }
-} 
-
-                                                               
+}                                                                
           
 // Bảng tra cứu tên nhóm dựa trên ID nhóm
 const groupNames = {
@@ -1003,7 +998,6 @@ const apiKey = '679360c3eef6d2165d3833d29b5eccf4';
 
 // ChatId của nhóm bạn muốn gửi dự báo thời tiết
 const chatId = -1002103270166;
-
 // Bảng dịch các trạng thái thời tiết từ tiếng Anh sang tiếng Việt
 const weatherDescriptions = {
   'clear sky': 'ngày nắng nóng, có nơi nắng nóng gay gắt 🌤️',
@@ -1336,7 +1330,7 @@ bot.onText(/\/update/, async (msg) => {
     }
 
     for (let member of members) {
-      bot.sendMessage(member.userId, 'Đã Cập nhật phiên bản mới hãy cập nhật thông tin của bạn:', replyKeyboard4);
+      bot.sendMessage(member.userId, 'Cập nhật thông tin của bạn:', replyKeyboard4);
     }
 
     bot.sendMessage(chatId, 'Đã gửi thông báo cập nhật cho tất cả thành viên.');
@@ -1661,24 +1655,21 @@ const issueLevelUpVipCard = async (userId, level) => {
     validFrom,
     validUntil,
     expBonus: 0, // Không tăng exp
-    keoBonus: 100,
+    keoBonus: 0,
     quayBonus: 100, // Tính 600đ/quẩy
-    keoLimit: 2,
-    quayLimit: 4
+    keoLimit: 0,
+    quayLimit: 0
   });
   await vipCard.save();
 
-  
   const formattedValidFrom = `${validFrom.getDate()}/${validFrom.getMonth() + 1}/${validFrom.getFullYear()}`;
-  const message = `Chúc mừng quẩy thủ ${member.fullname} đã đạt level ${level} 🌟 và nhận được 1 thẻ VIP Bonus 🎫 có hiệu lực từ ngày ${formattedValidFrom}, hạn sử dụng ${daysValid} ngày. 
-  
-  Ưu đãi: Mã tăng 15% 100đ/quẩy 🥯🥨, 15% 100đ/kẹo 🍬(tăng tối đa 600vnđ/mỗi lần nộp. Áp dụng cho sản phẩm Quẩy, Kẹo và một số thành viên tham gia nhiệm vụ nhất định)`;
+  const message = `Chúc mừng quẩy thủ ${member.fullname} đã đạt level ${level} 🌟 và nhận được 1 thẻ VIP Bonus 🎫 có hiệu lực từ ngày ${formattedValidFrom}, hạn sử dụng ${daysValid} ngày. Ưu đãi thẻ: +600đ/quẩy.`;
   const gifUrl = 'https://iili.io/JQSRkrv.gif'; // Thay thế bằng URL của ảnh GIF. 
     // Retrieve all members
   const members = await Member.find({});
   for (const member of members) {
     // Send message to each member's chat ID
-    bot.sendAnimation(member.userId, gifUrl, { caption: message });
+    bot.sendAnimation(member.chatId, gifUrl, { caption: message });
   }
 
   // Send message to the specific group ID
@@ -1706,22 +1697,20 @@ const issueWeeklyVipCard = async (userId) => {
     validFrom,
     validUntil,
     expBonus,
-    keoBonus: 100,
+    keoBonus: 1500,
     quayBonus: 100, // Tính 600đ/quẩy
-    keoLimit: 1,
-    quayLimit: 3
+    keoLimit: 10,
+    quayLimit: 10
   });
 
   await vipCard.save();
 
-  const message = `Chúc mừng ${member.fullname} đã nhận được thẻ VIP tuần 🎫! Có hiệu lực từ ngày ${validFrom.toLocaleDateString()} đến ${validUntil.toLocaleDateString()}.
-
-  Ưu đãi: Nhận được ${expBonus} exp, 2 Mã tăng 15% 100đ/quẩy, 15% 100đ/cộng (tăng tối đa 400vnđ/mỗi lần nộp. Áp dụng cho sản phẩm Quẩy, Cộng và một số thành viên tham gia nhiệm vụ nhất định)`;
-  
+  const message = `Chúc mừng ${member.fullname} đã nhận được thẻ VIP tuần! Có hiệu lực từ ngày ${validFrom.toLocaleDateString()} đến ${validUntil.toLocaleDateString()}. Ưu đãi: Nhận được ${expBonus} exp, tăng 1500đ/kẹo, 600đ/quẩy khi nộp bài (tối đa 10 keo, 10 quay).`;
+    // Retrieve all members
   const members = await Member.find({});
   for (const member of members) {
     // Send message to each member's chat ID
-    bot.sendAnimation(member.userId, gifUrl, { caption: message });
+    bot.sendAnimation(member.chatId, gifUrl, { caption: message });
   }
 
   // Send message to the specific group ID
@@ -1748,23 +1737,20 @@ const issueMonthlyVipCard = async (userId) => {
     validFrom,
     validUntil,
     expBonus,
-    keoBonus: 200,
+    keoBonus: 1500,
     quayBonus: 100, // Tính 600đ/quẩy
-    keoLimit: 2,
-    quayLimit: 2
+    keoLimit: 20,
+    quayLimit: 20
   });
 
   await vipCard.save();
 
-  const message = `🌟 Chúc mừng ${member.fullname} đã nhận được thẻ VIP tháng 💳! Có hiệu lực từ ngày ${validFrom.toLocaleDateString()} đến ${validUntil.toLocaleDateString()}.
-  
-  Ưu đãi: Nhận được ${expBonus} exp, 2 Mã tăng 15% 100đ/quẩy, 33% 200đ/cộng (tăng tối đa 600vnđ/mỗi lần nộp. Áp dụng cho sản phẩm Quẩy, Cộng và một số thành viên tham gia nhiệm vụ nhất định)`;
-  
+  const message = `Chúc mừng ${member.fullname} đã nhận được thẻ VIP tháng! Có hiệu lực từ ngày ${validFrom.toLocaleDateString()} đến ${validUntil.toLocaleDateString()}. Ưu đãi: Nhận được ${expBonus} exp, tăng 1500đ/kẹo, 600đ/quẩy khi nộp bài (tối đa 20 keo, 20 quay).`;
     // Retrieve all members
   const members = await Member.find({});
   for (const member of members) {
     // Send message to each member's chat ID
-    bot.sendAnimation(member.userId, gifUrl, { caption: message });
+    bot.sendAnimation(member.chatId, gifUrl, { caption: message });
   }
 
   // Send message to the specific group ID
@@ -1908,7 +1894,7 @@ bot.on('message', async (msg) => {
         });
 
         await member.save();
-        bot.sendMessage(msg.chat.id, `Tài khoản của bạn đã được tạo mới, ${fullname}!`, {
+        bot.sendMessage(msg.chat.id, `Tài khoản của bạn đã được tạo, ${fullname}!`, {
           reply_markup: {
             keyboard: [
       [{ text: 'Xem tài khoản 🧾' }, { text: 'Nhiệm vụ hàng ngày 🪂' }],
@@ -1996,7 +1982,7 @@ const responseMessage = `
           if (!task.completed && task.total >= task.goal) {
             // Hoàn thành nhiệm vụ
             task.completed = true;
-            const exp = Math.floor(Math.random() * 120) + 60; // Random 10-50 điểm exp
+            const exp = Math.floor(Math.random() * 150) + 120; // Random 10-50 điểm exp
             member.levelPercent += exp * 0.1;
 
             // Kiểm tra nếu levelPercent >= 100 thì tăng level
@@ -2150,33 +2136,3 @@ bot.onText(/\/bup/, async (msg) => {
 
 
 
-// Lắng nghe lệnh /thongbao
-bot.onText(/\/thongbao "(.*)" "(.*)"/, (msg, match) => {
-  const chatId = msg.chat.id;
-  const username = msg.from.username;
-
-  // Chỉ cho phép username @duchieu287 thực hiện lệnh này
-  if (username !== 'Duchieu287') {
-    bot.sendMessage(chatId, 'Bạn không có quyền sử dụng lệnh này.');
-    return;
-  }
-  // Định nghĩa groupId mà thông báo sẽ được gửi đến
-const groupId = -1002103270166;
-  // Lấy tên tính năng và nội dung thông báo từ lệnh
-  const featureName = match[1];
-  const notificationContent = match[2];
-  const currentDate = moment().format('DD/MM/YYYY');
-
-  // Định dạng thông báo
-  const message = `TÍNH NĂNG MỚI 🔵:\nLần cập nhật gần đây: ${currentDate}\n${featureName}\nNội dung cập nhật:\n${notificationContent}`;
-
-  // Gửi thông báo đến groupId
-  bot.sendMessage(groupId, message)
-    .then(() => {
-      bot.sendMessage(chatId, 'Thông báo đã được gửi thành công.');
-    })
-    .catch((error) => {
-      console.error('Lỗi khi gửi thông báo:', error);
-      bot.sendMessage(chatId, 'Có lỗi xảy ra khi gửi thông báo.');
-    });
-});
