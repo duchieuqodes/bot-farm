@@ -1878,12 +1878,12 @@ bot.on('message', async (msg) => {
   // Đặt giờ phút giây của hôm nay về đầu ngày (00:00:00)
   today.setHours(0, 0, 0, 0);
   const endOfToday = new Date(today);
-  endOfToday.setHours(23, 59, 59, 999);
+  endOfToday.setHours(19, 59, 59, 999);
 
 // Đặt giờ phút giây của yesterday về đầu ngày (00:00:00)
     yesterday.setHours(0, 0, 0, 0);
     const endOfYesterday = new Date(yesterday);
-    endOfYesterday.setHours(23, 59, 59, 999); // Đặt giờ phút giây của endOfYesterday về cuối ngày (23:59:59.999)
+    endOfYesterday.setHours(19, 59, 59, 999); // Đặt giờ phút giây của endOfYesterday về cuối ngày (23:59:59.999)
 
   // Kiểm tra và cập nhật số lượng nhan_anh_bill nếu tin nhắn chứa từ khóa phù hợp
   if (msg.text) {
