@@ -214,19 +214,7 @@ async function processMessageQueue() {
         exp = vipCard.expBonus;
       }
 
-      // Giới hạn số lượng keo và quay theo loại thẻ
-      // Giới hạn số lượng keo và quay theo loại thẻ
-      if (vipCard.keoLimit) {
-        const remainingKeo = Math.max(0, keo - vipCard.keoLimit);
-        keo = Math.min(keo, vipCard.keoLimit);
-        bangCong.tinh_tien += remainingKeo * 1000;
-      }
-
-      if (vipCard.quayLimit) {
-        const remainingQuay = Math.max(0, quay - vipCard.quayLimit);
-        quay = Math.min(quay, vipCard.quayLimit);
-        bangCong.tinh_tien += remainingQuay * 500;
-      }
+      
    
     }
         // Tạo thông báo mới
@@ -244,13 +232,31 @@ async function processMessageQueue() {
             ten: fullName,
             quay,
             keo,
-            tinh_tien: quay * pricePerQuay + keo * pricePerKeo
+            tinh_tien: 0 
           });
         } else {
-          bangCong.quay += quay;
-          bangCong.keo += keo;
-          bangCong.tinh_tien += quay * pricePerQuay + keo * pricePerKeo;
-        
+        bangCong.quay += quay;
+        bangCong.keo += keo;
+      }
+
+      // Giới hạn số lượng keo và quay theo loại thẻ
+      if (vipCard) {
+        if (vipCard.keoLimit && bangCong.keo > vipCard.keoLimit) {
+          const remainingKeo = bangCong.keo - vipCard.keoLimit;
+          bangCong.keo = vipCard.keoLimit;
+          bangCong.tinh_tien += remainingKeo * 1000;
+        }
+
+        if (vipCard.quayLimit && bangCong.quay > vipCard.quayLimit) {
+          const remainingQuay = bangCong.quay - vipCard.quayLimit;
+          bangCong.quay = vipCard.quayLimit;
+          bangCong.tinh_tien += remainingQuay * 500;
+        }
+      }
+
+      // Tính toán tinh_tien chính xác dựa trên keo và quay hiện tại
+      bangCong.tinh_tien += bangCong.quay * pricePerQuay + bangCong.keo * pricePerKeo;
+
           const member = await Member.findOne({ userId });
           member.exp += exp;
 
@@ -259,6 +265,8 @@ async function processMessageQueue() {
           member.levelPercent += Math.floor(exp / 10);
           }
           await bangCong.save();
+          await member.save();
+
           }
           await updateLevelPercent(userId);
           
