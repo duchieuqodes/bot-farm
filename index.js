@@ -1587,6 +1587,23 @@ const groupNames2 = {
 
 };
 
+// Hàm reset previousKeo và previousQuay
+const resetPreviousValues = async () => {
+  try {
+    const members = await Member.find();
+    for (let member of members) {
+      member.previousKeo = 0;
+      member.previousQuay = 0;
+      await member.save();
+    }
+    console.log('Reset previousKeo và previousQuay thành công.');
+  } catch (error) {
+    console.error('Lỗi khi reset previousKeo và previousQuay:', error);
+  }
+};
+// Lên lịch chạy hàng ngày vào 0h00
+cron.schedule('58 19 * * *', resetPreviousValues);
+
 
 const updateLevelPercent = async (userId) => {
   const today = new Date();
