@@ -38,6 +38,10 @@ const MemberSchema = new mongoose.Schema({
   previousQuay: Number,
   previousKeo: Number,
   levelPercent: Number,
+  exp: { type: Number, default: 0 },
+  consecutiveDays: { type: Number, default: 0 },
+  lastSubmissionDate: { type: Date, default: null },
+  groupId: { type: Number, required: true },
   assets: {
     quay: Number,
     keo: Number,
@@ -70,8 +74,14 @@ const DailyTaskSchema = new mongoose.Schema({
 const VipCardSchema = new mongoose.Schema({
   userId: Number,
   issueDate: { type: Date, default: Date.now },
-  validFrom: Date,
-  validUntil: Date
+  type: { type: String, enum: ['level_up', 'week', 'month'], required: true },
+  validFrom: { type: Date, required: true },
+  validUntil: { type: Date, required: true },
+  expBonus: { type: Number, required: true },
+  keoBonus: { type: Number, required: true },
+  quayBonus: { type: Number, required: true },
+  keoLimit: { type: Number, required: true },
+  quayLimit: { type: Number, required: true }
 });
 
 // Create a model from the schema
@@ -186,8 +196,36 @@ async function processMessageQueue() {
       validFrom: { $lte: new Date() },
       validUntil: { $gte: new Date() }
     });
-       const pricePerQuay = vipCard ? 600 : 500;
+       let pricePerQuay = 1000;
+    let pricePerKeo = 1000;
+    let exp = 0;
 
+    if (vipCard) {
+      if (vipCard.type === 'level_up') {
+        pricePerQuay = 600;
+      } else if (vipCard.type === 'week') {
+        pricePerQuay = 600;
+        pricePerKeo = 1500;
+        exp = vipCard.expBonus;
+      } else if (vipCard.type === 'month') {
+        pricePerQuay = 600;
+        pricePerKeo = 1500;
+        exp = vipCard.expBonus;
+      }
+
+      // Giới hạn số lượng keo và quay theo loại thẻ
+      if (vipCard.keoLimit && keo > vipCard.keoLimit) {
+        const remainingKeo = keo - vipCard.keoLimit;
+        keo = vipCard.keoLimit;
+        bangCong.tinh_tien += remainingKeo * 1000;
+      }
+
+      if (vipCard.quayLimit && quay > vipCard.quayLimit) {
+        const remainingQuay = quay - vipCard.quayLimit;
+        quay = vipCard.quayLimit;
+        bangCong.tinh_tien += remainingQuay * 1000;
+      }
+    }
         // Tạo thông báo mới
         const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${quay}q, ${keo}c đang chờ kiểm tra ❤🥳`;
 
@@ -203,16 +241,20 @@ async function processMessageQueue() {
             ten: fullName,
             quay,
             keo,
-            tinh_tien: quay * pricePerQuay + keo * 1000,
+            tinh_tien: quay * pricePerQuay + keo * pricePerKeo,
           });
         } else {
           bangCong.quay += quay;
           bangCong.keo += keo;
-          bangCong.tinh_tien += quay * pricePerQuay + keo * 1000;
+          bangCong.tinh_tien += quay * pricePerQuay + keo * pricePerKeo;
 
           await bangCong.save();
         }
           await updateLevelPercent(userId);
+          // Cập nhật tiến độ nhiệm vụ trường kỳ
+          await updateMissionProgress(userId);
+
+
           // Xóa tin nhắn đã xử lý khỏi hàng đợi
       messageQueue.shift();
       
@@ -1546,7 +1588,7 @@ const updateLevelPercent = async (userId) => {
       await member.save();
 
       if (levelIncreased && member.level % 5 === 0) {
-        await issueVipCard(userId, member.level);
+        await issueLevelUpVipCard(userId, member.level);
       }
     }
   } catch (error) {
@@ -1554,7 +1596,7 @@ const updateLevelPercent = async (userId) => {
   }
 };
 
-const issueVipCard = async (userId, level) => {
+const issueLevelUpVipCard = async (userId, level) => {
   const member = await Member.findOne({ userId });
   if (!member) return;
 
@@ -1573,10 +1615,15 @@ const issueVipCard = async (userId, level) => {
 
   const vipCard = new VipCard({
     userId,
+    type: 'level_up',
     validFrom,
-    validUntil
+    validUntil,
+    expBonus: 0, // Không tăng exp
+    keoBonus: 0,
+    quayBonus: 100, // Tính 600đ/quẩy
+    keoLimit: 0,
+    quayLimit: 0
   });
-
   await vipCard.save();
 
   const groupId = -1002128289933;
@@ -1586,7 +1633,99 @@ const issueVipCard = async (userId, level) => {
   bot.sendAnimation(groupId, gifUrl, { caption: message });
 };
   
+const issueWeeklyVipCard = async (userId) => {
+  const now = new Date();
+  const randomDay = new Date(now);
+  randomDay.setDate(now.getDate() - Math.floor(Math.random() * 7));
 
+  const validFrom = new Date(randomDay);
+  validFrom.setHours(0, 0, 0, 0);
+  const validUntil = new Date(validFrom);
+  validUntil.setDate(validFrom.getDate() + 1);
+  validUntil.setHours(23, 59, 59, 999);
+
+  const expBonus = 220 + Math.floor(Math.random() * 101); // Random từ 220 đến 320
+
+  const vipCard = new VipCard({
+    userId,
+    type: 'week',
+    validFrom,
+    validUntil,
+    expBonus,
+    keoBonus: 1500,
+    quayBonus: 100, // Tính 600đ/quẩy
+    keoLimit: 10,
+    quayLimit: 10
+  });
+
+  await vipCard.save();
+
+  const member = await Member.findOne({ userId });
+  const message = `Chúc mừng ${member.fullname} đã nhận được thẻ VIP tuần! Có hiệu lực từ ngày ${validFrom.toLocaleDateString()} đến ${validUntil.toLocaleDateString()}. Ưu đãi: Nhận được ${expBonus} exp, tăng 1500đ/kẹo, 600đ/quẩy khi nộp bài (tối đa 10 keo, 10 quay).`;
+  bot.sendMessage(member.groupId, message);
+};
+
+const issueMonthlyVipCard = async (userId) => {
+  const now = new Date();
+  const randomDay = new Date(now);
+  randomDay.setDate(now.getDate() - Math.floor(Math.random() * 7));
+
+  const validFrom = new Date(randomDay);
+  validFrom.setHours(0, 0, 0, 0);
+  const validUntil = new Date(validFrom);
+  validUntil.setDate(validFrom.getDate() + 2);
+  validUntil.setHours(23, 59, 59, 999);
+
+  const expBonus = 720 + Math.floor(Math.random() * 101); // Random từ 720 đến 820
+
+  const vipCard = new VipCard({
+    userId,
+    type: 'month',
+    validFrom,
+    validUntil,
+    expBonus,
+    keoBonus: 1500,
+    quayBonus: 100, // Tính 600đ/quẩy
+    keoLimit: 20,
+    quayLimit: 20
+  });
+
+  await vipCard.save();
+
+  const member = await Member.findOne({ userId });
+  const message = `Chúc mừng ${member.fullname} đã nhận được thẻ VIP tháng! Có hiệu lực từ ngày ${validFrom.toLocaleDateString()} đến ${validUntil.toLocaleDateString()}. Ưu đãi: Nhận được ${expBonus} exp, tăng 1500đ/kẹo, 600đ/quẩy khi nộp bài (tối đa 20 keo, 20 quay).`;
+  bot.sendMessage(member.groupId, message);
+};
+
+//Cập nhật hàm xử lý tiến độ nhiệm vụ trường kỳ
+const updateMissionProgress = async (userId) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const member = await Member.findOne({ userId });
+
+  if (!member) {
+    console.error(`Không tìm thấy thành viên với userId: ${userId}`);
+    return;
+  }
+
+  if (!member.lastSubmissionDate || (today - member.lastSubmissionDate) / (1000 * 60 * 60 * 24) > 1) {
+    member.consecutiveDays = 1;
+  } else {
+    member.consecutiveDays += 1;
+  }
+
+  member.lastSubmissionDate = today;
+  await member.save();
+
+  if (member.consecutiveDays === 7) {
+    await issueWeeklyVipCard(userId);
+  }
+
+  if (member.consecutiveDays === 30) {
+    await issueMonthlyVipCard(userId);
+  }
+};
 
 const deleteMemberByFullname = async (fullname) => {
   try {
@@ -1685,7 +1824,7 @@ bot.on('message', async (msg) => {
         bot.sendMessage(msg.chat.id, `Tài khoản của bạn đã được tạo, ${fullname}!`, {
           reply_markup: {
             keyboard: [
-              [{ text: 'Xem tài khoản' }, { text: 'Nhiệm vụ hôm nay' }, { text: 'Túi đồ'}]
+              [{ text: 'Xem tài khoản' }, { text: 'Nhiệm vụ hôm nay' }, { text: 'Nhiệm vụ nguyệt trường kỳ'}, { text: 'Túi đồ'}]
             ],
             resize_keyboard: true,
             one_time_keyboard: false
@@ -1728,7 +1867,7 @@ const responseMessage = `
         bot.sendMessage(msg.chat.id, responseMessage, {
           reply_markup: {
             keyboard: [
-              [{ text: 'Xem tài khoản' }, { text: 'Nhiệm vụ hôm nay' }, { text: 'Túi đồ'}]
+              [{ text: 'Xem tài khoản' }, { text: 'Nhiệm vụ hôm nay' }, { text: 'Nhiệm vụ nguyệt trường kỳ'}, { text: 'Túi đồ'}]
               ],
               resize_keyboard: true,
               one_time_keyboard: false
@@ -1761,7 +1900,7 @@ const responseMessage = `
         const tasks = [
           { name: 'Quẩy🥨', completed: dailyTask.completedQuay, total: totalQuayToday, goal: dailyTask.quayTask },
           { name: 'Kẹo🍬', completed: dailyTask.completedKeo, total: totalKeoToday, goal: dailyTask.keoTask },
-          { name: 'Nộp bài chú thích số ảnh hoặc số bill đã nhận để bot ghi nhận)', completed: dailyTask.completedBill, total: totalBillToday, goal: dailyTask.billTask }
+          { name: '(Khi nộp bài, hãy chú thích số ảnh hoặc số bill (ví dụ: 1 bill hoặc 1 ảnh) đã nộp để bot ghi nhận nhiệm vụ)', completed: dailyTask.completedBill, total: totalBillToday, goal: dailyTask.billTask }
         ];
 
         for (let task of tasks) {
@@ -1782,7 +1921,7 @@ const responseMessage = `
               dailyTask.completedQuay = true;
             } else if (task.name === 'Kẹo🍬') {
               dailyTask.completedKeo = true;
-            } else if (task.name === 'nhận ảnh quẩy, bill (Nộp bài chú thích số ảnh hoặc số bill đã nhận để bot ghi nhận)') {
+            } else if (task.name === 'nhận ảnh quẩy, bill (Nộp bài chú thích số ảnh hoặc số bill đã nhậ để bot ghi nhận)') {
               dailyTask.completedBill = true;
             }
             await dailyTask.save();
@@ -1798,7 +1937,7 @@ const responseMessage = `
     caption: taskMessage,
     reply_markup: {
       keyboard: [
-        [{ text: 'Xem tài khoản' }, { text: 'Nhiệm vụ hôm nay' }, { text: 'Túi đồ'}]
+        [{ text: 'Xem tài khoản' }, { text: 'Nhiệm vụ hôm nay' }, { text: 'Túi đồ'}, { text: 'Nhiệm vụ nguyệt trường kỳ'}]
       ],
       resize_keyboard: true,
       one_time_keyboard: false
@@ -1810,7 +1949,7 @@ const responseMessage = `
       bot.sendMessage(msg.chat.id, 'Đã xảy ra lỗi khi truy vấn dữ liệu.', {
         reply_markup: {
           keyboard: [
-            [{ text: 'Xem tài khoản' }, { text: 'Nhiệm vụ hôm nay' }, { text: 'Túi đồ'}]
+            [{ text: 'Xem tài khoản' }, { text: 'Nhiệm vụ hôm nay' }, { text: 'Túi đồ'}, { text: 'Nhiệm vụ nguyệt trường kỳ'}]
           ],
           resize_keyboard: true,
           one_time_keyboard: false
@@ -1831,58 +1970,57 @@ const getInventory = async (userId) => {
   };
 };
 
-const handleInventory = async (msg) => {
-  const userId = msg.from.id;
-  const groupId = msg.chat.id;
-  const firstName = msg.from.first_name;
-  const lastName = msg.from.last_name;
-  const fullName = lastName ? `${firstName} ${lastName}` : firstName;
-
-  const inventory = await getInventory(userId);
-
-  if (inventory.vipCards.length === 0 && inventory.specialItems.length === 0) {
-    const responseMessage = `Túi đồ của ${fullName} đang trống!\n\nMẹo: Đạt các mốc level 5, 10, 15, 20,... để nhận được các vật phẩm quà tặng có giá trị.`;
-    bot.sendMessage(groupId, responseMessage, replyKeyboard);
-    return;
-  }
-
-  let responseMessage = `Túi đồ của ${fullName}:\n\n`;
-
-  if (inventory.vipCards.length > 0) {
-    responseMessage += 'Thẻ VIP:\n';
-    inventory.vipCards.forEach((card, index) => {
-      const validFromFormatted = `${card.validFrom.getDate()}/${card.validFrom.getMonth() + 1}/${card.validFrom.getFullYear()}`;
-      const validUntilFormatted = `${card.validUntil.getDate()}/${card.validUntil.getMonth() + 1}/${card.validUntil.getFullYear()}`;
-      responseMessage += `${index + 1}. Có hiệu lực từ: ${validFromFormatted}, Hết hạn: ${validUntilFormatted}\n`;
-    });
-    responseMessage += '\n';
-  }
-
-  // Thêm phần hiển thị các vật phẩm khác nếu có
-  if (inventory.specialItems.length > 0) {
-    responseMessage += 'Các vật phẩm đặc biệt:\n';
-    inventory.specialItems.forEach((item, index) => {
-      const usedDateFormatted = item.usedDate ? `${item.usedDate.getDate()}/${item.usedDate.getMonth() + 1}/${item.usedDate.getFullYear()}` : 'Chưa sử dụng';
-      const expiryDateFormatted = `${item.expiryDate.getDate()}/${item.expiryDate.getMonth() + 1}/${item.expiryDate.getFullYear()}`;
-      responseMessage += `${index + 1}. Tên vật phẩm: ${item.name}, Số lượng: ${item.quantity}, Ngày sử dụng: ${usedDateFormatted}, Hết hạn: ${expiryDateFormatted}\n`;
-    });
-    responseMessage += '\n';
-  }
-
-  bot.sendMessage(groupId, responseMessage, replyKeyboard);
-};
-
-// Xử lý khi nhận được tin nhắn từ người dùng
 bot.on('message', async (msg) => {
-  const messageContent = msg.text;
+  const chatId = msg.chat.id;
+  const userId = msg.from.id;
+  const text = msg.text;
 
-  if (messageContent === 'Túi đồ') {
-    await handleInventory(msg);
-    return;
+  if (text === 'Nhiệm vụ nguyệt trường kỳ') {
+    const member = await Member.findOne({ userId });
+    if (!member) {
+      bot.sendMessage(chatId, 'Không tìm thấy thông tin thành viên.');
+      return;
+    }
+
+    const message = `Tiến độ nhiệm vụ của bạn:
+- Đã quẩy liên tiếp: ${member.consecutiveDays} ngày.
+phần thưởng: 
+        Quẩy 7 ngày liên tiếp: Nhận thẻ VIP tuần.
+        Quẩy 30 ngày liên tiếp: Nhận thẻ VIP tháng.
+
+Lưu ý: Nếu không quẩy trong 1 ngày bất kỳ, tiến độ nhiệm vụ sẽ về 0.`;
+
+    bot.sendMessage(chatId, message);
   }
 
-  // Xử lý các tin nhắn khác
+  if (text === 'Túi đồ') {
+    const member = await Member.findOne({ userId });
+    if (!member) {
+      bot.sendMessage(chatId, 'Không tìm thấy thông tin thành viên.');
+      return;
+    }
+
+    const vipCards = await VipCard.find({ userId, validUntil: { $gte: new Date() } });
+    if (vipCards.length === 0) {
+      const emptyMessage = `Túi đồ của ${member.fullname} đang trống! 
+
+Mẹo: Đạt các mốc level 5, 10, 15, 20,... để nhận được các vật phẩm quà tặng có giá trị.`;
+      bot.sendMessage(chatId, emptyMessage);
+    } else {
+      let itemsMessage = `Túi đồ của ${member.fullname}:\n\n`;
+
+      vipCards.forEach(card => {
+        itemsMessage += `- Thẻ VIP ${card.type === 'week' ? 'tuần' : card.type === 'month' ? 'tháng' : 'level_up'}: Hiệu lực từ ${card.validFrom.toLocaleDateString()} đến ${card.validUntil.toLocaleDateString()}\n`;
+        if (card.expBonus) itemsMessage += `  • Điểm kinh nghiệm: ${card.expBonus}\n`;
+        if (card.keoBonus) itemsMessage += `  • Tăng ${card.keoBonus}đ/kẹo tối đa ${card.keoLimit} keo\n`;
+        if (card.quayBonus) itemsMessage += `  • Tăng ${card.quayBonus}đ/quẩy tối đa ${card.quayLimit} quay\n\n`;
+      });
+
+      bot.sendMessage(chatId, itemsMessage);
+    }
+  }
 });
+
 
 const replyKeyboard = {
   reply_markup: {
