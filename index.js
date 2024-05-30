@@ -1628,10 +1628,19 @@ const issueLevelUpVipCard = async (userId, level) => {
   });
   await vipCard.save();
 
-  const groupId = -1002128289933;
+  
   const formattedValidFrom = `${validFrom.getDate()}/${validFrom.getMonth() + 1}/${validFrom.getFullYear()}`;
   const message = `Chúc mừng quẩy thủ ${member.fullname} đã đạt level ${level} 🌟 và nhận được 1 thẻ VIP Bonus 🎫 có hiệu lực từ ngày ${formattedValidFrom}, hạn sử dụng ${daysValid} ngày. Ưu đãi thẻ: +600đ/quẩy.`;
-  const gifUrl = 'https://iili.io/JQSRkrv.gif'; // Thay thế bằng URL của ảnh GIF
+  const gifUrl = 'https://iili.io/JQSRkrv.gif'; // Thay thế bằng URL của ảnh GIF. 
+    // Retrieve all members
+  const members = await Member.find({});
+  for (const member of members) {
+    // Send message to each member's chat ID
+    bot.sendAnimation(member.chatId, gifUrl, { caption: message });
+  }
+
+  // Send message to the specific group ID
+  const groupId = -1002103270166;
   bot.sendAnimation(groupId, gifUrl, { caption: message });
 };
   
@@ -1663,8 +1672,16 @@ const issueWeeklyVipCard = async (userId) => {
 
   await vipCard.save();
 
-  const groupId = -1002128289933;
   const message = `Chúc mừng ${member.fullname} đã nhận được thẻ VIP tuần! Có hiệu lực từ ngày ${validFrom.toLocaleDateString()} đến ${validUntil.toLocaleDateString()}. Ưu đãi: Nhận được ${expBonus} exp, tăng 1500đ/kẹo, 600đ/quẩy khi nộp bài (tối đa 10 keo, 10 quay).`;
+    // Retrieve all members
+  const members = await Member.find({});
+  for (const member of members) {
+    // Send message to each member's chat ID
+    bot.sendAnimation(member.chatId, gifUrl, { caption: message });
+  }
+
+  // Send message to the specific group ID
+  const groupId = -1002103270166;
   bot.sendAnimation(groupId, gifUrl, { caption: message });
 };
 
@@ -1695,8 +1712,16 @@ const issueMonthlyVipCard = async (userId) => {
 
   await vipCard.save();
 
-  const groupId = -1002128289933;
   const message = `Chúc mừng ${member.fullname} đã nhận được thẻ VIP tháng! Có hiệu lực từ ngày ${validFrom.toLocaleDateString()} đến ${validUntil.toLocaleDateString()}. Ưu đãi: Nhận được ${expBonus} exp, tăng 1500đ/kẹo, 600đ/quẩy khi nộp bài (tối đa 20 keo, 20 quay).`;
+    // Retrieve all members
+  const members = await Member.find({});
+  for (const member of members) {
+    // Send message to each member's chat ID
+    bot.sendAnimation(member.chatId, gifUrl, { caption: message });
+  }
+
+  // Send message to the specific group ID
+  const groupId = -1002103270166;
   bot.sendAnimation(groupId, gifUrl, { caption: message });
 };
 
