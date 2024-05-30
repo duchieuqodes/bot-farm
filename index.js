@@ -205,7 +205,7 @@ async function processMessageQueue() {
         pricePerQuay = 600;
       } else if (vipCard.type === 'week') {
         pricePerQuay = 600;
-        pricePerKeo = 1500;
+        pricePerKeo = 1300;
         exp = vipCard.expBonus;
       } else if (vipCard.type === 'month') {
         pricePerQuay = 600;
@@ -248,8 +248,15 @@ async function processMessageQueue() {
           bangCong.keo += keo;
           bangCong.tinh_tien += quay * pricePerQuay + keo * pricePerKeo;
 
+          const member = await Member.findOne({ userId });
+          member.exp += exp;
+
+          // Tăng levelPercent nếu có exp từ thẻ VIP
+          if (exp > 0) {
+          member.levelPercent += Math.floor(exp / 10);
+          }
           await bangCong.save();
-        }
+          }
           await updateLevelPercent(userId);
           
 
@@ -1331,7 +1338,7 @@ bot.onText(/\/update/, async (msg) => {
     }
 
     for (let member of members) {
-      bot.sendMessage(member.userId, 'Cập nhật thông tin của bạn:', replyKeyboard4);
+      bot.sendMessage(member.userId, 'Đã Cập nhật phiên bản mới hãy cập nhật thông tin của bạn:', replyKeyboard4);
     }
 
     bot.sendMessage(chatId, 'Đã gửi thông báo cập nhật cho tất cả thành viên.');
@@ -1659,19 +1666,19 @@ const issueLevelUpVipCard = async (userId, level) => {
     keoBonus: 0,
     quayBonus: 100, // Tính 600đ/quẩy
     keoLimit: 0,
-    quayLimit: 0
+    quayLimit: 40
   });
   await vipCard.save();
 
   
   const formattedValidFrom = `${validFrom.getDate()}/${validFrom.getMonth() + 1}/${validFrom.getFullYear()}`;
-  const message = `Chúc mừng quẩy thủ ${member.fullname} đã đạt level ${level} 🌟 và nhận được 1 thẻ VIP Bonus 🎫 có hiệu lực từ ngày ${formattedValidFrom}, hạn sử dụng ${daysValid} ngày. Ưu đãi thẻ: +600đ/quẩy.`;
+  const message = `Chúc mừng quẩy thủ ${member.fullname} đã đạt level ${level} 🌟 và nhận được 1 thẻ VIP Bonus 🎫 có hiệu lực từ ngày ${formattedValidFrom}, hạn sử dụng ${daysValid} ngày. Ưu đãi thẻ: 600đ/quẩy (tăng tối đa 40 quẩy)`;
   const gifUrl = 'https://iili.io/JQSRkrv.gif'; // Thay thế bằng URL của ảnh GIF. 
     // Retrieve all members
   const members = await Member.find({});
   for (const member of members) {
     // Send message to each member's chat ID
-    bot.sendAnimation(member.chatId, gifUrl, { caption: message });
+    bot.sendAnimation(member.userId, gifUrl, { caption: message });
   }
 
   // Send message to the specific group ID
@@ -1707,12 +1714,12 @@ const issueWeeklyVipCard = async (userId) => {
 
   await vipCard.save();
 
-  const message = `Chúc mừng ${member.fullname} đã nhận được thẻ VIP tuần! Có hiệu lực từ ngày ${validFrom.toLocaleDateString()} đến ${validUntil.toLocaleDateString()}. Ưu đãi: Nhận được ${expBonus} exp, tăng 1500đ/kẹo, 600đ/quẩy khi nộp bài (tối đa 10 keo, 10 quay).`;
-    // Retrieve all members
+  const message = `Chúc mừng ${member.fullname} đã nhận được thẻ VIP tuần 🎫! Có hiệu lực từ ngày ${validFrom.toLocaleDateString()} đến ${validUntil.toLocaleDateString()}. Ưu đãi: Nhận được ${expBonus} exp, +1300đ/kẹo, +600đ/quẩy khi nộp bài (tối đa 10 keo, 10 quay).`;
+    // Retrieve all member
   const members = await Member.find({});
   for (const member of members) {
     // Send message to each member's chat ID
-    bot.sendAnimation(member.chatId, gifUrl, { caption: message });
+    bot.sendAnimation(member.userId, gifUrl, { caption: message });
   }
 
   // Send message to the specific group ID
@@ -1741,18 +1748,18 @@ const issueMonthlyVipCard = async (userId) => {
     expBonus,
     keoBonus: 1500,
     quayBonus: 100, // Tính 600đ/quẩy
-    keoLimit: 20,
+    keoLimit: 10,
     quayLimit: 20
   });
 
   await vipCard.save();
 
-  const message = `Chúc mừng ${member.fullname} đã nhận được thẻ VIP tháng! Có hiệu lực từ ngày ${validFrom.toLocaleDateString()} đến ${validUntil.toLocaleDateString()}. Ưu đãi: Nhận được ${expBonus} exp, tăng 1500đ/kẹo, 600đ/quẩy khi nộp bài (tối đa 20 keo, 20 quay).`;
+  const message = `🌟 Chúc mừng ${member.fullname} đã nhận được thẻ VIP tháng 💳! Có hiệu lực từ ngày ${validFrom.toLocaleDateString()} đến ${validUntil.toLocaleDateString()}. Ưu đãi: Nhận được ${expBonus} exp, tăng 1500đ/kẹo, 600đ/quẩy khi nộp bài (tăng tối đa 10 keo, 20 quay).`;
     // Retrieve all members
   const members = await Member.find({});
   for (const member of members) {
     // Send message to each member's chat ID
-    bot.sendAnimation(member.chatId, gifUrl, { caption: message });
+    bot.sendAnimation(member.userId, gifUrl, { caption: message });
   }
 
   // Send message to the specific group ID
@@ -1896,7 +1903,7 @@ bot.on('message', async (msg) => {
         });
 
         await member.save();
-        bot.sendMessage(msg.chat.id, `Tài khoản của bạn đã được tạo, ${fullname}!`, {
+        bot.sendMessage(msg.chat.id, `Tài khoản của bạn đã được tạo mới, ${fullname}!`, {
           reply_markup: {
             keyboard: [
       [{ text: 'Xem tài khoản 🧾' }, { text: 'Nhiệm vụ hàng ngày 🪂' }],
@@ -1984,7 +1991,7 @@ const responseMessage = `
           if (!task.completed && task.total >= task.goal) {
             // Hoàn thành nhiệm vụ
             task.completed = true;
-            const exp = Math.floor(Math.random() * 150) + 120; // Random 10-50 điểm exp
+            const exp = Math.floor(Math.random() * 120) + 60; // Random 10-50 điểm exp
             member.levelPercent += exp * 0.1;
 
             // Kiểm tra nếu levelPercent >= 100 thì tăng level
