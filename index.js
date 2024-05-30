@@ -215,17 +215,19 @@ async function processMessageQueue() {
       }
 
       // Giới hạn số lượng keo và quay theo loại thẻ
-      if (vipCard.keoLimit && keo > vipCard.keoLimit) {
-        const remainingKeo = keo - vipCard.keoLimit;
-        keo = vipCard.keoLimit;
+      // Giới hạn số lượng keo và quay theo loại thẻ
+      if (vipCard.keoLimit) {
+        const remainingKeo = Math.max(0, keo - vipCard.keoLimit);
+        keo = Math.min(keo, vipCard.keoLimit);
         bangCong.tinh_tien += remainingKeo * 1000;
       }
 
-      if (vipCard.quayLimit && quay > vipCard.quayLimit) {
-        const remainingQuay = quay - vipCard.quayLimit;
-        quay = vipCard.quayLimit;
+      if (vipCard.quayLimit) {
+        const remainingQuay = Math.max(0, quay - vipCard.quayLimit);
+        quay = Math.min(quay, vipCard.quayLimit);
         bangCong.tinh_tien += remainingQuay * 500;
       }
+   
     }
         // Tạo thông báo mới
         const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${quay}q, ${keo}c đang chờ kiểm tra ❤🥳`;
