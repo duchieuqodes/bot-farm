@@ -1634,6 +1634,7 @@ const issueLevelUpVipCard = async (userId, level) => {
 };
   
 const issueWeeklyVipCard = async (userId) => {
+  const member = await Member.findOne({ userId });
   const now = new Date();
   const randomDay = new Date(now);
   randomDay.setDate(now.getDate() - Math.floor(Math.random() * 7));
@@ -1660,9 +1661,9 @@ const issueWeeklyVipCard = async (userId) => {
 
   await vipCard.save();
 
-  const member = await Member.findOne({ userId });
+  const groupId = -1002128289933;
   const message = `Chúc mừng ${member.fullname} đã nhận được thẻ VIP tuần! Có hiệu lực từ ngày ${validFrom.toLocaleDateString()} đến ${validUntil.toLocaleDateString()}. Ưu đãi: Nhận được ${expBonus} exp, tăng 1500đ/kẹo, 600đ/quẩy khi nộp bài (tối đa 10 keo, 10 quay).`;
-  bot.sendMessage(member.groupId, message);
+  bot.sendAnimation(groupId, gifUrl, { caption: message });
 };
 
 const issueMonthlyVipCard = async (userId) => {
@@ -1692,9 +1693,9 @@ const issueMonthlyVipCard = async (userId) => {
 
   await vipCard.save();
 
-  const member = await Member.findOne({ userId });
+  const groupId = -1002128289933;
   const message = `Chúc mừng ${member.fullname} đã nhận được thẻ VIP tháng! Có hiệu lực từ ngày ${validFrom.toLocaleDateString()} đến ${validUntil.toLocaleDateString()}. Ưu đãi: Nhận được ${expBonus} exp, tăng 1500đ/kẹo, 600đ/quẩy khi nộp bài (tối đa 20 keo, 20 quay).`;
-  bot.sendMessage(member.groupId, message);
+  bot.sendAnimation(groupId, gifUrl, { caption: message });
 };
 
 //Cập nhật hàm xử lý tiến độ nhiệm vụ trường kỳ
