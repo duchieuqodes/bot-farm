@@ -195,7 +195,7 @@ async function processMessageQueue() {
       validFrom: { $lte: new Date() },
       validUntil: { $gte: new Date() }
     });
-       let pricePerQuay = 1000;
+       let pricePerQuay = 500;
     let pricePerKeo = 1000;
     let exp = 0;
 
@@ -222,7 +222,7 @@ async function processMessageQueue() {
       if (vipCard.quayLimit && quay > vipCard.quayLimit) {
         const remainingQuay = quay - vipCard.quayLimit;
         quay = vipCard.quayLimit;
-        bangCong.tinh_tien += remainingQuay * 1000;
+        bangCong.tinh_tien += remainingQuay * 500;
       }
     }
         // Tạo thông báo mới
@@ -250,13 +250,13 @@ async function processMessageQueue() {
           await bangCong.save();
         }
           await updateLevelPercent(userId);
-          // Cập nhật tiến độ nhiệm vụ trường kỳ
-          await updateMissionProgress(userId);
-
+          
 
           // Xóa tin nhắn đã xử lý khỏi hàng đợi
       messageQueue.shift();
-      
+      // Cập nhật tiến độ nhiệm vụ trường kỳ
+          await updateMissionProgress(userId);
+
 
       
       // Đánh dấu rằng không còn xử lý tin nhắn nào
@@ -1537,6 +1537,7 @@ const groupNames2 = {
   "-1002129896837": "GROUP I MẠNH ĐỨC CHIA SẺ", 
   "-1002228252389": "BƯỚC ĐI KHỞI NGHIỆP", 
   "-1002108234982": "Community free, be truly rich",
+  "-1002128289933": "test", 
 
 };
 
@@ -1627,7 +1628,7 @@ const issueLevelUpVipCard = async (userId, level) => {
 
   const groupId = -1002128289933;
   const formattedValidFrom = `${validFrom.getDate()}/${validFrom.getMonth() + 1}/${validFrom.getFullYear()}`;
-  const message = `Chúc mừng quẩy thủ ${member.fullname} đã đạt level ${level} và nhận được 1 thẻ Vip có hiệu lực từ ngày ${formattedValidFrom}, hạn sử dụng ${daysValid} ngày. Ưu đãi thẻ: Tăng 600đ/quẩy.`;
+  const message = `Chúc mừng quẩy thủ ${member.fullname} đã đạt level ${level} 🌟 và nhận được 1 thẻ VIP Bonus 🎫 có hiệu lực từ ngày ${formattedValidFrom}, hạn sử dụng ${daysValid} ngày. Ưu đãi thẻ: +600đ/quẩy.`;
   const gifUrl = 'https://iili.io/JQSRkrv.gif'; // Thay thế bằng URL của ảnh GIF
   bot.sendAnimation(groupId, gifUrl, { caption: message });
 };
@@ -1982,12 +1983,12 @@ bot.on('message', async (msg) => {
     }
 
     const message = `Tiến độ nhiệm vụ của bạn:
-- Đã quẩy liên tiếp: ${member.consecutiveDays} ngày.
-phần thưởng: 
-        Quẩy 7 ngày liên tiếp: Nhận thẻ VIP tuần.
-        Quẩy 30 ngày liên tiếp: Nhận thẻ VIP tháng.
+- Bạn Đã quẩy 🥨🥯 được liên tiếp: ${member.consecutiveDays} ngày.
+phần thưởng 🛍️ nhiệm vụ Nguyệt Trường Kỳ: 
+        Quẩy 7 ngày liên tiếp 📅: Nhận 1 thẻ VIP tuần 🎟️.
+        Quẩy 30 ngày liên tiếp 📅: Nhận thẻ VIP tháng 💳.
 
-Lưu ý: Nếu không quẩy trong 1 ngày bất kỳ, tiến độ nhiệm vụ sẽ về 0.`;
+Lưu ý ⚠️: Nếu không làm trong 1 ngày bất kỳ, tiến độ nhiệm vụ sẽ trở về ban đầu 🔚.`;
 
     bot.sendMessage(chatId, message);
   }
@@ -2001,18 +2002,18 @@ Lưu ý: Nếu không quẩy trong 1 ngày bất kỳ, tiến độ nhiệm vụ
 
     const vipCards = await VipCard.find({ userId, validUntil: { $gte: new Date() } });
     if (vipCards.length === 0) {
-      const emptyMessage = `Túi đồ của ${member.fullname} đang trống! 
+      const emptyMessage = `🎒 Túi đồ của ${member.fullname} đang trống! 
 
-Mẹo: Đạt các mốc level 5, 10, 15, 20,... để nhận được các vật phẩm quà tặng có giá trị.`;
+Mẹo 💡: Đạt các mốc level 5, 10, 15, 20,... và làm các nhiệm vụ để nhận được các vật phẩm quà tặng có giá trị.`;
       bot.sendMessage(chatId, emptyMessage);
     } else {
       let itemsMessage = `Túi đồ của ${member.fullname}:\n\n`;
 
       vipCards.forEach(card => {
-        itemsMessage += `- Thẻ VIP ${card.type === 'week' ? 'tuần' : card.type === 'month' ? 'tháng' : 'level_up'}: Hiệu lực từ ${card.validFrom.toLocaleDateString()} đến ${card.validUntil.toLocaleDateString()}\n`;
+        itemsMessage += `- Thẻ VIP ${card.type === 'week' ? 'tuần 🎫' : card.type === 'month' ? 'tháng 🎫 ' : 'level_up'}: Hiệu lực từ ${card.validFrom.toLocaleDateString()} đến ${card.validUntil.toLocaleDateString()}\n`;
         if (card.expBonus) itemsMessage += `  • Điểm kinh nghiệm: ${card.expBonus}\n`;
-        if (card.keoBonus) itemsMessage += `  • Tăng ${card.keoBonus}đ/kẹo tối đa ${card.keoLimit} keo\n`;
-        if (card.quayBonus) itemsMessage += `  • Tăng ${card.quayBonus}đ/quẩy tối đa ${card.quayLimit} quay\n\n`;
+        if (card.keoBonus) itemsMessage += `  • +${card.keoBonus}đ/kẹo tối đa ${card.keoLimit} kẹo 🍬\n`;
+        if (card.quayBonus) itemsMessage += `  • +${card.quayBonus}đ/quẩy tối đa ${card.quayLimit} quẩy 🥯🥨\n\n`;
       });
 
       bot.sendMessage(chatId, itemsMessage);
