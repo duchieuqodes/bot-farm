@@ -1815,7 +1815,7 @@ bot.on('message', async (msg) => {
     await checkAndUpdateBillCount(userId, msg.caption);
   }
 
-  if (msg.text === 'Xem tài khoản' || msg.text === 'Nhiệm vụ hôm nay' || msg.text === 'Túi đồ') {
+  if (msg.text === 'Xem tài khoản 🧾' || msg.text === 'Nhiệm vụ hàng ngày 🪂' || msg.text === 'Túi đồ 🎒' || msg.text === 'Nhiệm vụ nguyệt trường kỳ 📜') {
     try {
       // Kiểm tra xem thành viên đã tồn tại chưa
       let member = await Member.findOne({ userId });
@@ -1856,7 +1856,7 @@ bot.on('message', async (msg) => {
       const totalKeoToday = bangCongRecordsToday.reduce((acc, record) => acc + (record.keo || 0), 0);
       const totalBillToday = bangCongRecordsToday.reduce((acc, record) => acc + (record.nhan_anh_bill || 0), 0);
 
-      if (msg.text === 'Xem tài khoản') {
+      if (msg.text === 'Xem tài khoản 🧾') {
         const rankEmoji = getRankEmoji(member.level);
         const starEmoji = getStarEmoji(member.levelPercent);
 
@@ -1887,7 +1887,7 @@ const responseMessage = `
               one_time_keyboard: false
             }
           });
-      } else if (msg.text === 'Nhiệm vụ hôm nay') {
+      } else if (msg.text === 'Nhiệm vụ hàng ngày 🪂') {
         // Kiểm tra xem nhiệm vụ hàng ngày đã tồn tại chưa
         let dailyTask = await DailyTask.findOne({ userId, date: today });
 
@@ -1989,7 +1989,7 @@ bot.on('message', async (msg) => {
   const userId = msg.from.id;
   const text = msg.text;
 
-  if (text === 'Nhiệm vụ nguyệt trường kỳ') {
+  if (text === 'Nhiệm vụ nguyệt trường kỳ 📜') {
     const member = await Member.findOne({ userId });
     if (!member) {
       bot.sendMessage(chatId, 'Không tìm thấy thông tin thành viên.');
@@ -2009,7 +2009,7 @@ Lưu ý ⚠️: Nếu không làm trong 1 ngày bất kỳ, tiến độ nhiệm
     bot.sendMessage(chatId, message);
   }
 
-  if (text === 'Túi đồ') {
+  if (text === 'Túi đồ 🎒') {
     const member = await Member.findOne({ userId });
     if (!member) {
       bot.sendMessage(chatId, 'Không tìm thấy thông tin thành viên.');
