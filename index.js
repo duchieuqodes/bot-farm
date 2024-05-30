@@ -199,63 +199,68 @@ async function processMessageQueue() {
        let pricePerQuay = 500;
     let pricePerKeo = 1000;
     let exp = 0;
+  
+const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const endOfToday = new Date(today);
+    endOfToday.setHours(23, 59, 59, 999);
+
+    const bangCongRecords = await BangCong2.find({
+      userId: userId,
+      date: { $gte: today, $lt: endOfToday }
+    });
+
+    let totalQuayToday = bangCongRecords.reduce((acc, record) => acc + (record.quay || 0), 0);
+    let totalKeoToday = bangCongRecords.reduce((acc, record) => acc + (record.keo || 0), 0);
 
     if (vipCard) {
       if (vipCard.type === 'level_up') {
         pricePerQuay = 600;
-        pricePerKeo = 1100;
-      } else if (vipCard.type === 'week') {
+      } else if (vipCard.type === 'week' || vipCard.type === 'month') {
         pricePerQuay = 600;
         pricePerKeo = 1100;
-        exp = vipCard.expBonus;
-      } else if (vipCard.type === 'month') {
-        pricePerQuay = 600;
-        pricePerKeo = 1200;
         exp = vipCard.expBonus;
       }
 
-      
-   
+      // Giới hạn số lượng keo và quay theo loại thẻ
+      if (vipCard.keoLimit) {
+        const keoCanBeAdded = Math.max(0, vipCard.keoLimit - totalKeoToday);
+        const remainingKeo = Math.max(0, keo - keoCanBeAdded);
+        keo = Math.min(keo, keoCanBeAdded);
+        bangCong.tinh_tien += remainingKeo * 1000;
+      }
+
+      if (vipCard.quayLimit) {
+        const quayCanBeAdded = Math.max(0, vipCard.quayLimit - totalQuayToday);
+        const remainingQuay = Math.max(0, quay - quayCanBeAdded);
+        quay = Math.min(quay, quayCanBeAdded);
+        bangCong.tinh_tien += remainingQuay * 1000;
+      }
     }
         // Tạo thông báo mới
         const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${quay}q, ${keo}c đang chờ kiểm tra ❤🥳`;
 
         // Gửi thông báo mới và lưu bảng công
         bot.sendMessage(groupId, responseMessage, { reply_to_message_id: msg.message_id }).then(async () => {
-        let bangCong = await BangCong2.findOne({ userId, groupId, date: currentDate });
+        let bangCong = await BangCong2.findOne({ userId, groupId, date: today });
 
         if (!bangCong) {
           bangCong = await BangCong2.create({
             userId,
             groupId,
-            date: currentDate,
+            date: today,
             ten: fullName,
-            quay,
-            keo,
-            tinh_tien: 0 
-          });
-        } else {
-        bangCong.quay += quay;
-        bangCong.keo += keo;
-      }
+            quay: quay,
+            keo: keo,
+            tinh_tien: quay * pricePerQuay + keo * pricePerKeo
+      });
+    } else {
+      bangCong.quay += quay;
+      bangCong.keo += keo;
+      bangCong.tinh_tien += quay * pricePerQuay + keo * pricePerKeo;
+    }
 
-      // Giới hạn số lượng keo và quay theo loại thẻ
-      if (vipCard) {
-        if (vipCard.keoLimit && bangCong.keo > vipCard.keoLimit) {
-          const remainingKeo = bangCong.keo - vipCard.keoLimit;
-          bangCong.keo = vipCard.keoLimit;
-          bangCong.tinh_tien += remainingKeo * 1000;
-        }
-
-        if (vipCard.quayLimit && bangCong.quay > vipCard.quayLimit) {
-          const remainingQuay = bangCong.quay - vipCard.quayLimit;
-          bangCong.quay = vipCard.quayLimit;
-          bangCong.tinh_tien += remainingQuay * 500;
-        }
-      }
-
-      // Tính toán tinh_tien chính xác dựa trên keo và quay hiện tại
-      bangCong.tinh_tien += bangCong.quay * pricePerQuay + bangCong.keo * pricePerKeo;
+    await bangCong.save();
 
           const member = await Member.findOne({ userId });
           member.exp += exp;
