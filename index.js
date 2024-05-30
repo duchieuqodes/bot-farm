@@ -41,7 +41,6 @@ const MemberSchema = new mongoose.Schema({
   exp: { type: Number, default: 0 },
   consecutiveDays: { type: Number, default: 0 },
   lastSubmissionDate: { type: Date, default: null },
-  groupId: { type: Number, required: true },
   assets: {
     quay: Number,
     keo: Number,
