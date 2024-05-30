@@ -1326,7 +1326,7 @@ bot.onText(/\/update/, async (msg) => {
   try {
     const members = await Member.find({});
     if (!members.length) {
-      bot.sendMessage(chatId, 'Không tìm thấy thành viên nào.');
+      bot.sendMessage(-1002103270166, 'Không tìm thấy thành viên nào.');
       return;
     }
 
@@ -1817,8 +1817,8 @@ const deleteMemberByFullname = async (fullname) => {
 
 // Tạo ngẫu nhiên nhiệm vụ
 function generateDailyTasks() {
-  const quayTask = Math.floor(Math.random() * 30) + 10; // 5-50 quay
-  const keoTask = Math.floor(Math.random() * 15) + 6; // 3-20 keo
+  const quayTask = Math.floor(Math.random() * 20) + 10; // 5-50 quay
+  const keoTask = Math.floor(Math.random() * 8) + 5; // 3-20 keo
   const billTask = Math.floor(Math.random() * 2) + 1; // 1-10 nhận ảnh bill
   return {
     quayTask,
@@ -1984,7 +1984,7 @@ const responseMessage = `
           if (!task.completed && task.total >= task.goal) {
             // Hoàn thành nhiệm vụ
             task.completed = true;
-            const exp = Math.floor(Math.random() * 41) + 10; // Random 10-50 điểm exp
+            const exp = Math.floor(Math.random() * 150) + 120; // Random 10-50 điểm exp
             member.levelPercent += exp * 0.1;
 
             // Kiểm tra nếu levelPercent >= 100 thì tăng level
