@@ -267,7 +267,7 @@ async function processMessageQueue() {
           await bangCong.save();
           await member.save();
 
-          }
+          
           await updateLevelPercent(userId);
           
 
