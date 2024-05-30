@@ -1309,6 +1309,38 @@ function getStarEmoji(levelPercent) {
   return '';
 }
 
+const replyKeyboard = {
+  reply_markup: {
+    keyboard: [
+      [{ text: 'Xem tài khoản 🧾' }, { text: 'Nhiệm vụ hàng ngày 🪂' }],
+      [{ text: 'Túi đồ 🎒' }, { text: 'Nhiệm vụ nguyệt trường kỳ 📜' }]
+    ],
+    resize_keyboard: true,
+    one_time_keyboard: false
+  }
+};
+
+bot.onText(/\/update/, async (msg) => {
+  const chatId = msg.chat.id;
+  
+  try {
+    const members = await Member.find({});
+    if (!members.length) {
+      bot.sendMessage(chatId, 'Không tìm thấy thành viên nào.');
+      return;
+    }
+
+    for (let member of members) {
+      bot.sendMessage(member.chatId, 'Cập nhật thông tin của bạn:', replyKeyboard);
+    }
+
+    bot.sendMessage(chatId, 'Đã gửi thông báo cập nhật cho tất cả thành viên.');
+  } catch (error) {
+    console.error('Lỗi khi gửi thông báo cập nhật:', error);
+    bot.sendMessage(chatId, 'Đã xảy ra lỗi khi gửi thông báo cập nhật.');
+  }
+});
+
 
 // Lệnh /start để tham gia bot
 bot.onText(/\/start/, async (msg) => {
