@@ -203,13 +203,14 @@ async function processMessageQueue() {
     if (vipCard) {
       if (vipCard.type === 'level_up') {
         pricePerQuay = 600;
+        pricePerKeo = 1100;
       } else if (vipCard.type === 'week') {
         pricePerQuay = 600;
-        pricePerKeo = 1300;
+        pricePerKeo = 1100;
         exp = vipCard.expBonus;
       } else if (vipCard.type === 'month') {
         pricePerQuay = 600;
-        pricePerKeo = 1500;
+        pricePerKeo = 1200;
         exp = vipCard.expBonus;
       }
 
@@ -1663,16 +1664,18 @@ const issueLevelUpVipCard = async (userId, level) => {
     validFrom,
     validUntil,
     expBonus: 0, // Không tăng exp
-    keoBonus: 0,
+    keoBonus: 100,
     quayBonus: 100, // Tính 600đ/quẩy
-    keoLimit: 0,
-    quayLimit: 40
+    keoLimit: 2,
+    quayLimit: 4
   });
   await vipCard.save();
 
   
   const formattedValidFrom = `${validFrom.getDate()}/${validFrom.getMonth() + 1}/${validFrom.getFullYear()}`;
-  const message = `Chúc mừng quẩy thủ ${member.fullname} đã đạt level ${level} 🌟 và nhận được 1 thẻ VIP Bonus 🎫 có hiệu lực từ ngày ${formattedValidFrom}, hạn sử dụng ${daysValid} ngày. Ưu đãi thẻ: 600đ/quẩy (tăng tối đa 40 quẩy)`;
+  const message = `Chúc mừng quẩy thủ ${member.fullname} đã đạt level ${level} 🌟 và nhận được 1 thẻ VIP Bonus 🎫 có hiệu lực từ ngày ${formattedValidFrom}, hạn sử dụng ${daysValid} ngày. 
+  
+  Ưu đãi: Mã tăng 15% 100đ/quẩy 🥯🥨, 15% 100đ/kẹo 🍬(tăng tối đa 600vnđ/mỗi lần nộp. Áp dụng cho sản phẩm Quẩy, Kẹo và một số thành viên tham gia nhiệm vụ nhất định)`;
   const gifUrl = 'https://iili.io/JQSRkrv.gif'; // Thay thế bằng URL của ảnh GIF. 
     // Retrieve all members
   const members = await Member.find({});
@@ -1706,16 +1709,18 @@ const issueWeeklyVipCard = async (userId) => {
     validFrom,
     validUntil,
     expBonus,
-    keoBonus: 1500,
+    keoBonus: 100,
     quayBonus: 100, // Tính 600đ/quẩy
-    keoLimit: 10,
-    quayLimit: 10
+    keoLimit: 1,
+    quayLimit: 3
   });
 
   await vipCard.save();
 
-  const message = `Chúc mừng ${member.fullname} đã nhận được thẻ VIP tuần 🎫! Có hiệu lực từ ngày ${validFrom.toLocaleDateString()} đến ${validUntil.toLocaleDateString()}. Ưu đãi: Nhận được ${expBonus} exp, +1300đ/kẹo, +600đ/quẩy khi nộp bài (tối đa 10 keo, 10 quay).`;
-    // Retrieve all member
+  const message = `Chúc mừng ${member.fullname} đã nhận được thẻ VIP tuần 🎫! Có hiệu lực từ ngày ${validFrom.toLocaleDateString()} đến ${validUntil.toLocaleDateString()}.
+
+  Ưu đãi: Nhận được ${expBonus} exp, 2 Mã tăng 15% 100đ/quẩy, 15% 100đ/cộng (tăng tối đa 400vnđ/mỗi lần nộp. Áp dụng cho sản phẩm Quẩy, Cộng và một số thành viên tham gia nhiệm vụ nhất định)`;
+  
   const members = await Member.find({});
   for (const member of members) {
     // Send message to each member's chat ID
@@ -1746,15 +1751,18 @@ const issueMonthlyVipCard = async (userId) => {
     validFrom,
     validUntil,
     expBonus,
-    keoBonus: 1500,
+    keoBonus: 200,
     quayBonus: 100, // Tính 600đ/quẩy
-    keoLimit: 10,
-    quayLimit: 20
+    keoLimit: 2,
+    quayLimit: 2
   });
 
   await vipCard.save();
 
-  const message = `🌟 Chúc mừng ${member.fullname} đã nhận được thẻ VIP tháng 💳! Có hiệu lực từ ngày ${validFrom.toLocaleDateString()} đến ${validUntil.toLocaleDateString()}. Ưu đãi: Nhận được ${expBonus} exp, tăng 1500đ/kẹo, 600đ/quẩy khi nộp bài (tăng tối đa 10 keo, 20 quay).`;
+  const message = `🌟 Chúc mừng ${member.fullname} đã nhận được thẻ VIP tháng 💳! Có hiệu lực từ ngày ${validFrom.toLocaleDateString()} đến ${validUntil.toLocaleDateString()}.
+  
+  Ưu đãi: Nhận được ${expBonus} exp, 2 Mã tăng 15% 100đ/quẩy, 33% 200đ/cộng (tăng tối đa 600vnđ/mỗi lần nộp. Áp dụng cho sản phẩm Quẩy, Cộng và một số thành viên tham gia nhiệm vụ nhất định)`;
+  
     // Retrieve all members
   const members = await Member.find({});
   for (const member of members) {
