@@ -1509,8 +1509,9 @@ bot.on('callback_query', async (callbackQuery) => {
           const replyOpts = {
             reply_markup: {
               keyboard: [
-                [{ text: 'Xem tài khoản' }]
-              ],
+      [{ text: 'Xem tài khoản 🧾' }, { text: 'Nhiệm vụ hàng ngày 🪂' }],
+      [{ text: 'Túi đồ 🎒' }, { text: 'Nhiệm vụ nguyệt trường kỳ 📜' }]
+    ],
               resize_keyboard: true,
               one_time_keyboard: false
             },
@@ -1838,8 +1839,9 @@ bot.on('message', async (msg) => {
         bot.sendMessage(msg.chat.id, `Tài khoản của bạn đã được tạo, ${fullname}!`, {
           reply_markup: {
             keyboard: [
-              [{ text: 'Xem tài khoản 🧾' }, { text: 'Nhiệm vụ hàng ngày 🪂' }], [ { text: 'Túi đồ 🎒'}, { text: 'Nhiệm vụ nguyệt trường kỳ 📜'}],
-          ],
+      [{ text: 'Xem tài khoản 🧾' }, { text: 'Nhiệm vụ hàng ngày 🪂' }],
+      [{ text: 'Túi đồ 🎒' }, { text: 'Nhiệm vụ nguyệt trường kỳ 📜' }]
+    ],
             resize_keyboard: true,
             one_time_keyboard: false
           }
@@ -1881,8 +1883,9 @@ const responseMessage = `
         bot.sendMessage(msg.chat.id, responseMessage, {
           reply_markup: {
             keyboard: [
-              [{ text: 'Xem tài khoản 🧾' }, { text: 'Nhiệm vụ hàng ngày 🪂' }], [ { text: 'Túi đồ 🎒'}, { text: 'Nhiệm vụ nguyệt trường kỳ 📜'}],
-          ],
+      [{ text: 'Xem tài khoản 🧾' }, { text: 'Nhiệm vụ hàng ngày 🪂' }],
+      [{ text: 'Túi đồ 🎒' }, { text: 'Nhiệm vụ nguyệt trường kỳ 📜' }]
+    ],
               resize_keyboard: true,
               one_time_keyboard: false
             }
@@ -1948,23 +1951,26 @@ const responseMessage = `
         const gifUrl = 'https://iili.io/JQSaM6g.gif'; // Thay thế bằng URL của ảnh GIF
 
   bot.sendAnimation(msg.chat.id, gifUrl, {
-    caption: taskMessage,
-    reply_markup: {
-      keyboard: [
-        [{ text: 'Xem tài khoản 🧾' }, { text: 'Nhiệm vụ hàng ngày 🪂' }], [ { text: 'Túi đồ 🎒'}, { text: 'Nhiệm vụ nguyệt trường kỳ 📜'}],
-          ],
-      resize_keyboard: true,
-      one_time_keyboard: false
-    }
-  });
+  caption: taskMessage,
+  reply_markup: {
+    keyboard: [
+      [{ text: 'Xem tài khoản 🧾' }, { text: 'Nhiệm vụ hàng ngày 🪂' }],
+      [{ text: 'Túi đồ 🎒' }, { text: 'Nhiệm vụ nguyệt trường kỳ 📜' }]
+    ],
+    resize_keyboard: true,
+    one_time_keyboard: false
+  }
+});
+
       }
     } catch (error) {
       console.error('Lỗi khi truy vấn dữ liệu:', error);
       bot.sendMessage(msg.chat.id, 'Đã xảy ra lỗi khi truy vấn dữ liệu.', {
         reply_markup: {
           keyboard: [
-            [{ text: 'Xem tài khoản 🧾' }, { text: 'Nhiệm vụ hàng ngày 🪂' }], [ { text: 'Túi đồ 🎒'}, { text: 'Nhiệm vụ nguyệt trường kỳ 📜'}],
-          ],
+      [{ text: 'Xem tài khoản 🧾' }, { text: 'Nhiệm vụ hàng ngày 🪂' }],
+      [{ text: 'Túi đồ 🎒' }, { text: 'Nhiệm vụ nguyệt trường kỳ 📜' }]
+    ],
           resize_keyboard: true,
           one_time_keyboard: false
         }
@@ -2041,13 +2047,13 @@ Mẹo 💡: Đạt các mốc level 5, 10, 15, 20,... và làm các nhiệm vụ
 const replyKeyboard = {
   reply_markup: {
     keyboard: [
-            [{ text: 'Xem tài khoản 🧾' }, { text: 'Nhiệm vụ hàng ngày 🪂' }], [ { text: 'Túi đồ 🎒'}, { text: 'Nhiệm vụ nguyệt trường kỳ 📜'}],
-          ],
+      [{ text: 'Xem tài khoản 🧾' }, { text: 'Nhiệm vụ hàng ngày 🪂' }],
+      [{ text: 'Túi đồ 🎒' }, { text: 'Nhiệm vụ nguyệt trường kỳ 📜' }]
+    ],
     resize_keyboard: true,
     one_time_keyboard: false
   }
 };
-
 
 
 
