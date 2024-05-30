@@ -248,7 +248,7 @@ async function processMessageQueue() {
           bangCong.quay += quay;
           bangCong.keo += keo;
           bangCong.tinh_tien += quay * pricePerQuay + keo * pricePerKeo;
-        }
+        
           const member = await Member.findOne({ userId });
           member.exp += exp;
 
@@ -257,16 +257,23 @@ async function processMessageQueue() {
           member.levelPercent += Math.floor(exp / 10);
           }
           await bangCong.save();
-          
+          }
           await updateLevelPercent(userId);
-      // Cập nhật tiến độ nhiệm vụ trường kỳ
-          await updateMissionProgress(userId);  
-      // Đánh dấu rằng không còn xử lý tin nhắn nào 
+          
+
           // Xóa tin nhắn đã xử lý khỏi hàng đợi
       messageQueue.shift();
+      // Cập nhật tiến độ nhiệm vụ trường kỳ
+          await updateMissionProgress(userId);
+
+
+      
+      // Đánh dấu rằng không còn xử lý tin nhắn nào
       processingMessage = false;
       // Nếu còn tin nhắn trong hàng đợi, tiếp tục xử lý
-      
+      if (messageQueue.length > 0) {
+        setTimeout(processMessageQueue, 5000); // Đợi 4 giây trước khi xử lý tin nhắn tiếp theo
+      }
       });
     
   }
