@@ -232,7 +232,7 @@ async function processMessageQueue() {
 
         // Gửi thông báo mới và lưu bảng công
         bot.sendMessage(groupId, responseMessage, { reply_to_message_id: msg.message_id }).then(async () => {
-        let bangCong = await BangCong2.findOne({ userId, groupId, date: currentDate });
+        const bangCong = await BangCong2.findOne({ userId, groupId, date: currentDate });
 
         if (!bangCong) {
           bangCong = await BangCong2.create({
@@ -242,13 +242,13 @@ async function processMessageQueue() {
             ten: fullName,
             quay,
             keo,
-            tinh_tien: quay * pricePerQuay + keo * pricePerKeo,
+            tinh_tien: quay * pricePerQuay + keo * pricePerKeo
           });
         } else {
           bangCong.quay += quay;
           bangCong.keo += keo;
           bangCong.tinh_tien += quay * pricePerQuay + keo * pricePerKeo;
-
+        }
           const member = await Member.findOne({ userId });
           member.exp += exp;
 
@@ -257,23 +257,16 @@ async function processMessageQueue() {
           member.levelPercent += Math.floor(exp / 10);
           }
           await bangCong.save();
-          }
-          await updateLevelPercent(userId);
           
-
+          await updateLevelPercent(userId);
+      // Cập nhật tiến độ nhiệm vụ trường kỳ
+          await updateMissionProgress(userId);  
+      // Đánh dấu rằng không còn xử lý tin nhắn nào 
           // Xóa tin nhắn đã xử lý khỏi hàng đợi
       messageQueue.shift();
-      // Cập nhật tiến độ nhiệm vụ trường kỳ
-          await updateMissionProgress(userId);
-
-
-      
-      // Đánh dấu rằng không còn xử lý tin nhắn nào
       processingMessage = false;
       // Nếu còn tin nhắn trong hàng đợi, tiếp tục xử lý
-      if (messageQueue.length > 0) {
-        setTimeout(processMessageQueue, 5000); // Đợi 4 giây trước khi xử lý tin nhắn tiếp theo
-      }
+      
       });
     
   }
