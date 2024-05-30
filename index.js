@@ -215,17 +215,18 @@ async function processMessageQueue() {
         exp = vipCard.expBonus;
       }
 
-      // Giới hạn số lượng keo và quay theo loại thẻ
+      
+       // Giới hạn số lượng keo và quay theo loại thẻ
       if (vipCard.keoLimit && keo > vipCard.keoLimit) {
         const remainingKeo = keo - vipCard.keoLimit;
         keo = vipCard.keoLimit;
-        pricePerKeo += remainingKeo * 1000;
+        bangCong.tinh_tien += remainingKeo * 1000;
       }
 
       if (vipCard.quayLimit && quay > vipCard.quayLimit) {
         const remainingQuay = quay - vipCard.quayLimit;
         quay = vipCard.quayLimit;
-        pricePerQuay += remainingQuay * 1000;
+        bangCong.tinh_tien += remainingQuay * 500;
       }
     }
         // Tạo thông báo mới
@@ -250,15 +251,8 @@ async function processMessageQueue() {
           bangCong.keo += keo;
           bangCong.tinh_tien += quay * pricePerQuay + keo * pricePerKeo;
 
-          const member = await Member.findOne({ userId });
-          member.exp += exp;
-
-          // Tăng levelPercent nếu có exp từ thẻ VIP
-          if (exp > 0) {
-          member.levelPercent += Math.floor(exp / 10);
-          }
           await bangCong.save();
-          }
+        }
           await updateLevelPercent(userId);
           
 
@@ -278,7 +272,9 @@ async function processMessageQueue() {
       });
     
   }
-}                                                                
+} 
+
+                                                               
           
 // Bảng tra cứu tên nhóm dựa trên ID nhóm
 const groupNames = {
