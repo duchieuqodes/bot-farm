@@ -214,25 +214,29 @@ async function processMessageQueue() {
         exp = vipCard.expBonus;
       }
 
-      // Giới hạn số lượng keo và quay theo loại thẻ
-      if (vipCard.keoLimit && keo > vipCard.keoLimit) {
-        const remainingKeo = keo - vipCard.keoLimit;
-        keo = vipCard.keoLimit;
-        bangCong.tinh_tien += remainingKeo * 1000;
-      }
+      if (vipCard.keoLimit) {
+  const remainingKeo = Math.max(0, keo - vipCard.keoLimit);
+  keo = Math.min(keo, vipCard.keoLimit);
+  if (remainingKeo > 0) {
+    pricePerKeo += remainingKeo * 1000;
+  }
+}
 
-      if (vipCard.quayLimit && quay > vipCard.quayLimit) {
-        const remainingQuay = quay - vipCard.quayLimit;
-        quay = vipCard.quayLimit;
-        bangCong.tinh_tien += remainingQuay * 500;
-      }
+if (vipCard.quayLimit) {
+  const remainingQuay = Math.max(0, quay - vipCard.quayLimit);
+  quay = Math.min(quay, vipCard.quayLimit);
+  if (remainingQuay > 0) {
+    pricePerQuay += remainingQuay * 500;
+  }
+}
+
     }
         // Tạo thông báo mới
         const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${quay}q, ${keo}c đang chờ kiểm tra ❤🥳`;
 
         // Gửi thông báo mới và lưu bảng công
         bot.sendMessage(groupId, responseMessage, { reply_to_message_id: msg.message_id }).then(async () => {
-        const bangCong = await BangCong2.findOne({ userId, groupId, date: currentDate });
+        let bangCong = await BangCong2.findOne({ userId, groupId, date: currentDate });
 
         if (!bangCong) {
           bangCong = await BangCong2.create({
