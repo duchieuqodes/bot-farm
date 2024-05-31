@@ -264,7 +264,7 @@ async function processMessageQueue() {
           await bangCong.save();
           }
           await updateLevelPercent(userId);
-          await member.save();
+          
 
           // Xóa tin nhắn đã xử lý khỏi hàng đợi
       messageQueue.shift();
