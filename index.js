@@ -1630,7 +1630,7 @@ function generateDailyTasks() {
   };
 }
 
-async function checkAndUpdateBillCount(userId, text) {
+async function checkAndUpdateBillCount(userId, text, groupId) {
   const match = text.match(/(\d+)\s*(ảnh|bill)/i);
   if (match) {
     let count = parseInt(match[1], 10);
@@ -1643,15 +1643,37 @@ async function checkAndUpdateBillCount(userId, text) {
       const endOfToday = new Date(today);
       endOfToday.setHours(23, 59, 59, 999);
 
-      let bangCong = await BangCong2.findOne({ userId, date: { $gte: today, $lt: endOfToday } });
+      // Tìm kiếm bangCong dựa trên userId, groupId và date
+      let bangCong = await BangCong2.findOne({ userId, groupId, date: { $gte: today, $lt: endOfToday } });
       if (!bangCong) {
-        bangCong = new BangCong2({ userId, date: new Date(), quay: 0, keo: 0, tinh_tien: 0, nhan_anh_bill: 0 });
+        // Nếu không tồn tại, tạo một bản ghi mới cho bangCong
+        bangCong = new BangCong2({ userId, date: new Date(), quay: 0, keo: 0, tinh_tien: 0, nhan_anh_bill: 0, groupId: groupId });
       }
-      bangCong.nhan_anh_bill = (bangCong.nhan_anh_bill || 0) + count; // Ensure nhan_anh_bill is a number
+
+      // Check if experience was already received today
+      let dailyTask = await DailyTask.findOne({ userId, date: { $gte: today, $lt: endOfToday } });
+      if (!dailyTask) {
+        dailyTask = new DailyTask({ userId, date: new Date(), quayTask: 0, keoTask: 0, billTask: count, completedBill: true, experienceReceived: false });
+      } else {
+        dailyTask.billTask = count;
+        dailyTask.completedBill = true;
+      }
+
+      // Only grant experience if it hasn't been received yet
+      if (!dailyTask.experienceReceived) {
+        // Grant experience here (adjust the logic as needed)
+        dailyTask.experienceReceived = true;
+      }
+
+      bangCong.nhan_anh_bill = count; // Set nhan_anh_bill to the current count
+      await dailyTask.save();
       await bangCong.save();
     }
   }
 }
+
+  
+
 
 
 // Xử lý sự kiện khi nút "Xem tài khoản" hoặc "Nhiệm vụ hôm nay" được nhấn
