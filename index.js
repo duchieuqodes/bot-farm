@@ -198,6 +198,8 @@ async function processMessageQueue() {
     });
        let pricePerQuay = 500;
     let pricePerKeo = 1000;
+    let pricePerKeoBonus = 0;
+    let pricePerQuayBonus = 0;
     let exp = 0;
   
       if (vipCard) {
@@ -218,15 +220,17 @@ async function processMessageQueue() {
       // Giới hạn số lượng keo và quay theo loại thẻ
       if (vipCard.keoLimit && keo > vipCard.keoLimit) {
         const remainingKeo = keo - vipCard.keoLimit;
-        keo = vipCard.keoLimit;
-        pricePerKeo += remainingKeo * 100;
+        
+        pricePerKeo = 1000;
+        pricePerKeoBonus = remainingKeo * 100;
+
       }
 
       if (vipCard.quayLimit && quay > vipCard.quayLimit) {
         const remainingQuay = quay - vipCard.quayLimit;
-        quay = vipCard.quayLimit;
-        pricePerQuay += remainingQuay * 100;
-      }
+        pricePerQuay = 1000;
+        pricePerQuayBonus = remainingQuay * 100;
+}
     }
         // Tạo thông báo mới
         const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${quay}q, ${keo}c đang chờ kiểm tra ❤🥳`;
@@ -243,13 +247,13 @@ async function processMessageQueue() {
             ten: fullName,
             quay,
             keo,
-            tinh_tien: quay * pricePerQuay + keo * pricePerKeo,
+            tinh_tien: (quay * pricePerQuay + keo * pricePerKeo) + (pricePerKeoBonus + pricePerQuayBonus) ,
           });
         } else {
           bangCong.quay += quay;
           bangCong.keo += keo;
-          bangCong.tinh_tien += quay * pricePerQuay + keo * pricePerKeo;
-
+          bangCong.tinh_tien += (quay * pricePerQuay + keo * pricePerKeo) + (pricePerKeoBonus + pricePerQuayBonus);
+          
           const member = await Member.findOne({ userId });
           member.exp += exp;
 
@@ -260,7 +264,7 @@ async function processMessageQueue() {
           await bangCong.save();
           }
           await updateLevelPercent(userId);
-          
+          await member.save();
 
           // Xóa tin nhắn đã xử lý khỏi hàng đợi
       messageQueue.shift();
