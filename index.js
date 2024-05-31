@@ -46,7 +46,8 @@ const MemberSchema = new mongoose.Schema({
     quay: Number,
     keo: Number,
     vnd: Number
-  }
+  },
+  hasInteracted: { type: Boolean, default: false } // New field to track interaction
 });
 
 // Định nghĩa schema cho tin nhắn
@@ -1342,35 +1343,40 @@ bot.onText(/\/start/, async (msg) => {
   }
 });       
 
-// Xử lý tin nhắn và hiển thị theo định dạng yêu cầu
 bot.on('message', async (msg) => {
-  // Kiểm tra nếu tin nhắn không phải từ cuộc trò chuyện cá nhân (chat riêng tư) thì bỏ qua
-  if (msg.chat.type !== 'private') return;
-
-  if (msg.text && (msg.text.startsWith('/') || msg.text.startsWith('chưa có'))) return; // Bỏ qua lệnh bot và "Xem tài khoản"
-
+  const chatId = msg.chat.id;
   const userId = msg.from.id;
+  const messageContent = msg.text || msg.caption;
 
-  try {
+  // Bỏ qua lệnh bot và tin nhắn bắt đầu bằng "chưa có"
+  if (msg.text && (msg.text.startsWith('/') || msg.text.startsWith('chưa có'))) return;
+
+  // Định nghĩa tùy chọn phản hồi
+  const replyOpts = {
+    reply_markup: {
+      keyboard: [
+        [{ text: 'Xem tài khoản 🧾' }, { text: 'Nhiệm vụ hàng ngày 🪂' }],
+        [{ text: 'Túi đồ 🎒' }, { text: 'Nhiệm vụ nguyệt trường kỳ 📜' }]
+      ],
+      resize_keyboard: true,
+      one_time_keyboard: false
+    },
+    parse_mode: 'HTML'
+  };
+
+  // Check if the message is from a private chat (chatId > 0)
+  if (chatId > 0) {
+    // Lấy thông tin thành viên
     const member = await Member.findOne({ userId });
-
     if (!member) {
-      bot.sendMessage(msg.chat.id, 'Bạn cần nhập /start để tham gia bot trước.');
+      console.error("Member not found");
       return;
     }
+    
+    // Đánh dấu người dùng đã tương tác với bot
+    await Member.updateOne({ userId }, { $set: { hasInteracted: true } }, { upsert: true });
 
-    const replyOpts = {
-      reply_markup: {
-        keyboard: [
-          [{ text: 'Xem tài khoản 🧾' }, { text: 'Nhiệm vụ hàng ngày 🪂' }],
-          [{ text: 'Túi đồ 🎒' }, { text: 'Nhiệm vụ nguyệt trường kỳ 📜' }]
-        ],
-        resize_keyboard: true,
-        one_time_keyboard: false
-      },
-      
-    };
-
+    // Lấy các thông tin cần thiết
     const fullname = member.fullname;
     const level = member.level;
     const levelPercent = member.levelPercent;
@@ -1378,52 +1384,46 @@ bot.on('message', async (msg) => {
     const rankEmoji = getRankEmoji(level);
     const starEmoji = getStarEmoji(levelPercent);
 
-    const captionText = msg.caption || 'hình ảnh';
+    const captionText = msg.caption || 'hình ảnh'; 
     const responseMessage = `Quẩy thủ: <a href="tg://user?id=${userId}">${fullname}</a> ${rankEmoji} (Level: ${level}):
     ${starEmoji}
     
     Lời nhắn: ${msg.text || captionText}`;
 
-    // Lưu tin nhắn gốc vào database
-    const originalMessage = new Message({
-      messageId: msg.message_id,
-      userId: msg.from.id,
-      chatId: msg.chat.id,
-      text: msg.text || captionText
-    });
+    // Gửi thông điệp phản hồi đến người gửi
+    await bot.sendMessage(chatId, responseMessage, replyOpts);
 
-    await originalMessage.save();
-
-    // Xóa tin nhắn gốc
-    bot.deleteMessage(msg.chat.id, msg.message_id.toString());
-
-    // Gửi tin nhắn theo định dạng yêu cầu cho chính người gửi
-    if (msg.photo) {
-      const photoId = msg.photo[msg.photo.length - 1].file_id;
-      await bot.sendPhoto(msg.chat.id, photoId, { caption: responseMessage, ...replyOpts });
-    } else {
-      await bot.sendMessage(msg.chat.id, responseMessage, replyOpts);
+    if (messageContent) {
+      // Forward the message to all other members in private chats
+      await sendMessageToAllMembers(responseMessage, userId);
     }
-
-    // Gửi tin nhắn tới tất cả thành viên khác (bỏ qua phần này nếu là tin nhắn trả lời)
-    if (!msg.reply_to_message) {
-      const members = await Member.find({});
-      for (let member of members) {
-        
-          if (msg.photo) {
-            const photoId = msg.photo[msg.photo.length - 1].file_id;
-            await bot.sendPhoto(member.userId, photoId, { caption: responseMessage});
-          } else {
-            await bot.sendMessage(member.userId, responseMessage);
-          }
-        
-      }
-    }
-  } catch (error) {
-    console.error('Lỗi khi gửi tin nhắn:', error);
-    bot.sendMessage(msg.chat.id, 'Đã xảy ra lỗi khi gửi tin nhắn.');
   }
+
+  // Existing logic for processing messages in groups...
 });
+
+// Function to send messages to all members
+async function sendMessageToAllMembers(messageText, senderUserId) {
+  try {
+    const members = await Member.find({ hasInteracted: true }); // Retrieve all members who have interacted with the bot
+    members.forEach(async (member) => {
+      if (member.userId !== senderUserId) { // Avoid sending the message to the sender
+        try {
+          await bot.sendMessage(member.userId, messageText, { parse_mode: 'HTML' }); // Send the message to each member with HTML parse mode
+        } catch (error) {
+          if (error.response && error.response.statusCode === 403) {
+            console.error(`Error sending message to ${member.userId}: Bot can't initiate conversation`);
+          } else {
+            console.error(`Error sending message to ${member.userId}:`, error);
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.error("Error sending message to all members:", error);
+  }
+}
+
 
 
 const groupNames2 = {
