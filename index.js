@@ -298,94 +298,6 @@ const groupNames = {
   "-1002228252389": "ORMARKET community", 
 };
 
-// Xử lý lệnh /bc để hiển thị bảng công cho tất cả các nhóm
-bot.onText(/\/bc/, async (msg) => {
-  const chatId = msg.chat.id;
-
-  try {
-    const currentDate = new Date().toLocaleDateString(); // Ngày hiện tại
-    // Lấy bảng công cho ngày hiện tại, loại trừ nhóm có chatId -1002050799248
-    const bangCongs = await BangCong2.find({
-      date: currentDate,
-      groupId: { $ne: -1002108234982 }, // Loại trừ nhóm này
-    });
-
-    if (bangCongs.length === 0) {
-      bot.sendMessage(chatId, "Không có bảng công nào cho ngày hôm nay.");
-      return;
-    }
-
-    // Tạo bảng công phân loại theo ID nhóm
-    const groupedByGroupId = {};
-    bangCongs.forEach((bangCong) => {
-      const groupId = bangCong.groupId ? bangCong.groupId.toString() : ''; // Kiểm tra nếu groupId không undefined
-      if (!groupedByGroupId[groupId]) {
-        groupedByGroupId[groupId] = [];
-      }
-      groupedByGroupId[groupId].push(bangCong);
-    });
-
-    let response = '';
-
-    // Tạo bảng công cho mỗi nhóm
-    for (const groupId in groupedByGroupId) {
-      if (!groupId) {
-        continue; // Bỏ qua nếu groupId không hợp lệ
-      }
-
-      const groupData = groupedByGroupId[groupId];
-      const groupName = groupNames[groupId] || `Nhóm ${groupId}`; // Lấy tên nhóm từ bảng tra cứu
-
-      response += `Bảng công nhóm ${groupName}:\n\n`;
-
-      let totalGroupMoney = 0; // Biến để tính tổng số tiền của nhóm
-
-      groupData.forEach((bangCong) => {
-        if (bangCong.tinh_tien !== undefined) { // Kiểm tra trước khi truy cập thuộc tính
-          const formattedTien = bangCong.tinh_tien.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-          response += `${bangCong.ten}\t\t${bangCong.quay}q +\t${bangCong.keo}c\t${formattedTien}vnđ\n`;
-          totalGroupMoney += bangCong.tinh_tien; // Tính tổng tiền
-        }
-      });
-
-      const formattedTotal = totalGroupMoney.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-      response += `Tổng tiền: ${formattedTotal}vnđ\n\n`; // Hiển thị tổng tiền của nhóm
-    }
-
-    // Nếu response dài hơn 4000 ký tự, tách thành hai phần
-    if (response.length > 4000) {
-      const middle = Math.floor(response.length / 2);
-      const splitIndex = response.lastIndexOf('\n', middle); // Tìm dấu ngắt dòng gần giữa nhất để chia
-
-      const firstPart = response.substring(0, splitIndex).trim();
-      const secondPart = response.substring(splitIndex).trim();
-
-      bot.sendMessage(chatId, firstPart); // Gửi phần đầu tiên
-      bot.sendMessage(chatId, secondPart); // Gửi phần còn lại
-    } else {
-      bot.sendMessage(chatId, response.trim()); // Nếu không dài quá, gửi bình thường
-    }
-  } catch (error) {
-    console.error('Lỗi khi truy vấn dữ liệu từ MongoDB:', error);
-    bot.sendMessage(chatId, 'Đã xảy ra lỗi khi truy vấn dữ liệu từ cơ sở dữ liệu.');
-  }
-});
-
-
-// Lập lịch gửi bảng công tổng hợp vào 9h12 sáng hàng ngày theo giờ Việt Nam
-cron.schedule('30 7 * * *', async () => {
-  try {
-    // Gửi bảng công tổng hợp
-    await sendAggregatedData(-1002128289933);
-  } catch (error) {
-    console.error("Lỗi khi gửi bảng công tổng hợp:", error);
-  }
-}, {
-  scheduled: true,
-  timezone: "Asia/Ho_Chi_Minh"
-});
-
-
 bot.onText(/\/sum/, async (msg) => {
   const chatId = msg.chat.id;
 
@@ -406,12 +318,15 @@ async function sendAggregatedData(chatId) {
     const startOfYesterday = new Date(currentDate.setHours(0, 0, 0, 0)); // Bắt đầu của ngày hôm qua
     const endOfYesterday = new Date(currentDate.setHours(23, 59, 59, 999)); // Kết thúc của ngày hôm qua
 
+    // Lấy danh sách các groupId cần tính toán
+    const groupIds = Object.keys(groupNames).map(id => parseInt(id, 10));
+
     // Truy vấn để tổng hợp bảng công của các thành viên trong ngày hôm qua
     const aggregatedData = await BangCong2.aggregate([
       {
-        $match: { 
+        $match: {
           date: { $gte: startOfYesterday, $lte: endOfYesterday },
-          groupId: { $ne: -1002108234982 } // Loại trừ nhóm -1002108234982
+          groupId: { $in: groupIds } // Chỉ lấy các nhóm trong groupNames
         },
       },
       {
