@@ -1342,6 +1342,90 @@ bot.onText(/\/start/, async (msg) => {
   }
 });       
 
+// Xử lý tin nhắn và hiển thị theo định dạng yêu cầu
+bot.on('message', async (msg) => {
+  // Kiểm tra nếu tin nhắn không phải từ cuộc trò chuyện cá nhân (chat riêng tư) thì bỏ qua
+  if (msg.chat.type !== 'private') return;
+
+  if (msg.text && (msg.text.startsWith('/') || msg.text.startsWith('chưa có'))) return; // Bỏ qua lệnh bot và "Xem tài khoản"
+
+  const userId = msg.from.id;
+
+  try {
+    const member = await Member.findOne({ userId });
+
+    if (!member) {
+      bot.sendMessage(msg.chat.id, 'Bạn cần nhập /start để tham gia bot trước.');
+      return;
+    }
+
+    const replyOpts = {
+      reply_markup: {
+        keyboard: [
+          [{ text: 'Xem tài khoản 🧾' }, { text: 'Nhiệm vụ hàng ngày 🪂' }],
+          [{ text: 'Túi đồ 🎒' }, { text: 'Nhiệm vụ nguyệt trường kỳ 📜' }]
+        ],
+        resize_keyboard: true,
+        one_time_keyboard: false
+      },
+      parse_mode: 'HTML'
+    };
+
+    const fullname = member.fullname;
+    const level = member.level;
+    const levelPercent = member.levelPercent;
+
+    const rankEmoji = getRankEmoji(level);
+    const starEmoji = getStarEmoji(levelPercent);
+
+    const captionText = msg.caption || 'hình ảnh';
+    const responseMessage = `Quẩy thủ: <a href="tg://user?id=${userId}">${fullname}</a> ${rankEmoji} (Level: ${level}):
+    ${starEmoji}
+    
+    Lời nhắn: ${msg.text || captionText}`;
+
+    // Lưu tin nhắn gốc vào database
+    const originalMessage = new Message({
+      messageId: msg.message_id,
+      userId: msg.from.id,
+      chatId: msg.chat.id,
+      text: msg.text || captionText
+    });
+
+    await originalMessage.save();
+
+    // Xóa tin nhắn gốc
+    bot.deleteMessage(msg.chat.id, msg.message_id.toString());
+
+    // Gửi tin nhắn theo định dạng yêu cầu cho chính người gửi
+    if (msg.photo) {
+      const photoId = msg.photo[msg.photo.length - 1].file_id;
+      await bot.sendPhoto(msg.chat.id, photoId, { caption: responseMessage, ...replyOpts });
+    } else {
+      await bot.sendMessage(msg.chat.id, responseMessage, replyOpts);
+    }
+
+    // Gửi tin nhắn tới tất cả thành viên khác (bỏ qua phần này nếu là tin nhắn trả lời)
+    if (!msg.reply_to_message) {
+      const members = await Member.find({});
+      for (let member of members) {
+        if (member.userId !== userId) {
+          if (msg.photo) {
+            const photoId = msg.photo[msg.photo.length - 1].file_id;
+            await bot.sendPhoto(member.userId, photoId, { caption: responseMessage, parse_mode: 'HTML' });
+          } else {
+            await bot.sendMessage(member.userId, responseMessage, { parse_mode: 'HTML' });
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Lỗi khi gửi tin nhắn:', error);
+    bot.sendMessage(msg.chat.id, 'Đã xảy ra lỗi khi gửi tin nhắn.');
+  }
+});
+
+
 const groupNames2 = {
   "-1002039100507": "CỘNG ĐỒNG NẮM BẮT CƠ HỘI",
   "-1002004082575": "Hội Nhóm",
