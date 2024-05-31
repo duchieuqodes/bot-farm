@@ -68,7 +68,8 @@ const DailyTaskSchema = new mongoose.Schema({
   billTask: Number,
   completedQuay: { type: Boolean, default: false },
   completedKeo: { type: Boolean, default: false },
-  completedBill: { type: Boolean, default: false }
+  completedBill: { type: Boolean, default: false },
+  expReceivedForBill: false // Thêm trường này để theo dõi điểm kinh nghiệm nhận được cho nhiệm vụ bill
 });
 
 // Add this to your schema definitions
@@ -1795,7 +1796,11 @@ const responseMessage = `
             date: today,
             quayTask: tasks.quayTask,
             keoTask: tasks.keoTask,
-            billTask: tasks.billTask
+            billTask: tasks.billTask,
+            completedQuay: false,
+            completedKeo: false,
+            completedBill: false,
+            expReceivedForBill: false
           });
           await dailyTask.save();
         }
@@ -1810,15 +1815,17 @@ const responseMessage = `
         const tasks = [
           { name: 'Quẩy🥨', completed: dailyTask.completedQuay, total: totalQuayToday, goal: dailyTask.quayTask },
           { name: 'Kẹo🍬', completed: dailyTask.completedKeo, total: totalKeoToday, goal: dailyTask.keoTask },
-          { name: '(Khi nộp bài, hãy chú thích số ảnh hoặc số bill (ví dụ: 1 bill hoặc 1 ảnh) đã nộp để bot ghi nhận nhiệm vụ)', completed: dailyTask.completedBill, total: totalBillToday, goal: dailyTask.billTask }
+          { name: 'Bill hoặc ảnh quẩy (vd: 1 ảnh, 1 bill)', completed: dailyTask.completedBill, total: totalBillToday, goal: dailyTask.billTask }
         ];
 
         for (let task of tasks) {
           if (!task.completed && task.total >= task.goal) {
             // Hoàn thành nhiệm vụ
             task.completed = true;
-            const exp = Math.floor(Math.random() * 120) + 60; // Random 10-50 điểm exp
-            member.levelPercent += exp * 0.1;
+            let exp = 0;
+            if (task.name === 'Quẩy🥨' || task.name === 'Kẹo🍬' || (task.name === 'Bill hoặc ảnh quẩy (vd: 1 ảnh, 1 bill)' && !dailyTask.expReceivedForBill)) {
+            const exp = Math.floor(Math.random() * 120) + 60; // Random 10-50 điểm           
+              member.levelPercent += exp * 0.1;
 
             // Kiểm tra nếu levelPercent >= 100 thì tăng level
             if (member.levelPercent >= 100) {
@@ -1831,8 +1838,10 @@ const responseMessage = `
               dailyTask.completedQuay = true;
             } else if (task.name === 'Kẹo🍬') {
               dailyTask.completedKeo = true;
-            } else if (task.name === 'nhận ảnh quẩy, bill (Nộp bài chú thích số ảnh hoặc số bill đã nhậ để bot ghi nhận)') {
+            } else if (task.name === 'Bill hoặc ảnh quẩy (vd: 1 ảnh, 1 bill)') {
               dailyTask.completedBill = true;
+              dailyTask.expReceivedForBill = true; // Đánh dấu rằng đã nhận điểm kinh nghiệm cho nhiệm vụ bill
+             
             }
             await dailyTask.save();
 
@@ -1897,9 +1906,9 @@ bot.on('message', async (msg) => {
 
     const message = `Tiến độ nhiệm vụ của bạn 📜:
     
-- Bạn Đã quẩy 🥨🥯 được liên tiếp: ${member.consecutiveDays} ngày.
+- Bạn Đã quẩy 🥨🥯 liên tiếp được: ${member.consecutiveDays} ngày.
 
-phần thưởng nhiệm vụ Nguyệt Trường Kỳ: 
+        Phần thưởng nhiệm vụ Trường Kỳ: 
         Quẩy 7 ngày liên tiếp 📅: Nhận 1 thẻ VIP tuần 🎟️.
         Quẩy 30 ngày liên tiếp 📅: Nhận thẻ VIP tháng 💳.
 
