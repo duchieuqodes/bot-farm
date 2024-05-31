@@ -69,7 +69,10 @@ const DailyTaskSchema = new mongoose.Schema({
   completedQuay: { type: Boolean, default: false },
   completedKeo: { type: Boolean, default: false },
   completedBill: { type: Boolean, default: false },
-  expReceivedForBill: false // Thêm trường này để theo dõi điểm kinh nghiệm nhận được cho nhiệm vụ bill
+  expReceivedForBill: {
+    type: Boolean,
+    default: false
+  }
 });
 
 // Add this to your schema definitions
