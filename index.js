@@ -1368,7 +1368,7 @@ bot.on('message', async (msg) => {
         resize_keyboard: true,
         one_time_keyboard: false
       },
-      parse_mode: 'HTML'
+      
     };
 
     const fullname = member.fullname;
@@ -1409,14 +1409,14 @@ bot.on('message', async (msg) => {
     if (!msg.reply_to_message) {
       const members = await Member.find({});
       for (let member of members) {
-        if (member.userId !== userId) {
+        
           if (msg.photo) {
             const photoId = msg.photo[msg.photo.length - 1].file_id;
-            await bot.sendPhoto(member.userId, photoId, { caption: responseMessage, parse_mode: 'HTML' });
+            await bot.sendPhoto(member.userId, photoId, { caption: responseMessage});
           } else {
-            await bot.sendMessage(member.userId, responseMessage, { parse_mode: 'HTML' });
+            await bot.sendMessage(member.userId, responseMessage);
           }
-        }
+        
       }
     }
   } catch (error) {
