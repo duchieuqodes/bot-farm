@@ -219,13 +219,13 @@ async function processMessageQueue() {
       if (vipCard.keoLimit && keo > vipCard.keoLimit) {
         const remainingKeo = keo - vipCard.keoLimit;
         keo = vipCard.keoLimit;
-        pricePerKeo += remainingKeo * 1000;
+        pricePerKeo += remainingKeo * 100;
       }
 
       if (vipCard.quayLimit && quay > vipCard.quayLimit) {
         const remainingQuay = quay - vipCard.quayLimit;
         quay = vipCard.quayLimit;
-        pricePerQuay += remainingQuay * 1000;
+        pricePerQuay += remainingQuay * 100;
       }
     }
         // Tạo thông báo mới
