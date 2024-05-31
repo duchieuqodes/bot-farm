@@ -228,7 +228,7 @@ async function processMessageQueue() {
 
       if (vipCard.quayLimit && quay > vipCard.quayLimit) {
         const remainingQuay = vipCard.quayLimit;
-        pricePerQuay = 1000;
+        pricePerQuay = 500;
         pricePerQuayBonus = remainingQuay * 100;
 }
     }
