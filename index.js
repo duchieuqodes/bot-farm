@@ -1852,7 +1852,7 @@ const responseMessage = `
           }
           taskMessage += `Hoàn thành ${task.name}: ${task.total}/${task.goal} (Phần thường: điểm kinh nghiệm)\n\n`;
         }
-
+        }
         const gifUrl = 'https://iili.io/JQSaM6g.gif'; // Thay thế bằng URL của ảnh GIF
 
   bot.sendAnimation(msg.chat.id, gifUrl, {
