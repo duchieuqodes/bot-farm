@@ -219,7 +219,7 @@ async function processMessageQueue() {
 
       // Giới hạn số lượng keo và quay theo loại thẻ
       if (vipCard.keoLimit && keo > vipCard.keoLimit) {
-        const remainingKeo = keo - vipCard.keoLimit;
+        const remainingKeo = vipCard.keoLimit;
         
         pricePerKeo = 1000;
         pricePerKeoBonus = remainingKeo * 100;
@@ -227,7 +227,7 @@ async function processMessageQueue() {
       }
 
       if (vipCard.quayLimit && quay > vipCard.quayLimit) {
-        const remainingQuay = quay - vipCard.quayLimit;
+        const remainingQuay = vipCard.quayLimit;
         pricePerQuay = 1000;
         pricePerQuayBonus = remainingQuay * 100;
 }
