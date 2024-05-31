@@ -1954,7 +1954,13 @@ bot.on('message', async (msg) => {
       const totalQuayToday = bangCongRecordsToday.reduce((acc, record) => acc + (record.quay || 0), 0);
       const totalKeoToday = bangCongRecordsToday.reduce((acc, record) => acc + (record.keo || 0), 0);
       const totalBillToday = bangCongRecordsToday.reduce((acc, record) => acc + (record.nhan_anh_bill || 0), 0);
+      const totalTinhTienYesterday = bangCongRecordsYesterday.reduce((acc, record) => acc + (record.tinh_tien || 0), 0);
+      const totalTinhTienToday = bangCongRecordsToday.reduce((acc, record) => acc + (record.tinh_tien || 0), 0);
+      
+      const totalBonusYesterday = totalTinhTienYesterday - ((totalKeoYesterday * 1000) + (totalQuayYesterday * 500));
+      const totalBonusToday = totalTinhTienToday - ((totalKeoToday * 1000) + (totalQuayToday * 500));
 
+      
       if (msg.text === 'Xem tài khoản 🧾') {
         const rankEmoji = getRankEmoji(member.level);
         const starEmoji = getStarEmoji(member.levelPercent);
@@ -1969,11 +1975,13 @@ const responseMessage = `
         Tổng Quẩy: ${totalQuayYesterday} 🥨
         Tổng Kẹo: ${totalKeoYesterday} 🍬
         Tổng tính tiền: ${bangCongRecordsYesterday.reduce((acc, record) => acc + (record.tinh_tien || 0), 0)} VNĐ
-
+        Tổng tiền bonus: ${totalBonusYesterday} VNĐ ▲
+        
         🎒 Tài sản quẩy của bạn ngày hôm nay:
         Tổng Quẩy: ${totalQuayToday} 🥨
         Tổng Kẹo: ${totalKeoToday} 🍬
         Tổng tính tiền: ${bangCongRecordsToday.reduce((acc, record) => acc + (record.tinh_tien || 0), 0)} VNĐ   
+        Tổng tiền bonus: ${totalBonusToday} VNĐ ▲
 
         Lưu ý: Tổng tài sản trên là bao gồm cả nhóm quẩy Comunity free và Be truly rich nếu có.
       `;
