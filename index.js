@@ -1266,44 +1266,46 @@ bot.on('message', async (msg) => {
   // Bỏ qua lệnh bot và tin nhắn bắt đầu bằng "chưa có"
   if (msg.text && (msg.text.startsWith('/') || msg.text.startsWith('chưa có'))) return;
 
-  // Định nghĩa tùy chọn phản hồi
-  const replyOpts = {
-    reply_markup: {
-      keyboard: [
-        [{ text: 'Xem tài khoản 🧾' }, { text: 'Nhiệm vụ hàng ngày 🪂' }],
-        [{ text: 'Túi đồ 🎒' }, { text: 'Nhiệm vụ nguyệt trường kỳ 📜' }]
-      ],
-      resize_keyboard: true,
-      one_time_keyboard: false
-    },
-    parse_mode: 'HTML'
-  };
+  // Tìm hoặc tạo mới thành viên
+  let member = await Member.findOne({ userId });
+  if (!member) {
+    member = new Member({
+      userId,
+      fullname: msg.from.first_name,
+      hasInteracted: chatId > 0 // Mark as interacted if from private chat
+    });
+    await member.save();
+  } else if (chatId > 0) {
+    // Đánh dấu người dùng đã tương tác với bot trong cuộc trò chuyện riêng tư
+    await Member.updateOne({ userId }, { $set: { hasInteracted: true } });
+  }
 
-  // Check if the message is from a private chat (chatId > 0)
+  // Nếu tin nhắn từ cuộc trò chuyện riêng tư
   if (chatId > 0) {
-    // Lấy thông tin thành viên
-    const member = await Member.findOne({ userId });
-    if (!member) {
-      console.error("Member not found");
-      return;
-    }
-    
-    // Đánh dấu người dùng đã tương tác với bot
-    await Member.updateOne({ userId }, { $set: { hasInteracted: true } }, { upsert: true });
-
-    // Lấy các thông tin cần thiết
     const fullname = member.fullname;
     const level = member.level;
     const levelPercent = member.levelPercent;
-
     const rankEmoji = getRankEmoji(level);
     const starEmoji = getStarEmoji(levelPercent);
 
-    const captionText = msg.caption || 'hình ảnh'; 
+    const captionText = msg.caption || 'hình ảnh';
     const responseMessage = `Quẩy thủ: <a href="tg://user?id=${userId}">${fullname}</a> ${rankEmoji} (Level: ${level}):
     ${starEmoji}
     
     Lời nhắn: ${msg.text || captionText}`;
+
+    // Định nghĩa tùy chọn phản hồi
+    const replyOpts = {
+      reply_markup: {
+        keyboard: [
+          [{ text: 'Xem tài khoản 🧾' }, { text: 'Nhiệm vụ hàng ngày 🪂' }],
+          [{ text: 'Túi đồ 🎒' }, { text: 'Nhiệm vụ nguyệt trường kỳ 📜' }]
+        ],
+        resize_keyboard: true,
+        one_time_keyboard: false
+      },
+      parse_mode: 'HTML'
+    };
 
     // Gửi thông điệp phản hồi đến người gửi
     await bot.sendMessage(chatId, responseMessage, replyOpts);
@@ -1312,19 +1314,20 @@ bot.on('message', async (msg) => {
       // Forward the message to all other members in private chats
       await sendMessageToAllMembers(responseMessage, userId);
     }
+  } else {
+    // Xử lý tin nhắn trong nhóm, không forward cho các thành viên khác
+    console.log(`Message from group ${chatId}: ${msg.text || 'No text message'}`);
   }
-
-  // Existing logic for processing messages in groups...
 });
 
-// Function to send messages to all members
+// Function to send messages to all members who have interacted
 async function sendMessageToAllMembers(messageText, senderUserId) {
   try {
-    const members = await Member.find({ hasInteracted: true }); // Retrieve all members who have interacted with the bot
+    const members = await Member.find({ hasInteracted: true });
     members.forEach(async (member) => {
-      if (member.userId !== senderUserId) { // Avoid sending the message to the sender
+      if (member.userId !== senderUserId) {
         try {
-          await bot.sendMessage(member.userId, messageText, { parse_mode: 'HTML' }); // Send the message to each member with HTML parse mode
+          await bot.sendMessage(member.userId, messageText, { parse_mode: 'HTML' });
         } catch (error) {
           if (error.response && error.response.statusCode === 403) {
             console.error(`Error sending message to ${member.userId}: Bot can't initiate conversation`);
@@ -1338,8 +1341,6 @@ async function sendMessageToAllMembers(messageText, senderUserId) {
     console.error("Error sending message to all members:", error);
   }
 }
-
-
 
 const groupNames2 = {
   "-1002039100507": "CỘNG ĐỒNG NẮM BẮT CƠ HỘI",
