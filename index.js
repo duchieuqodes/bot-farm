@@ -1688,7 +1688,7 @@ const issueLevelUpVipCard = async (userId, level) => {
     expBonus: 0, // Không tăng exp
     keoBonus: 100,
     quayBonus: 100, // Tính 600đ/quẩy
-    keoLimit: 2,
+    keoLimit: 3,
     quayLimit: 4
   });
   await vipCard.save();
@@ -1697,7 +1697,7 @@ const issueLevelUpVipCard = async (userId, level) => {
   const formattedValidFrom = `${validFrom.getDate()}/${validFrom.getMonth() + 1}/${validFrom.getFullYear()}`;
   const message = `Chúc mừng quẩy thủ ${member.fullname} đã đạt level ${level} 🌟 và nhận được 1 thẻ VIP Bonus 🎫 có hiệu lực từ ngày ${formattedValidFrom}, hạn sử dụng ${daysValid} ngày. 
   
-  Ưu đãi: Mã tăng 15% 100đ/quẩy 🥯🥨, 15% 100đ/kẹo 🍬(tăng tối đa 600vnđ/mỗi lần nộp. Áp dụng cho sản phẩm Quẩy, Kẹo và một số thành viên tham gia nhiệm vụ nhất định)`;
+  Ưu đãi: Mã tăng 15% 100đ/quẩy 🥯🥨, 15% 100đ/kẹo 🍬(tăng tối đa 700vnđ/lần nộp. Áp dụng cho sản phẩm Quẩy, Kẹo và một số thành viên tham gia nhiệm vụ nhất định)`;
   const gifUrl = 'https://iili.io/JQSRkrv.gif'; // Thay thế bằng URL của ảnh GIF. 
     // Retrieve all members
   const members = await Member.find({});
@@ -1733,8 +1733,8 @@ const issueWeeklyVipCard = async (userId) => {
     expBonus,
     keoBonus: 100,
     quayBonus: 100, // Tính 600đ/quẩy
-    keoLimit: 1,
-    quayLimit: 3
+    keoLimit: 2,
+    quayLimit: 2
   });
 
   await vipCard.save();
@@ -1773,17 +1773,17 @@ const issueMonthlyVipCard = async (userId) => {
     validFrom,
     validUntil,
     expBonus,
-    keoBonus: 200,
+    keoBonus: 100,
     quayBonus: 100, // Tính 600đ/quẩy
-    keoLimit: 2,
-    quayLimit: 2
+    keoLimit: 4,
+    quayLimit: 3
   });
 
   await vipCard.save();
 
   const message = `🌟 Chúc mừng ${member.fullname} đã nhận được thẻ VIP tháng 💳! Có hiệu lực từ ngày ${validFrom.toLocaleDateString()} đến ${validUntil.toLocaleDateString()}.
   
-  Ưu đãi: Nhận được ${expBonus} exp, 2 Mã tăng 15% 100đ/quẩy, 33% 200đ/cộng (tăng tối đa 600vnđ/mỗi lần nộp. Áp dụng cho sản phẩm Quẩy, Cộng và một số thành viên tham gia nhiệm vụ nhất định)`;
+  Ưu đãi: Nhận được ${expBonus} exp, 2 Mã tăng 15% 100đ/quẩy, 15% 100đ/cộng (tăng tối đa 600vnđ/mỗi lần nộp. Áp dụng cho sản phẩm Quẩy, Cộng và một số thành viên tham gia nhiệm vụ nhất định)`;
   
     // Retrieve all members
   const members = await Member.find({});
