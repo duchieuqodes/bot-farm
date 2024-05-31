@@ -68,11 +68,8 @@ const DailyTaskSchema = new mongoose.Schema({
   billTask: Number,
   completedQuay: { type: Boolean, default: false },
   completedKeo: { type: Boolean, default: false },
-  completedBill: { type: Boolean, default: false },
-  expReceivedForBill: {
-    type: Boolean,
-    default: false
-  }
+  completedBill: { type: Boolean, default: false }
+  
 });
 
 // Add this to your schema definitions
@@ -1800,10 +1797,7 @@ const responseMessage = `
             quayTask: tasks.quayTask,
             keoTask: tasks.keoTask,
             billTask: tasks.billTask,
-            completedQuay: false,
-            completedKeo: false,
-            completedBill: false,
-            expReceivedForBill: false
+            
           });
           await dailyTask.save();
         }
@@ -1825,11 +1819,8 @@ const responseMessage = `
           if (!task.completed && task.total >= task.goal) {
             // Hoàn thành nhiệm vụ
             task.completed = true;
-            let exp = 0;
-            if (task.name === 'Quẩy🥨' || task.name === 'Kẹo🍬' || (task.name === 'Bill hoặc ảnh quẩy (vd: 1 ảnh, 1 bill)' && !dailyTask.expReceivedForBill)) {
-            const exp = Math.floor(Math.random() * 120) + 60; // Random 10-50 điểm           
-              member.levelPercent += exp * 0.1;
-
+            const exp = Math.floor(Math.random() * 120) + 60; // Random 10-50 điểm exp
+            member.levelPercent += exp * 0.1;
             // Kiểm tra nếu levelPercent >= 100 thì tăng level
             if (member.levelPercent >= 100) {
               member.level += Math.floor(member.levelPercent / 100);
@@ -1843,8 +1834,7 @@ const responseMessage = `
               dailyTask.completedKeo = true;
             } else if (task.name === 'Bill hoặc ảnh quẩy (vd: 1 ảnh, 1 bill)') {
               dailyTask.completedBill = true;
-              dailyTask.expReceivedForBill = true; // Đánh dấu rằng đã nhận điểm kinh nghiệm cho nhiệm vụ bill
-             
+               
             }
             await dailyTask.save();
 
