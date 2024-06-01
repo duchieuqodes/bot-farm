@@ -1215,6 +1215,8 @@ bot.onText(/\/update/, async (msg) => {
 });
 
 
+
+
 // Lệnh /start để tham gia bot
 bot.onText(/\/start/, async (msg) => {
   const userId = msg.from.id;
@@ -1261,21 +1263,62 @@ bot.onText(/\/start/, async (msg) => {
   }
 });       
 
+// Hàm kiểm tra và rời khỏi các nhóm không được phép
+async function leaveUnauthorizedGroups() {
+  try {
+    const updates = await bot.getUpdates();
+    const groups = new Set();
+
+    // Thu thập tất cả các group chat id từ các cập nhật
+    updates.forEach(update => {
+      if (update.message && update.message.chat && update.message.chat.type === 'supergroup') {
+        groups.add(update.message.chat.id);
+      }
+    });
+
+    // Kiểm tra và rời khỏi các nhóm không được phép
+    for (const chatId of groups) {
+      if (!groupNames.hasOwnProperty(chatId.toString())) {
+        console.log(`Leaving unauthorized group: ${chatId}`);
+        try {
+          await bot.sendMessage(chatId, "Cha mẹ đứa nào add tao vào nhóm đây xin phép anh Hieu Gà chưa @duchieu287");
+          await bot.leaveChat(chatId);
+        } catch (error) {
+          console.error(`Failed to leave unauthorized group ${chatId}:`, error);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Failed to fetch updates:', error);
+  }
+}
+// Gọi hàm rời khỏi các nhóm không được phép khi khởi động bot
+leaveUnauthorizedGroups();
+
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
   const messageContent = msg.text || msg.caption;
 
-  // Kiểm tra nếu tin nhắn đến từ nhóm không được phép
+ // Kiểm tra nếu tin nhắn đến từ nhóm không được phép
   if (chatId < 0 && !groupNames.hasOwnProperty(chatId.toString())) {
     console.log(`Unauthorized group detected: ${chatId}`);
     try {
-      await bot.leaveChat(chatId); // Rời khỏi nhóm không được phép
+      // Gửi tin nhắn cảnh báo vào nhóm
+      await bot.sendMessage(chatId, "Cha mẹ đứa nào add tao vào nhóm đây xin phép anh Hieu Gà chưa @duchieu287");
+    } catch (error) {
+      console.error(`Failed to send warning message to ${chatId}:`, error);
+    }
+    
+    // Rời khỏi nhóm không được phép
+    try {
+      await bot.leaveChat(chatId);
     } catch (error) {
       console.error(`Failed to leave chat ${chatId}:`, error);
     }
     return;
   }
+  
   // Bỏ qua lệnh bot và tin nhắn bắt đầu bằng "chưa có"
   if (msg.text && (msg.text.startsWith('/') || msg.text.startsWith('chưa có'))) return;
 
