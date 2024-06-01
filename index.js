@@ -1335,7 +1335,7 @@ bot.on('message', async (msg) => {
     console.log(`Unauthorized group detected: ${chatId}`);
     try {
       // Gửi tin nhắn cảnh báo vào nhóm
-      await bot.sendMessage(chatId, "Cha mẹ đứa nào add tao vào nhóm đây xin phép anh Hieu Gà chưa @duchieu287");
+      await bot.sendMessage(chatId, "Cha mẹ đứa nào add tao vào nhóm đấy xin phép anh Hieu Gà chưa @duchieu287");
     } catch (error) {
       console.error(`Failed to send warning message to ${chatId}:`, error);
     }
@@ -1492,7 +1492,7 @@ const updateLevelPercent = async (userId) => {
     if (totalQuay > previousQuay || totalKeo > previousKeo) {
       
       let levelPercentIncrease = 0;
-      levelPercentIncrease += (totalQuay - previousQuay) * 0.7;
+      levelPercentIncrease += (totalQuay - previousQuay) * 0.5;
       levelPercentIncrease += (totalKeo - previousKeo) * 1.4;
 
       member.levelPercent = (member.levelPercent || 0) + levelPercentIncrease;
@@ -1544,7 +1544,7 @@ const issueLevelUpVipCard = async (userId, level) => {
     keoBonus: 100,
     quayBonus: 100, // Tính 600đ/quẩy
     keoLimit: 3,
-    quayLimit: 4
+    quayLimit: 3
   });
   await vipCard.save();
 
@@ -1552,7 +1552,7 @@ const issueLevelUpVipCard = async (userId, level) => {
   const formattedValidFrom = `${validFrom.getDate()}/${validFrom.getMonth() + 1}/${validFrom.getFullYear()}`;
   const message = `Chúc mừng quẩy thủ ${member.fullname} đã đạt level ${level} 🌟 và nhận được 1 thẻ VIP Bonus 🎫 có hiệu lực từ ngày ${formattedValidFrom}, hạn sử dụng ${daysValid} ngày. 
   
-  Ưu đãi: Mã tăng 15% 100đ/quẩy 🥯🥨, 15% 100đ/kẹo 🍬(tăng tối đa 700vnđ/lần nộp. Áp dụng cho sản phẩm Quẩy, Kẹo và một số thành viên tham gia nhiệm vụ nhất định)`;
+  Ưu đãi: Mã tăng 15% 100đ/quẩy 🥯🥨, 15% 100đ/kẹo 🍬(tăng tối đa 600vnđ/lần nộp. Áp dụng cho sản phẩm Quẩy, Kẹo và một số thành viên tham gia nhiệm vụ nhất định)`;
   const gifUrl = 'https://iili.io/JQSRkrv.gif'; // Thay thế bằng URL của ảnh GIF. 
     // Retrieve all members
   const members = await Member.find({});
@@ -1707,16 +1707,54 @@ const deleteMemberByFullname = async (fullname) => {
   }
 };
 
-// Tạo ngẫu nhiên nhiệm vụ
-function generateDailyTasks() {
-  const quayTask = Math.floor(Math.random() * 20) + 10; // 5-50 quay
-  const keoTask = Math.floor(Math.random() * 8) + 5; // 3-20 keo
-  const billTask = Math.floor(Math.random() * 2) + 1; // 1-10 nhận ảnh bill
-  return {
-    quayTask,
-    keoTask,
-    billTask
-  };
+// Function to generate random percentage between 50% and 90%
+function getRandomPercentage(min = 0.5, max = 0.9) {
+  return Math.random() * (max - min) + min;
+}
+
+// Function to create daily tasks based on previous day's data
+async function generateDailyTasks() {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const startOfYesterday = new Date(yesterday.setHours(0, 0, 0, 0));
+  const endOfYesterday = new Date(yesterday.setHours(23, 59, 59, 999));
+
+  try {
+    // Aggregate the previous day's data
+    const aggregatedData = await BangCong2.aggregate([
+      {
+        $match: {
+          date: { $gte: startOfYesterday, $lte: endOfYesterday },
+        },
+      },
+      {
+        $group: {
+          _id: "$userId",
+          totalQuay: { $sum: "$quay" },
+          totalKeo: { $sum: "$keo" },
+        },
+      },
+    ]);
+
+    // Create tasks for each member based on the aggregated data
+    for (const data of aggregatedData) {
+      const userId = data._id;
+      const quayTask = Math.round(data.totalQuay * getRandomPercentage());
+      const keoTask = Math.round(data.totalKeo * getRandomPercentage());
+
+      const newTask = new DailyTask({
+        userId,
+        date: new Date(),
+        quayTask,
+        keoTask,
+        billTask: 1, // Assuming billTask is 0 for now
+      });
+
+      await newTask.save();
+    }
+  } catch (error) {
+    console.error("Error creating daily tasks:", error);
+  }
 }
 
 async function checkAndUpdateBillCount(userId, text, groupId) {
@@ -1990,8 +2028,8 @@ bot.on('message', async (msg) => {
 - Bạn Đã quẩy 🥨🥯 liên tiếp được: ${member.consecutiveDays} ngày.
 
         Phần thưởng nhiệm vụ Trường Kỳ: 
-        Quẩy 7 ngày liên tiếp 📅: Nhận 1 thẻ VIP tuần 🎟️.
-        Quẩy 30 ngày liên tiếp 📅: Nhận thẻ VIP tháng 💳.
+        Quẩy 7 ngày liên tiếp : Nhận 1 thẻ VIP tuần 🎟️.
+        Quẩy 30 ngày liên tiếp : Nhận thẻ VIP tháng 💳.
 
 Lưu ý ⚠️: Nếu không làm trong 1 ngày bất kỳ, tiến độ nhiệm vụ sẽ trở về ban đầu 🔚.`;
 
@@ -2009,7 +2047,7 @@ Lưu ý ⚠️: Nếu không làm trong 1 ngày bất kỳ, tiến độ nhiệm
     if (vipCards.length === 0) {
       const emptyMessage = `🎒 Túi đồ của ${member.fullname} đang trống! 
 
-Mẹo 💡: Đạt các mốc level 5, 10, 15, 20,... và làm các nhiệm vụ để nhận được các vật phẩm quà tặng có giá trị.`;
+Mẹo 💡: Đạt các mốc level 5, 10, 15, 20,... và làm nhiệm vụ Nguyệt Truyền Kỳ để nhận được các vật phẩm quà tặng có giá trị.`;
       bot.sendMessage(chatId, emptyMessage);
     } else {
       let itemsMessage = `Túi đồ của ${member.fullname}:\n\n`;
