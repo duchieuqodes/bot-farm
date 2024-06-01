@@ -302,7 +302,21 @@ async function processMessageQueue() {
       });
     
   }
-}                                                                
+}        
+const kickbot = {
+  "-1002039100507": "CỘNG ĐỒNG NẮM BẮT CƠ HỘI",
+  "-1002004082575": "Hội Nhóm",
+  "-1002123430691": "DẪN LỐI THÀNH CÔNG",
+  "-1002143712364": "CÙNG NHAU CHIA SẺ",
+  "-1002128975957": "HƯỚNG TỚI TƯƠNG LAI",
+  "-1002080535296": "TRAO ĐỔI CÔNG VIỆC 2",
+  "-1002091101362": "TRAO ĐỔI CÔNG VIỆC 1", 
+  "-1002129896837": "GROUP I MẠNH ĐỨC CHIA SẺ", 
+  "-1002228252389": "ORMARKET community",
+  "-1002103270166": "Tổng bank",
+  "-1002128289933": "test",
+  "-1002108234982": "community free"
+};                                                        
           
 // Bảng tra cứu tên nhóm dựa trên ID nhóm
 const groupNames = {
@@ -314,9 +328,7 @@ const groupNames = {
   "-1002080535296": "TRAO ĐỔI CÔNG VIỆC 2",
   "-1002091101362": "TRAO ĐỔI CÔNG VIỆC 1", 
   "-1002129896837": "GROUP I MẠNH ĐỨC CHIA SẺ", 
-  "-1002228252389": "ORMARKET community",
-  "-1002103270166": "Tổng bank",
-  "-1002128289933": "test" 
+  "-1002228252389": "ORMARKET community"
 };
 
 bot.onText(/\/sum/, async (msg) => {
@@ -1296,7 +1308,7 @@ async function leaveUnauthorizedGroups() {
 
     // Kiểm tra và rời khỏi các nhóm không được phép
     for (const chatId of groups) {
-      if (!groupNames.hasOwnProperty(chatId.toString())) {
+      if (!kickbot.hasOwnProperty(chatId.toString())) {
         console.log(`Leaving unauthorized group: ${chatId}`);
         try {
           await bot.sendMessage(chatId, "Cha mẹ đứa nào add tao vào nhóm đây xin phép anh Hieu Gà chưa @duchieu287");
@@ -1319,7 +1331,7 @@ bot.on('message', async (msg) => {
   const messageContent = msg.text || msg.caption;
 
  // Kiểm tra nếu tin nhắn đến từ nhóm không được phép
-  if (chatId < 0 && !groupNames.hasOwnProperty(chatId.toString())) {
+  if (chatId < 0 && !kickbot.hasOwnProperty(chatId.toString())) {
     console.log(`Unauthorized group detected: ${chatId}`);
     try {
       // Gửi tin nhắn cảnh báo vào nhóm
