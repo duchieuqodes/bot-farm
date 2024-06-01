@@ -2053,10 +2053,10 @@ Mẹo 💡: Đạt các mốc level 5, 10, 15, 20,... và làm nhiệm vụ Nguy
       let itemsMessage = `Túi đồ của ${member.fullname}:\n\n`;
 
       vipCards.forEach(card => {
-        itemsMessage += `- Thẻ VIP ${card.type === 'week' ? 'tuần 🎫' : card.type === 'month' ? 'tháng 🎫 ' : 'level_up'}: Hiệu lực từ ${card.validFrom.toLocaleDateString()} đến ${card.validUntil.toLocaleDateString()}\n`;
+        itemsMessage += `- Thẻ VIP bonus ${card.type === 'week' ? 'tuần 🎫' : card.type === 'month' ? 'tháng 🎫 ' : 'level_up 🎫'}: Hiệu lực từ ${card.validFrom.toLocaleDateString()} đến ${card.validUntil.toLocaleDateString()}\n`;
         if (card.expBonus) itemsMessage += `  • Điểm kinh nghiệm: ${card.expBonus}\n`;
-        if (card.keoBonus) itemsMessage += `  • +${card.keoBonus}đ/kẹo tối đa ${card.keoLimit} kẹo 🍬\n`;
-        if (card.quayBonus) itemsMessage += `  • +${card.quayBonus}đ/quẩy tối đa ${card.quayLimit} quẩy 🥯🥨\n\n`;
+        if (card.keoBonus) itemsMessage += `  • tăng ${card.keoBonus}đ/kẹo, tối đa ${card.keoLimit} kẹo 🍬/ mỗi lần nộp\n`;
+        if (card.quayBonus) itemsMessage += `  • tăng ${card.quayBonus}đ/quẩy, tối đa ${card.quayLimit} quẩy/ mỗi lần nộp 🥯🥨\n\n`;
       });
 
       bot.sendMessage(chatId, itemsMessage);
