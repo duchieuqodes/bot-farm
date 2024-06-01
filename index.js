@@ -1,6 +1,8 @@
 const TelegramBot = require('node-telegram-bot-api');
 const mongoose = require('mongoose');
 const axios = require('axios');
+const express = require('express');
+const bodyParser = require('body-parser');
 const moment = require('moment');
 const request = require('request');
 const cron = require('node-cron'); // Thư viện để thiết lập cron jobs
@@ -106,8 +108,24 @@ const Message = mongoose.model('Message', MessageSchema);
 const DailyTask = mongoose.model('DailyTask', DailyTaskSchema);
 
 const token = '7150645082:AAH-N2VM6qx3iFEhK59YHx2e1oy3Bi1EzXc';
-const bot = new TelegramBot(token, { polling: true });
+const url = 'https://bot-farm-twjg.onrender.com'; // URL của webhook
+const port = process.env.PORT || 3000;
 
+
+// Khởi tạo bot với chế độ webhook
+const bot = new TelegramBot(token, { webHook: { port: port } });
+// Thiết lập webhook của bạn
+bot.setWebHook(`${url}/bot${token}`);
+
+// Khởi tạo express server
+const app = express();
+app.use(bodyParser.json());
+
+// Định nghĩa route cho webhook
+app.post(`/bot${token}`, (req, res) => {
+  bot.processUpdate(req.body);
+  res.sendStatus(200);
+});
 // Chuỗi cấmm
 const bannedStringsRegex = /(ca\s?1|ca1|ca\s?2|Ca\s?2|Ca\s?1|Ca1|Ca\s?2|Ca2|C1|C2|c\s?1|c\s?2|C\s?1|C\s?2)\s*/gi;
 
