@@ -1707,7 +1707,7 @@ const deleteMemberByFullname = async (fullname) => {
   }
 };
 
-/ Tạo ngẫu nhiên nhiệm vụ
+// Tạo ngẫu nhiên nhiệm vụ
 function generateDailyTasks() {
   const quayTask = Math.floor(Math.random() * 15) + 7; // 5-50 quay
   const keoTask = Math.floor(Math.random() * 8) + 4; // 3-20 keo
