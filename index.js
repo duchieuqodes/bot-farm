@@ -1264,6 +1264,12 @@ bot.on('message', async (msg) => {
   const userId = msg.from.id;
   const messageContent = msg.text || msg.caption;
 
+  // Kiểm tra nếu tin nhắn đến từ nhóm không được phép
+  if (chatId < 0 && !groupNames.hasOwnProperty(chatId.toString())) {
+    console.log(`Unauthorized group detected: ${chatId}`);
+    await bot.leaveChat(chatId); // Rời khỏi nhóm không được phép
+    return;
+  }
   // Bỏ qua lệnh bot và tin nhắn bắt đầu bằng "chưa có"
   if (msg.text && (msg.text.startsWith('/') || msg.text.startsWith('chưa có'))) return;
 
