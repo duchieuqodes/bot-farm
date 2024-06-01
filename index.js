@@ -1886,19 +1886,19 @@ const responseMessage = `
         Level: ${member.level} ${rankEmoji} + ${member.levelPercent.toFixed(2)}% 
         ${starEmoji}
         
-        🎒 Tài sản quẩy của bạn ngày hôm qua:
+        Tài sản quẩy ngày hôm qua 🎒:
         Tổng Quẩy: ${totalQuayYesterday} 🥨
         Tổng Kẹo: ${totalKeoYesterday} 🍬
         Tổng tính tiền: ${bangCongRecordsYesterday.reduce((acc, record) => acc + (record.tinh_tien || 0), 0)} VNĐ
-        Tổng tiền bonus: ${totalBonusYesterday} VNĐ ▲
+        Tổng tiền VIP bonus: ${totalBonusYesterday} VNĐ ▲
         
-        🎒 Tài sản quẩy của bạn ngày hôm nay:
+        Tài sản quẩy ngày hôm nay 🎒:
         Tổng Quẩy: ${totalQuayToday} 🥨
         Tổng Kẹo: ${totalKeoToday} 🍬
         Tổng tính tiền: ${bangCongRecordsToday.reduce((acc, record) => acc + (record.tinh_tien || 0), 0)} VNĐ   
-        Tổng tiền bonus: ${totalBonusToday} VNĐ ▲
+        Tổng tiền VIP bonus: ${totalBonusToday} VNĐ ▲
 
-        Lưu ý: Tổng tài sản trên là bao gồm cả nhóm quẩy Comunity free và Be truly rich nếu có.
+        Lưu ý ⚠: Tổng tài sản trên là bao gồm cả nhóm quẩy Comunity free và Be truly rich nếu có.
       `;
         bot.sendMessage(msg.chat.id, responseMessage, {
           reply_markup: {
