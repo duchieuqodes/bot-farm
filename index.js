@@ -1707,44 +1707,16 @@ const deleteMemberByFullname = async (fullname) => {
   }
 };
 
-function generateDailyTasks(totalQuayYesterday, totalKeoYesterday) {
-    let quayTask = 0;
-    let keoTask = 0;
-    let billTask = 0;
-
-
-    // Ensure the inputs are numbers and not NaN
-    if (typeof totalQuayYesterday !== 'number' || isNaN(totalQuayYesterday) ||
-        typeof totalKeoYesterday !== 'number' || isNaN(totalKeoYesterday)) {
-        throw new Error("Invalid input: totalQuayYesterday and totalKeoYesterday must be valid numbers");
-    }
-
-    if (totalQuayYesterday <= 5 || totalKeoYesterday <= 5) {
-        quayTask = Math.floor(Math.random() * 4) + 2; // Random integer between 2 and 5
-        keoTask = Math.floor(Math.random() * 6) + 5; // Random integer between 5 and 10
-    } else {
-        // Generate a random percentage between 50% and 90% as an integer value
-        let quayPercentage = Math.floor(Math.random() * 41) + 50; // Random integer between 50 and 90
-        quayTask = Math.round(totalQuayYesterday * quayPercentage / 100);
-
-        let keoPercentage = Math.floor(Math.random() * 41) + 50; // Random integer between 50 and 90
-        keoTask = Math.round(totalKeoYesterday * keoPercentage / 100);
-    }
-
-    // Ensure quayTask and keoTask are valid numbers and not undefined or NaN
-    if (typeof quayTask !== 'number' || isNaN(quayTask) || quayTask === undefined) {
-        quayTask = 0; // Default value
-    }
-    if (typeof keoTask !== 'number' || isNaN(keoTask) || keoTask === undefined) {
-        keoTask = 0; // Default value
-    }
-
-    return {
-        quayTask: quayTask,
-        keoTask: keoTask,
-        billTask: 1
-
-    };
+/ Tạo ngẫu nhiên nhiệm vụ
+function generateDailyTasks() {
+  const quayTask = Math.floor(Math.random() * 15) + 7; // 5-50 quay
+  const keoTask = Math.floor(Math.random() * 8) + 4; // 3-20 keo
+  const billTask = Math.floor(Math.random() * 1) + 1; // 1-10 nhận ảnh bill
+  return {
+    quayTask,
+    keoTask,
+    billTask
+  };
 }
 
 
