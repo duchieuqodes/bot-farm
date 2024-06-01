@@ -146,6 +146,23 @@ cron.schedule('0 0 * * *', async () => {
   }
 });
 
+// Thiết lập cron job để xóa dữ liệu DailyTask của những ngày trước đó
+cron.schedule('0 0 * * *', async () => {
+  const currentDate = new Date().setHours(0, 0, 0, 0);
+
+  try {
+    const result = await DailyTask.deleteMany({
+      $or: [
+        { date: { $lt: currentDate } },
+        { date: { $exists: false } }
+      ]
+    });
+    console.log(`Đã xóa ${result.deletedCount} nhiệm vụ hàng ngày trước ngày ${new Date(currentDate).toLocaleDateString()}`);
+  } catch (error) {
+    console.error("Lỗi khi xóa dữ liệu từ MongoDB:", error);
+  }
+});
+
 // Tìm các số theo sau bởi ký tự hoặc từ khóa xác định hành vi
 const regex = /\d+(q|Q|c|C|quẩy|cộng|acc)/gi;
 const messageQueue = [];
