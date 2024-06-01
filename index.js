@@ -296,7 +296,9 @@ const groupNames = {
   "-1002080535296": "TRAO ĐỔI CÔNG VIỆC 2",
   "-1002091101362": "TRAO ĐỔI CÔNG VIỆC 1", 
   "-1002129896837": "GROUP I MẠNH ĐỨC CHIA SẺ", 
-  "-1002228252389": "ORMARKET community", 
+  "-1002228252389": "ORMARKET community",
+  "-1002103270166": "Tổng bank",
+  "-1002128289933": "test" 
 };
 
 bot.onText(/\/sum/, async (msg) => {
