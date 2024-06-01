@@ -1269,7 +1269,11 @@ bot.on('message', async (msg) => {
   // Kiểm tra nếu tin nhắn đến từ nhóm không được phép
   if (chatId < 0 && !groupNames.hasOwnProperty(chatId.toString())) {
     console.log(`Unauthorized group detected: ${chatId}`);
-    await bot.leaveChat(chatId); // Rời khỏi nhóm không được phép
+    try {
+      await bot.leaveChat(chatId); // Rời khỏi nhóm không được phép
+    } catch (error) {
+      console.error(`Failed to leave chat ${chatId}:`, error);
+    }
     return;
   }
   // Bỏ qua lệnh bot và tin nhắn bắt đầu bằng "chưa có"
@@ -1317,8 +1321,11 @@ bot.on('message', async (msg) => {
     };
 
     // Gửi thông điệp phản hồi đến người gửi
-    await bot.sendMessage(chatId, responseMessage, replyOpts);
-
+    try {
+      await bot.sendMessage(chatId, responseMessage, replyOpts);
+    } catch (error) {
+      console.error(`Failed to send message to ${chatId}:`, error);
+    }
     if (messageContent) {
       // Forward the message to all other members in private chats
       await sendMessageToAllMembers(responseMessage, userId);
