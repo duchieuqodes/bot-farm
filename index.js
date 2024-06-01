@@ -1707,55 +1707,29 @@ const deleteMemberByFullname = async (fullname) => {
   }
 };
 
-// Function to generate random percentage between 50% and 90%
-function getRandomPercentage(min = 0.5, max = 0.9) {
-  return Math.random() * (max - min) + min;
-}
+function generateDailyTasks(totalQuayYesterday, totalKeoYesterday) {
+    let quayTask, keoTask;
 
-// Function to create daily tasks based on previous day's data
-async function generateDailyTasks() {
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const startOfYesterday = new Date(yesterday.setHours(0, 0, 0, 0));
-  const endOfYesterday = new Date(yesterday.setHours(23, 59, 59, 999));
+    if (totalQuayYesterday <= 5 || totalKeoYesterday <= 5) {
+        quayTask = Math.floor(Math.random() * 4) + 2; // Random integer between 2 and 5
+        keoTask = Math.floor(Math.random() * 6) + 5; // Random integer between 5 and 10
+    } else {
+        // Generate a random percentage between 50% and 90% as an integer value
+        let quayPercentage = Math.floor(Math.random() * 41) + 50; // Random integer between 50 and 90
+        quayTask = Math.round(totalQuayYesterday * quayPercentage / 100);
 
-  try {
-    // Aggregate the previous day's data
-    const aggregatedData = await BangCong2.aggregate([
-      {
-        $match: {
-          date: { $gte: startOfYesterday, $lte: endOfYesterday },
-        },
-      },
-      {
-        $group: {
-          _id: "$userId",
-          totalQuay: { $sum: "$quay" },
-          totalKeo: { $sum: "$keo" },
-        },
-      },
-    ]);
-
-    // Create tasks for each member based on the aggregated data
-    for (const data of aggregatedData) {
-      const userId = data._id;
-      const quayTask = Math.round(data.totalQuay * getRandomPercentage());
-      const keoTask = Math.round(data.totalKeo * getRandomPercentage());
-
-      const newTask = new DailyTask({
-        userId,
-        date: new Date(),
-        quayTask,
-        keoTask,
-        billTask: 1, // Assuming billTask is 0 for now
-      });
-
-      await newTask.save();
+        let keoPercentage = Math.floor(Math.random() * 41) + 50; // Random integer between 50 and 90
+        keoTask = Math.round(totalKeoYesterday * keoPercentage / 100);
     }
-  } catch (error) {
-    console.error("Error creating daily tasks:", error);
-  }
+
+    return {
+        quayTask: quayTask,
+        keoTask: keoTask,
+        billTask: 1
+
+    };
 }
+
 
 async function checkAndUpdateBillCount(userId, text, groupId) {
   const match = text.match(/(\d+)\s*(ảnh|bill)/i);
