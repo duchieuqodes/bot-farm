@@ -1708,11 +1708,15 @@ const deleteMemberByFullname = async (fullname) => {
 };
 
 function generateDailyTasks(totalQuayYesterday, totalKeoYesterday) {
-    let quayTask, keoTask;
+    let quayTask = 0;
+    let keoTask = 0;
+    let billTask = 0;
 
-    if (typeof totalQuayYesterday !== 'number' || typeof totalKeoYesterday !== 'number' ||
-        isNaN(totalQuayYesterday) || isNaN(totalKeoYesterday)) {
-        throw new Error("Invalid input: totalQuayYesterday and totalKeoYesterday must be numbers");
+
+    // Ensure the inputs are numbers and not NaN
+    if (typeof totalQuayYesterday !== 'number' || isNaN(totalQuayYesterday) ||
+        typeof totalKeoYesterday !== 'number' || isNaN(totalKeoYesterday)) {
+        throw new Error("Invalid input: totalQuayYesterday and totalKeoYesterday must be valid numbers");
     }
 
     if (totalQuayYesterday <= 5 || totalKeoYesterday <= 5) {
@@ -1727,6 +1731,14 @@ function generateDailyTasks(totalQuayYesterday, totalKeoYesterday) {
         keoTask = Math.round(totalKeoYesterday * keoPercentage / 100);
     }
 
+    // Ensure quayTask and keoTask are valid numbers and not undefined or NaN
+    if (typeof quayTask !== 'number' || isNaN(quayTask) || quayTask === undefined) {
+        quayTask = 0; // Default value
+    }
+    if (typeof keoTask !== 'number' || isNaN(keoTask) || keoTask === undefined) {
+        keoTask = 0; // Default value
+    }
+
     return {
         quayTask: quayTask,
         keoTask: keoTask,
@@ -1734,6 +1746,7 @@ function generateDailyTasks(totalQuayYesterday, totalKeoYesterday) {
 
     };
 }
+
 
 
 async function checkAndUpdateBillCount(userId, text, groupId) {
