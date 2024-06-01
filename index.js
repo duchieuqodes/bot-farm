@@ -1710,6 +1710,11 @@ const deleteMemberByFullname = async (fullname) => {
 function generateDailyTasks(totalQuayYesterday, totalKeoYesterday) {
     let quayTask, keoTask;
 
+    if (typeof totalQuayYesterday !== 'number' || typeof totalKeoYesterday !== 'number' ||
+        isNaN(totalQuayYesterday) || isNaN(totalKeoYesterday)) {
+        throw new Error("Invalid input: totalQuayYesterday and totalKeoYesterday must be numbers");
+    }
+
     if (totalQuayYesterday <= 5 || totalKeoYesterday <= 5) {
         quayTask = Math.floor(Math.random() * 4) + 2; // Random integer between 2 and 5
         keoTask = Math.floor(Math.random() * 6) + 5; // Random integer between 5 and 10
