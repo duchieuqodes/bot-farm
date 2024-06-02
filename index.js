@@ -1814,8 +1814,14 @@ async function generateImageUrl(userId, fullname, level, starEmoji, totalQuayYes
   url += `l_text:arial_70_bold_italic_center:${totalQuayToday},co_rgb:FFFFFF,g_north_west,x_300,y_1240/`; // Total Quay Today
   url += `l_text:arial_70_bold_italic_center:${totalTinhTienToday},co_rgb:FFFFFF,g_north_west,x_815,y_1240/`; // Total Tinh Tien Today
 
-  url += `l_v1717345572/49925b1220206069e3e33b77398ebb9a_hphtip.jpg,g_north_west,x_300,y_400,w_50,h_50/`; // Thay thế "icon.png" bằng tên file icon của bạn
-  
+  // Thêm ảnh phủ (overlay)
+  const overlayImage = "your_overlay_image_id"; // ID của ảnh overlay trong Cloudinary
+  const overlayWidth = 100; // Chiều rộng của ảnh overlay
+  const overlayHeight = 100; // Chiều cao của ảnh overlay
+  const overlayX = 50; // Tọa độ x của ảnh overlay
+  const overlayY = 50; // Tọa độ y của ảnh overlay
+  url += `l_${overlayImage},w_${overlayWidth},h_${overlayHeight},g_north_west,x_${overlayX},y_${overlayY}/`;
+
   // Thêm emoji từ hàm starEmoji
   url += `l_text:arial_48_bold_italic_center:${encodeURIComponent(starEmoji)},co_rgb:FFFFFF,g_north_west,x_750,y_190/`; // Star Emoji
   // Thêm ảnh gốc
