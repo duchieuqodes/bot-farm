@@ -1798,7 +1798,7 @@ async function generateImageUrl(userId, fullname, level, starEmoji, totalQuayYes
   url += `l_text:arial_48_bold_italic_center:${member.level},co_rgb:FFFFFF,g_north_west,x_410,y_410/`;// Level (giữ nguyên)
 
   // Thêm fullName và level (kích thước nhỏ hơn so với các thay đổi khác)
-  url += `l_text:arial_68_bold_italic_center:${fullname},co_rgb:FFFFFF,g_north_west,x_74,y_302/`; // Full Name
+  url += `l_text:arial_68_bold_italic_center:${encodeURIComponent(fullname)},co_rgb:FFFFFF,g_north_west,x_74,y_302/`; // Full Name
 
   // Văn bản khác (tăng gấp đôi kích thước, in đậm, in nghiêng, màu trắng, font game 2D)
   url += `l_text:arial_70_bold_italic_center:${totalKeoYesterday},co_rgb:FFFFFF,g_north_west,x_300,y_940/`; // Total Keo Yesterday
@@ -1813,7 +1813,7 @@ async function generateImageUrl(userId, fullname, level, starEmoji, totalQuayYes
   url += `l_text:arial_70_bold_italic_center:${totalTinhTienToday},co_rgb:FFFFFF,g_north_west,x_815,y_1240/`; // Total Tinh Tien Today
 
   // Thêm emoji từ hàm starEmoji
-  url += `l_text:arial_48_bold_italic_center:${encodeURIComponent(starEmoji)},co_rgb:FFFFFF,g_north_west,x_817,y_212/`; // Star Emoji
+  url += `l_text:arial_48_bold_italic_center:${encodeURIComponent(starEmoji)},co_rgb:FFFFFF,g_north_west,x_760,y_190/`; // Star Emoji
   // Thêm ảnh gốc
   url += "v1717336612/kub77rwh14uuopyyykdt.jpg"; // Thay thế "sample.jpg" bằng đường dẫn đến ảnh của bạn
 
