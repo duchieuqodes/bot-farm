@@ -1791,14 +1791,16 @@ const cloudinary = {
 async function generateImageUrl(userId, fullname, level, starEmoji, totalQuayYesterday, totalKeoYesterday, totalTinhTienYesterday, totalBonusYesterday, totalQuayToday, totalKeoToday, totalTinhTienToday, totalBonusToday) {
 
   let member = await Member.findOne({ userId });
+  const encodedFullname = encodeURIComponent(fullname);
+
   // URL cơ bản của ảnh
   let url = `https://res.cloudinary.com/${cloudinary.cloud_name}/image/upload/`;
 
   // Thêm văn bản vào các vị trí xác định từ Photoshop
-  url += `l_text:arial_48_bold_italic_center:${member.level},co_rgb:FFFFFF,g_north_west,x_410,y_410/`;// Level (giữ nguyên)
+  url += `l_text:arial_46_bold_italic_center:${member.level},co_rgb:FFFFFF,g_north_west,x_406,y_410/`;// Level (giữ nguyên)
 
   // Thêm fullName và level (kích thước nhỏ hơn so với các thay đổi khác)
-  url += `l_text:arial_68_bold_italic_center:${encodeURIComponent(fullname)},co_rgb:FFFFFF,g_north_west,x_74,y_302/`; // Full Name
+  url += `l_text:arial_68_bold_italic_center:${encodedFullname},co_rgb:FFFFFF,g_north_west,x_74,y_302/`; // Full Name
 
   // Văn bản khác (tăng gấp đôi kích thước, in đậm, in nghiêng, màu trắng, font game 2D)
   url += `l_text:arial_70_bold_italic_center:${totalKeoYesterday},co_rgb:FFFFFF,g_north_west,x_300,y_940/`; // Total Keo Yesterday
@@ -1812,8 +1814,10 @@ async function generateImageUrl(userId, fullname, level, starEmoji, totalQuayYes
   url += `l_text:arial_70_bold_italic_center:${totalQuayToday},co_rgb:FFFFFF,g_north_west,x_300,y_1240/`; // Total Quay Today
   url += `l_text:arial_70_bold_italic_center:${totalTinhTienToday},co_rgb:FFFFFF,g_north_west,x_815,y_1240/`; // Total Tinh Tien Today
 
+  url += `l_v1717345572/49925b1220206069e3e33b77398ebb9a_hphtip.jpg,g_north_west,x_300,y_400,w_50,h_50/`; // Thay thế "icon.png" bằng tên file icon của bạn
+  
   // Thêm emoji từ hàm starEmoji
-  url += `l_text:arial_48_bold_italic_center:${encodeURIComponent(starEmoji)},co_rgb:FFFFFF,g_north_west,x_760,y_190/`; // Star Emoji
+  url += `l_text:arial_48_bold_italic_center:${encodeURIComponent(starEmoji)},co_rgb:FFFFFF,g_north_west,x_750,y_190/`; // Star Emoji
   // Thêm ảnh gốc
   url += "v1717336612/kub77rwh14uuopyyykdt.jpg"; // Thay thế "sample.jpg" bằng đường dẫn đến ảnh của bạn
 
