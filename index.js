@@ -1780,6 +1780,12 @@ async function checkAndUpdateBillCount(userId, text, groupId) {
   }
 }
 
+// Thông tin Cloudinary
+const cloudinary = {
+  cloud_name: 'dvgqc5i4n',
+  api_key: '743276718962993',
+  api_secret: '02v-rlQstSdcpd_6IekFwQ-tdNA'
+};
 
 // Hàm để tạo URL ảnh với văn bản tùy chỉnh
 async function generateImageUrl(userId, fullname, level, totalQuayYesterday, totalKeoYesterday, totalTinhTienYesterday, totalBonusYesterday, totalQuayToday, totalKeoToday, totalTinhTienToday, totalBonusToday) {
