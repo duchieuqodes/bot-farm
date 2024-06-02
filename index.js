@@ -1780,8 +1780,37 @@ async function checkAndUpdateBillCount(userId, text, groupId) {
   }
 }
 
-  
 
+// Hàm để tạo URL ảnh với văn bản tùy chỉnh
+async function generateImageUrl(userId, fullname, level, totalQuayYesterday, totalKeoYesterday, totalTinhTienYesterday, totalBonusYesterday, totalQuayToday, totalKeoToday, totalTinhTienToday, totalBonusToday) {
+
+  let member = await Member.findOne({ userId });
+  // URL cơ bản của ảnh
+  let url = `https://res.cloudinary.com/${cloudinary.cloud_name}/image/upload/`;
+
+  // Thêm văn bản vào các vị trí xác định từ Photoshop
+  url += `l_text:arial_48_bold_italic:${member.level},co_rgb:FFFFFF,g_north_west,x_410,y_410/`;// Level (giữ nguyên)
+
+  // Thêm fullName và level (kích thước nhỏ hơn so với các thay đổi khác)
+  url += `l_text:arial_68_bold_italic:${fullname},co_rgb:FFFFFF,g_north_west,x_74,y_302/`; // Full Name
+
+  // Văn bản khác (tăng gấp đôi kích thước, in đậm, in nghiêng, màu trắng, font game 2D)
+  url += `l_text:arial_70_bold_italic:${totalKeoYesterday},co_rgb:FFFFFF,g_north_west,x_300,y_940/`; // Total Keo Yesterday
+  url += `l_text:arial_70_bold_italic:${totalBonusYesterday},co_rgb:FFFFFF,g_north_west,x_805,y_940/`; // Total Bonus Yesterday
+  url += `l_text:arial_70_bold_italic:${totalQuayYesterday},co_rgb:FFFFFF,g_north_west,x_305,y_750/`; // Total Quay Yesterday
+  url += `l_text:arial_70_bold_italic:${totalTinhTienYesterday},co_rgb:FFFFFF,g_north_west,x_805,y_750/`; // Total Tinh Tien Yesterday
+
+  // Thêm văn bản cho hôm nay
+  url += `l_text:arial_70_bold_italic:${totalKeoToday},co_rgb:FFFFFF,g_north_west,x_300,y_1430/`; // Total Keo Today
+  url += `l_text:arial_70_bold_italic:${totalBonusToday},co_rgb:FFFFFF,g_north_west,x_815,y_1430/`; // Total Bonus Today
+  url += `l_text:arial_70_bold_italic:${totalQuayToday},co_rgb:FFFFFF,g_north_west,x_300,y_1240/`; // Total Quay Today
+  url += `l_text:arial_70_bold_italic:${totalTinhTienToday},co_rgb:FFFFFF,g_north_west,x_815,y_1240/`; // Total Tinh Tien Today
+
+  // Thêm ảnh gốc
+  url += "v1717336612/kub77rwh14uuopyyykdt.jpg"; // Thay thế "sample.jpg" bằng đường dẫn đến ảnh của bạn
+
+  return url;
+}
 
 
 // Xử lý sự kiện khi nút "Xem tài khoản" hoặc "Nhiệm vụ hôm nay" được nhấn
@@ -1860,6 +1889,7 @@ bot.on('message', async (msg) => {
       if (msg.text === 'Xem tài khoản 🧾') {
         const rankEmoji = getRankEmoji(member.level);
         const starEmoji = getStarEmoji(member.levelPercent);
+        const imageUrl = await generateImageUrl(userId, fullname, level, totalQuayYesterday, totalKeoYesterday, totalTinhTienYesterday, totalBonusYesterday, totalQuayToday, totalKeoToday, totalTinhTienToday, totalBonusToday);
 
 const responseMessage = `
         Thông tin tài khoản 🩴:
@@ -1881,6 +1911,8 @@ const responseMessage = `
 
         Lưu ý ⚠: Tổng tài sản trên là bao gồm cả nhóm quẩy Comunity free và Be truly rich nếu có.
       `;
+       bot.sendPhoto(msg.chat.id, imageUrl, { caption: 'Thông tin tài khoản' });
+
         bot.sendMessage(msg.chat.id, responseMessage, {
           reply_markup: {
             keyboard: [
