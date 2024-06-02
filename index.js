@@ -1815,7 +1815,7 @@ async function generateImageUrl(userId, fullname, level, starEmoji, totalQuayYes
   url += `l_text:arial_70_bold_italic_center:${totalTinhTienToday},co_rgb:FFFFFF,g_north_west,x_815,y_1240/`; // Total Tinh Tien Today
 
   // Thêm ảnh phủ (overlay)
-  const overlayImage = "your_overlay_image_id"; // ID của ảnh overlay trong Cloudinary
+  const overlayImage = "v1717345572/49925b1220206069e3e33b77398ebb9a_hphtip.jpg"; // ID của ảnh overlay trong Cloudinary
   const overlayWidth = 100; // Chiều rộng của ảnh overlay
   const overlayHeight = 100; // Chiều cao của ảnh overlay
   const overlayX = 50; // Tọa độ x của ảnh overlay
