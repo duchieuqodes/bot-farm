@@ -1550,7 +1550,7 @@ const issueLevelUpVipCard = async (userId, level) => {
   validFrom.setHours(0, 0, 0, 0); // Bắt đầu từ 00:00:00 ngày mai
   const validUntil = new Date(validFrom);
   validUntil.setDate(validFrom.getDate() + daysValid); // Hiệu lực trong 1 ngày
-  validUntil.setHours(23, 59, 59, 999); // Kết thúc vào 23:59:59 ngày sau đó
+  validUntil.setHours(1, 0, 0, 0); // Kết thúc vào 23:59:59 ngày sau đó
 
   const vipCard = new VipCard({
     userId,
@@ -1593,7 +1593,7 @@ const issueWeeklyVipCard = async (userId) => {
   validFrom.setHours(0, 0, 0, 0);
   const validUntil = new Date(validFrom);
   validUntil.setDate(validFrom.getDate() + 1);
-  validUntil.setHours(23, 59, 59, 999);
+  validUntil.setHours(1, 0, 0, 0);
 
   const expBonus = 220 + Math.floor(Math.random() * 101); // Random từ 220 đến 320
 
@@ -1635,7 +1635,7 @@ const issueMonthlyVipCard = async (userId) => {
   validFrom.setHours(0, 0, 0, 0);
   const validUntil = new Date(validFrom);
   validUntil.setDate(validFrom.getDate() + 2);
-  validUntil.setHours(23, 59, 59, 999);
+  validUntil.setHours(1, 0, 0, 0);
 
   const expBonus = 720 + Math.floor(Math.random() * 101); // Random từ 720 đến 820
 
