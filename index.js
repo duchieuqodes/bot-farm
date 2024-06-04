@@ -163,10 +163,9 @@ cron.schedule('0 0 * * *', async () => {
   }
 });
 
+
 // Tìm các số theo sau bởi ký tự hoặc từ khóa xác định hành vi
 const regex = /\d+(q|Q|c|C|quẩy|cộng|acc)/gi;
-const messageQueue = [];
-let processingMessage = false;
 
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
@@ -175,151 +174,119 @@ bot.on('message', async (msg) => {
   if (chatId !== -1002103270166) {
     // Kiểm tra nếu tin nhắn chứa chuỗi cấm
     // Kiểm tra cả văn bản và chú thích
-  const messageContent = msg.text || msg.caption;
-  if (messageContent) {
-    // Chỉ thực hiện kiểm tra bảng công nếu tin nhắn chứa chuỗi cấm
-    if (regex.test(messageContent)) {
-      messageQueue.push(msg); // Đưa tin nhắn vào hàng đợi
-
-    if (!processingMessage) {
-          processMessageQueue();
-        }
+    const messageContent = msg.text || msg.caption;
+    if (messageContent) {
+      // Chỉ thực hiện kiểm tra bảng công nếu tin nhắn chứa chuỗi cấm
+      if (regex.test(messageContent)) {
+        processMessage(msg); // Xử lý tin nhắn trực tiếp
       }
     }
   }
 });
 
-async function processMessageQueue() {
-  if (messageQueue.length > 0) {
-    processingMessage = true; // Đánh dấu đang xử lý tin nhắn
-    
-    const msg = messageQueue[0];
-    const messageContent = msg.text || msg.caption;
-    const matches = messageContent.match(regex);
-      const userId = msg.from.id;
-      const groupId = msg.chat.id;
-      
-    
-      // Tìm tất cả số và ký tự sau số
-      // Tìm tất cả số theo sau bởi q, c, Q, C, quẩy, cộng, hoặc acc
-      
-      let quay = 0;
-      let keo = 0;
+async function processMessage(msg) {
+  const messageContent = msg.text || msg.caption;
+  const matches = messageContent.match(regex);
+  const userId = msg.from.id;
+  const groupId = msg.chat.id;
 
-      if (matches) {
-        matches.forEach((match) => {
-          const number = parseInt(match); // Lấy số
-          const suffix = match.slice(number.toString().length); // Lấy chữ cái hoặc từ theo sau số
+  let quay = 0;
+  let keo = 0;
 
-          if (suffix.toLowerCase() === 'q' || suffix.toLowerCase() === 'p') {
-            quay += number; // Nếu sau số là "q" hoặc "Q", thêm vào "quay"
-          } else if (suffix.toLowerCase() === 'c' || suffix === '+') {
-            keo += number; // Nếu sau số là "c", "C", hoặc "acc", thêm vào "keo"
-          } else if (suffix === 'quẩy') {
-            quay += number; // Nếu sau số là "quẩy", thêm vào "quay"
-          } else if (suffix === 'cộng') {
-            keo += number; // Nếu sau số là "cộng", thêm vào "keo"
-          }
-        });
+  if (matches) {
+    matches.forEach((match) => {
+      const number = parseInt(match); // Lấy số
+      const suffix = match.slice(number.toString().length); // Lấy chữ cái hoặc từ theo sau số
+
+      if (suffix.toLowerCase() === 'q' || suffix.toLowerCase() === 'p') {
+        quay += number; // Nếu sau số là "q" hoặc "Q", thêm vào "quay"
+      } else if (suffix.toLowerCase() === 'c' || suffix === '+') {
+        keo += number; // Nếu sau số là "c", "C", hoặc "acc", thêm vào "keo"
+      } else if (suffix === 'quẩy') {
+        quay += number; // Nếu sau số là "quẩy", thêm vào "quay"
+      } else if (suffix === 'cộng') {
+        keo += number; // Nếu sau số là "cộng", thêm vào "keo"
       }
-
-        const currentDate = new Date().toLocaleDateString();
-        const firstName = msg.from.first_name;
-        const lastName = msg.from.last_name;
-        const fullName = lastName ? `${firstName} ${lastName}` : firstName;
-
-        const vipCard = await VipCard.findOne({
-      userId,
-      validFrom: { $lte: new Date() },
-      validUntil: { $gte: new Date() }
     });
-       let pricePerQuay = 500;
-    let pricePerKeo = 1000;
-    let pricePerKeoBonus = 0;
-    let pricePerQuayBonus = 0;
-    let exp = 0;
-  
-      if (vipCard) {
-      if (vipCard.type === 'level_up') {
-        pricePerQuay = 600;
-        pricePerKeo = 1100;
-
-      } else if (vipCard.type === 'week') {
-        pricePerQuay = 600;
-        pricePerKeo = 1100;
-        exp = vipCard.expBonus;
-      } else if (vipCard.type === 'month') {
-        pricePerQuay = 600;
-        pricePerKeo = 1100;
-        exp = vipCard.expBonus;
-      }
-
-      // Giới hạn số lượng keo và quay theo loại thẻ
-      if (vipCard.keoLimit && keo > vipCard.keoLimit) {
-        const remainingKeo = vipCard.keoLimit;
-        
-        pricePerKeo = 1000;
-        pricePerKeoBonus = remainingKeo * 100;
-
-      }
-
-      if (vipCard.quayLimit && quay > vipCard.quayLimit) {
-        const remainingQuay = vipCard.quayLimit;
-        pricePerQuay = 500;
-        pricePerQuayBonus = remainingQuay * 100;
-}
-    }
-        // Tạo thông báo mới
-        const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${quay}q, ${keo}c đang chờ kiểm tra ❤🥳`;
-
-        // Gửi thông báo mới và lưu bảng công
-        bot.sendMessage(groupId, responseMessage, { reply_to_message_id: msg.message_id }).then(async () => {
-        let bangCong = await BangCong2.findOne({ userId, groupId, date: currentDate });
-
-        if (!bangCong) {
-          bangCong = await BangCong2.create({
-            userId,
-            groupId,
-            date: currentDate,
-            ten: fullName,
-            quay,
-            keo,
-            tinh_tien: (quay * pricePerQuay + keo * pricePerKeo) + (pricePerKeoBonus + pricePerQuayBonus) ,
-          });
-        } else {
-          bangCong.quay += quay;
-          bangCong.keo += keo;
-          bangCong.tinh_tien += (quay * pricePerQuay + keo * pricePerKeo) + (pricePerKeoBonus + pricePerQuayBonus);
-          
-          const member = await Member.findOne({ userId });
-          member.exp += exp;
-
-          // Tăng levelPercent nếu có exp từ thẻ VIP
-          if (exp > 0) {
-          member.levelPercent += Math.floor(exp / 10);
-          }
-          await bangCong.save();
-          }
-          await updateLevelPercent(userId);
-          
-
-          // Xóa tin nhắn đã xử lý khỏi hàng đợi
-      messageQueue.shift();
-      // Cập nhật tiến độ nhiệm vụ trường kỳ
-          await updateMissionProgress(userId);
-
-
-      
-      // Đánh dấu rằng không còn xử lý tin nhắn nào
-      processingMessage = false;
-      // Nếu còn tin nhắn trong hàng đợi, tiếp tục xử lý
-      if (messageQueue.length > 0) {
-        setTimeout(processMessageQueue, 5000); // Đợi 4 giây trước khi xử lý tin nhắn tiếp theo
-      }
-      });
-    
   }
-}        
+
+  const currentDate = new Date().toLocaleDateString();
+  const firstName = msg.from.first_name;
+  const lastName = msg.from.last_name;
+  const fullName = lastName ? `${firstName} ${lastName}` : firstName;
+
+  const vipCard = await VipCard.findOne({
+    userId,
+    validFrom: { $lte: new Date() },
+    validUntil: { $gte: new Date() }
+  });
+
+  let pricePerQuay = 500;
+  let pricePerKeo = 1000;
+  let pricePerKeoBonus = 0;
+  let pricePerQuayBonus = 0;
+  let exp = 0;
+
+  if (vipCard) {
+    if (vipCard.type === 'level_up') {
+      pricePerQuay = 600;
+      pricePerKeo = 1100;
+    } else if (vipCard.type === 'week' || vipCard.type === 'month') {
+      pricePerQuay = 600;
+      pricePerKeo = 1100;
+      exp = vipCard.expBonus;
+    }
+
+    if (vipCard.keoLimit && keo > vipCard.keoLimit) {
+      const remainingKeo = vipCard.keoLimit;
+      pricePerKeo = 1000;
+      pricePerKeoBonus = remainingKeo * 100;
+    }
+
+    if (vipCard.quayLimit && quay > vipCard.quayLimit) {
+      const remainingQuay = vipCard.quayLimit;
+      pricePerQuay = 500;
+      pricePerQuayBonus = remainingQuay * 100;
+    }
+  }
+
+  const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${quay}q, ${keo}c đang chờ kiểm tra ❤🥳`;
+
+  bot.sendMessage(groupId, responseMessage, { reply_to_message_id: msg.message_id }).then(async () => {
+    let bangCong = await BangCong2.findOne({ userId, groupId, date: currentDate });
+
+    if (!bangCong) {
+      bangCong = await BangCong2.create({
+        userId,
+        groupId,
+        date: currentDate,
+        ten: fullName,
+        quay,
+        keo,
+        tinh_tien: (quay * pricePerQuay + keo * pricePerKeo) + (pricePerKeoBonus + pricePerQuayBonus),
+      });
+    } else {
+      bangCong.quay += quay;
+      bangCong.keo += keo;
+      bangCong.tinh_tien += (quay * pricePerQuay + keo * pricePerKeo) + (pricePerKeoBonus + pricePerQuayBonus);
+
+      const member = await Member.findOne({ userId });
+      member.exp += exp;
+
+      if (exp > 0) {
+        member.levelPercent += Math.floor(exp / 10);
+      }
+
+      await bangCong.save();
+    }
+
+    await updateLevelPercent(userId);
+    await updateMissionProgress(userId);
+  });
+}
+
+        
+       
 const kickbot = {
   "-1002039100507": "CỘNG ĐỒNG NẮM BẮT CƠ HỘI",
   "-1002004082575": "Hội Nhóm",
