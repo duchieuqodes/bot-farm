@@ -250,12 +250,18 @@ bot.onText(/\/thom/, async (msg) => {
   }
 
   let responseMessage = `BẢNG CÔNG NHÓM ZALO THOM - ${new Date().toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}\n\n`;
+  let totalMoney = 0;
+
   bangCongList.forEach(entry => {
-    responseMessage += `Tên: ${entry.ten}, ${entry.acc} Acc, Tổng tiền: ${entry.tinh_tien} VNĐ\n`;
+    responseMessage += `${entry.ten}: ${entry.acc} Acc ${entry.tinh_tien.toLocaleString()} VNĐ\n\n`;
+    totalMoney += entry.tinh_tien;
   });
+
+  responseMessage += `Tổng tiền: ${totalMoney.toLocaleString()} VNĐ`;
 
   bot.sendMessage(chatId, responseMessage);
 });
+
 
 
 // Tìm các số theo sau bởi ký tự hoặc từ khóa xác định hành vi
