@@ -10,7 +10,6 @@ const keep_alive = require('./keep_alive.js');
 const { resetDailyGiftStatus, sendMorningMessage, handleGiftClaim } = require('./gift');
 const { setupNewsSchedule, sendLatestNews } = require('./news.js');
 const { handleMessage, resetKeywords } = require('./warningMember');
-const { processAccMessage } = require('./acc'); // Import các hàm từ acc.js
 
 // Kết nối tới MongoDB
 mongoose.connect(
@@ -185,12 +184,12 @@ bot.on('message', async (msg) => {
     // Kiểm tra nếu tin nhắn chứa từ khóa "xong (số) acc"
     const messageContent = msg.text || msg.caption;
     if (messageContent && /xong\s*\d+\s*acc/gi.test(messageContent)) {
-      await processAccMessage(bot, msg); // Gọi hàm xử lý tin nhắn từ acc.js
+      await processAccMessage(msg); // Gọi hàm xử lý tin nhắn từ acc.js
     }
   }
 });
 
-async function processAccMessage(bot, msg) {
+async function processAccMessage(msg) {
   const messageContent = msg.text || msg.caption;
   const accMatches = messageContent.match(accRegex);
   const userId = msg.from.id;
