@@ -33,7 +33,7 @@ const BangCongSchema = new mongoose.Schema({
   nhan_anh_bill: { type: Number, default: 0 } // Ensure default is 0
 });
 
- const AccSchema = new mongoose.Schema({
+ const TrasuaSchema = new mongoose.Schema({
   userId: Number,
   groupId: Number,
   date: String,
@@ -100,7 +100,7 @@ const VipCardSchema = new mongoose.Schema({
 
 // Create a model from the schema
 const VipCard = mongoose.model('VipCard', VipCardSchema);
-const Acc = mongoose.model('Acc', AccSchema);
+const Trasua = mongoose.model('Trasua', TrasuaSchema);
 
 // Tạo model từ schema
 const BangCong2 = mongoose.model('BangCong2', BangCongSchema);
