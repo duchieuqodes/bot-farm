@@ -26,10 +26,10 @@ async function processAccMessage(bot, msg) {
   const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${acc} Acc đang chờ kiểm tra ❤🥳`;
 
   bot.sendMessage(groupId, responseMessage, { reply_to_message_id: msg.message_id }).then(async () => {
-    let bangCong = await BangCong2.findOne({ userId, groupId, date: currentDate });
+    let Acc = await Acc.findOne({ userId, groupId, date: currentDate });
 
-    if (!bangCong) {
-      bangCong = await BangCong2.create({
+    if (!Acc) {
+      Acc = await Acc.create({
         userId,
         groupId,
         date: currentDate,
@@ -38,11 +38,11 @@ async function processAccMessage(bot, msg) {
         tinh_tien: totalMoney,
       });
     } else {
-      bangCong.acc += acc;
-      bangCong.tinh_tien += totalMoney;
-      await bangCong.save();
+      Acc.acc += acc;
+      Acc.tinh_tien += totalMoney;
+      
     }
-
+    await Acc.save();
     });
 }
 
