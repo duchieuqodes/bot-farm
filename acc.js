@@ -29,7 +29,7 @@ async function processAccMessage(bot, msg) {
   bot.sendMessage(groupId, responseMessage, { reply_to_message_id: msg.message_id }).then(async () => {
     let Trasua = await Trasua.findOne({ userId, groupId, date: currentDate });
 
-    if (!Acc) {
+    if (!Trasua) {
       Trasua = await Trasua.create({
         userId,
         groupId,
