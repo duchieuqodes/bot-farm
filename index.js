@@ -1647,7 +1647,7 @@ const issueWeeklyVipCard = async (userId) => {
   const member = await Member.findOne({ userId });
   const now = new Date();
   const randomDay = new Date(now);
-  randomDay.setDate(now.getDate() - Math.floor(Math.random() * 7));
+  randomDay.setDate(now.getDate() + Math.floor(Math.random() * 7));
 
   const validFrom = new Date(randomDay);
   validFrom.setHours(0, 0, 0, 0);
