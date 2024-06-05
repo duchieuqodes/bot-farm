@@ -184,21 +184,21 @@ bot.onText(/\/thom/, async (msg) => {
   const chatId = msg.chat.id;
   const currentDate = new Date().toLocaleDateString();
 
-  if (chatId === -1002163768880) {
-    const bangCongList = await BangCong2.find({ groupId: chatId, date: currentDate });
-    if (bangCongList.length === 0) {
-      bot.sendMessage(chatId, 'Chưa có bảng công nào được ghi nhận trong ngày hôm nay.');
-      return;
-    }
-
-    let responseMessage = `BẢNG CÔNG NHÓM ZALO THOM - ${new Date().toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}\n\n`;
-    bangCongList.forEach(entry => {
-      responseMessage += `Tên: ${entry.ten}, ${entry.acc} Acc, Tổng tiền: ${entry.tinh_tien} VNĐ\n`;
-    });
-
-    bot.sendMessage(chatId, responseMessage);
+  // Tìm các bản ghi bảng công có groupId -1002163768880 trong ngày hiện tại
+  const bangCongList = await BangCong2.find({ groupId: -1002163768880, date: currentDate });
+  if (bangCongList.length === 0) {
+    bot.sendMessage(chatId, 'Chưa có bảng công nào được ghi nhận trong ngày hôm nay.');
+    return;
   }
+
+  let responseMessage = `BẢNG CÔNG NHÓM ZALO THOM - ${new Date().toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}\n\n`;
+  bangCongList.forEach(entry => {
+    responseMessage += `Tên: ${entry.ten}, ${entry.acc} Acc, Tổng tiền: ${entry.tinh_tien} VNĐ\n`;
+  });
+
+  bot.sendMessage(chatId, responseMessage);
 });
+
 
 // Tìm các số theo sau bởi ký tự hoặc từ khóa xác định hành vi
 const regex = /\d+(q|Q|c|C|quẩy|cộng|acc)/gi;
