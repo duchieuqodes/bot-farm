@@ -228,9 +228,9 @@ async function processAccMessage(msg) {
     } else {
       Trasua.acc += acc;
       Trasua.tinh_tien += totalMoney;
-      
+      await Trasua.save();
     }
-    await Trasua.save();
+    
     });
 }
 
@@ -1674,7 +1674,8 @@ const issueWeeklyVipCard = async (userId) => {
   const message = `Chúc mừng ${member.fullname} đã nhận được thẻ VIP tuần 🎫! Có hiệu lực từ ngày ${validFrom.toLocaleDateString()} đến ${validUntil.toLocaleDateString()}.
 
   Ưu đãi: Nhận được ${expBonus} exp, 2 Mã tăng 15% 100đ/quẩy, 15% 100đ/cộng (tăng tối đa 400vnđ/mỗi lần nộp. Áp dụng cho sản phẩm Quẩy, Cộng và một số thành viên tham gia nhiệm vụ nhất định)`;
-  
+  const gifUrl = 'https://iili.io/JQSRkrv.gif'; // Thay thế bằng URL của ảnh GIF. 
+   
   const members = await Member.find({});
   for (const member of members) {
     // Send message to each member's chat ID
@@ -1719,6 +1720,8 @@ const issueMonthlyVipCard = async (userId) => {
   
     // Retrieve all members
   const members = await Member.find({});
+  const gifUrl = 'https://iili.io/JQSRkrv.gif'; // Thay thế bằng URL của ảnh GIF. 
+   
   for (const member of members) {
     // Send message to each member's chat ID
     bot.sendAnimation(member.userId, gifUrl, { caption: message });
