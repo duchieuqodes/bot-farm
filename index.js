@@ -201,7 +201,7 @@ bot.onText(/\/thom/, async (msg) => {
 
 
 // Tìm các số theo sau bởi ký tự hoặc từ khóa xác định hành vi
-const regex = /\d+(q|Q|c|C|quẩy|cộng|acc)/gi;
+const regex = /\d+(q|Q|c|C|quẩy|cộng)/gi;
 
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
