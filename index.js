@@ -183,7 +183,8 @@ bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
 
   // Chỉ kiểm tra nếu không phải là nhóm có ID
-  if (chatId !== -1002103270166) {
+  if (chatId !== -1002103270166 && chatId !== -1002163768880) {
+   
     // Kiểm tra nếu tin nhắn chứa từ khóa "xong (số) acc"
     const messageContent = msg.text || msg.caption;
     if (messageContent && /xong\s*\d+\s*acc/gi.test(messageContent)) {
@@ -265,7 +266,7 @@ bot.onText(/\/thom/, async (msg) => {
 
 
 // Tìm các số theo sau bởi ký tự hoặc từ khóa xác định hành vi
-const regex = /\d+(q|Q|c|C|quẩy|cộng)/gi;
+const regex = /\d+(ca1|ca2|q|Q|c|C)/gi;
 
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
