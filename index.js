@@ -335,7 +335,8 @@ const kickbot = {
   "-1002228252389": "ORMARKET community",
   "-1002103270166": "Tổng bank",
   "-1002128289933": "test",
-  "-1002108234982": "community free"
+  "-1002108234982": "community free",
+  "-1002163768880": "tra sua" 
 };                                                        
           
 // Bảng tra cứu tên nhóm dựa trên ID nhóm
