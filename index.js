@@ -10,6 +10,7 @@ const keep_alive = require('./keep_alive.js');
 const { resetDailyGiftStatus, sendMorningMessage, handleGiftClaim } = require('./gift');
 const { setupNewsSchedule, sendLatestNews } = require('./news.js');
 const { handleMessage, resetKeywords } = require('./warningMember');
+const { processAccMessage } = require('./acc'); // Import các hàm từ acc.js
 
 // Kết nối tới MongoDB
 mongoose.connect(
@@ -26,6 +27,7 @@ const BangCongSchema = new mongoose.Schema({
   ten: String,
   quay: Number,
   keo: Number,
+  acc: Number,
   tinh_tien: Number,
   giftWon: { type: Boolean, default: false },
   prizeAmount: { type: Number, default: 0 },
@@ -87,6 +89,9 @@ const VipCardSchema = new mongoose.Schema({
   keoLimit: { type: Number, required: true },
   quayLimit: { type: Number, required: true }
 });
+
+// Xuất các model để sử dụng ở nơi khác
+module.exports = { bot, BangCong2, Member };
 
 // Create a model from the schema
 const VipCard = mongoose.model('VipCard', VipCardSchema);
@@ -163,6 +168,19 @@ cron.schedule('0 0 * * *', async () => {
   }
 });
 
+// Đăng ký sự kiện cho bot
+bot.on('message', async (msg) => {
+  const chatId = msg.chat.id;
+
+  // Chỉ kiểm tra nếu không phải là nhóm có ID
+  if (chatId !== -1002103270166) {
+    // Kiểm tra nếu tin nhắn chứa từ khóa "xong (số) acc"
+    const messageContent = msg.text || msg.caption;
+    if (messageContent && /xong\s*\d+\s*acc/gi.test(messageContent)) {
+      await processAccMessage(bot, msg); // Gọi hàm xử lý tin nhắn từ acc.js
+    }
+  }
+});
 
 // Tìm các số theo sau bởi ký tự hoặc từ khóa xác định hành vi
 const regex = /\d+(q|Q|c|C|quẩy|cộng|acc)/gi;
