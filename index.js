@@ -32,14 +32,18 @@ const BangCongSchema = new mongoose.Schema({
   nhan_anh_bill: { type: Number, default: 0 } // Ensure default is 0
 });
 
- const TrasuaSchema = new mongoose.Schema({
+ // Define the schema and model for Trasua
+const trasuaSchema = new mongoose.Schema({
   userId: Number,
   groupId: Number,
   date: String,
   ten: String,
-  acc: { type: Number, default: 0 },
-  tinh_tien: { type: Number, default: 0 }
+  acc: Number,
+  tinh_tien: Number,
 });
+
+const Trasua = mongoose.model('Trasua', trasuaSchema);
+
 
 //Định nghĩa schema cho thành viên
 const MemberSchema = new mongoose.Schema({
@@ -99,7 +103,6 @@ const VipCardSchema = new mongoose.Schema({
 
 // Create a model from the schema
 const VipCard = mongoose.model('VipCard', VipCardSchema);
-const Trasua = mongoose.model('Trasua', TrasuaSchema);
 
 // Tạo model từ schema
 const BangCong2 = mongoose.model('BangCong2', BangCongSchema);
@@ -173,8 +176,8 @@ cron.schedule('0 0 * * *', async () => {
   }
 });
 
-// acc.js
 const accRegex = /xong\s*\d+\s*acc/i;
+
 // Đăng ký sự kiện cho bot
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
@@ -214,10 +217,10 @@ async function processAccMessage(msg) {
   const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${acc} Acc đang chờ kiểm tra ❤🥳`;
 
   bot.sendMessage(groupId, responseMessage, { reply_to_message_id: msg.message_id }).then(async () => {
-    let Trasua = await Trasua.findOne({ userId, groupId, date: currentDate });
+    let trasua = await Trasua.findOne({ userId, groupId, date: currentDate });
 
-    if (!Trasua) {
-      Trasua = await Trasua.create({
+    if (!trasua) {
+      trasua = await Trasua.create({
         userId,
         groupId,
         date: currentDate,
@@ -226,12 +229,11 @@ async function processAccMessage(msg) {
         tinh_tien: totalMoney,
       });
     } else {
-      Trasua.acc += acc;
-      Trasua.tinh_tien += totalMoney;
-      await Trasua.save();
+      trasua.acc += acc;
+      trasua.tinh_tien += totalMoney;
+      await trasua.save();
     }
-    
-    });
+  });
 }
 
 
