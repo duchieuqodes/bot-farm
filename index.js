@@ -27,11 +27,19 @@ const BangCongSchema = new mongoose.Schema({
   ten: String,
   quay: Number,
   keo: Number,
-  acc: Number,
   tinh_tien: Number,
   giftWon: { type: Boolean, default: false },
   prizeAmount: { type: Number, default: 0 },
   nhan_anh_bill: { type: Number, default: 0 } // Ensure default is 0
+});
+
+ const AccSchema = new mongoose.Schema({
+  userId: Number,
+  groupId: Number,
+  date: String,
+  ten: String,
+  acc: { type: Number, default: 0 },
+  tinh_tien: { type: Number, default: 0 }
 });
 
 //Định nghĩa schema cho thành viên
@@ -92,6 +100,7 @@ const VipCardSchema = new mongoose.Schema({
 
 // Create a model from the schema
 const VipCard = mongoose.model('VipCard', VipCardSchema);
+const Acc = mongoose.model('Acc', AccSchema);
 
 // Tạo model từ schema
 const BangCong2 = mongoose.model('BangCong2', BangCongSchema);
