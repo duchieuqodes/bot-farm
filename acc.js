@@ -1,6 +1,4 @@
 // acc.js
-const { bot, BangCong2} = require('./index'); // Import các module cần thiết
-
 const accRegex = /xong\s*\d+\s*acc/i;
 
 async function processAccMessage(bot, msg) {
