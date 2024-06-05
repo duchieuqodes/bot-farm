@@ -90,9 +90,6 @@ const VipCardSchema = new mongoose.Schema({
   quayLimit: { type: Number, required: true }
 });
 
-// Xuất các model để sử dụng ở nơi khác
-module.exports = { bot, BangCong2, Member };
-
 // Create a model from the schema
 const VipCard = mongoose.model('VipCard', VipCardSchema);
 
