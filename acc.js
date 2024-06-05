@@ -1,5 +1,6 @@
 // acc.js
 const accRegex = /xong\s*\d+\s*acc/i;
+const { Trasua } = require('./index'); // Import model BangCong2 từ index.js
 
 async function processAccMessage(bot, msg) {
   const messageContent = msg.text || msg.caption;
@@ -26,10 +27,10 @@ async function processAccMessage(bot, msg) {
   const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${acc} Acc đang chờ kiểm tra ❤🥳`;
 
   bot.sendMessage(groupId, responseMessage, { reply_to_message_id: msg.message_id }).then(async () => {
-    let Acc = await Acc.findOne({ userId, groupId, date: currentDate });
+    let Trasua = await Trasua.findOne({ userId, groupId, date: currentDate });
 
     if (!Acc) {
-      Acc = await Acc.create({
+      Trasua = await Trasua.create({
         userId,
         groupId,
         date: currentDate,
@@ -38,11 +39,11 @@ async function processAccMessage(bot, msg) {
         tinh_tien: totalMoney,
       });
     } else {
-      Acc.acc += acc;
-      Acc.tinh_tien += totalMoney;
+      Trasua.acc += acc;
+      Trasua.tinh_tien += totalMoney;
       
     }
-    await Acc.save();
+    await Trasua.save();
     });
 }
 
