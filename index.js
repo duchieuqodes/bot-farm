@@ -1502,9 +1502,8 @@ bot.on('message', async (msg) => {
       await sendMessageToAllMembers(responseMessage, userId);
     }
   } else {
-    // Xử lý tin nhắn trong nhóm, không forward cho các thành viên khác
-    console.log(`Message from group ${chatId}: ${msg.text || 'No text message'}`);
-  }
+    
+   }
 });
 
 // Function to send messages to all members who have interacted
