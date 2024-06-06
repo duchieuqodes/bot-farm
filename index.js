@@ -194,9 +194,9 @@ const accRegex = /xong\s*\d+\s*acc/i;
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
 
-  // Chỉ kiểm tra nếu không phải là nhóm có ID
-  if (chatId !== -1002103270166 && chatId !== -1002163768880) {
-   
+    // Chỉ kiểm tra nếu không phải là nhóm có ID
+  if (chatId !== -1002103270166) {
+  
     // Kiểm tra nếu tin nhắn chứa từ khóa "xong (số) acc"
     const messageContent = msg.text || msg.caption;
     if (messageContent && /xong\s*\d+\s*acc/gi.test(messageContent)) {
@@ -283,8 +283,8 @@ const regex = /\d+(ca1|ca2|q|Q|c|C)/gi;
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
 
-  // Chỉ kiểm tra nếu không phải là nhóm có ID
-  if (chatId !== -1002103270166) {
+// Chỉ kiểm tra nếu không phải là nhóm có ID
+  if (chatId !== -1002103270166 && chatId !== -1002163768880) {
     // Kiểm tra nếu tin nhắn chứa chuỗi cấm
     // Kiểm tra cả văn bản và chú thích
     const messageContent = msg.text || msg.caption;
