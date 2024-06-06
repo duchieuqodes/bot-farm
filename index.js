@@ -159,6 +159,18 @@ cron.schedule('0 0 * * *', async () => {
   }
 });
 
+// Hàm để xóa các thẻ VipCard đã hết hiệu lực
+const deleteExpiredVipCards = async () => {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  await VipCard.deleteMany({ validUntil: { $lt: now } });
+  console.log('Đã xóa các thẻ VIP đã hết hiệu lực.');
+};
+
+// Thiết lập công việc cron để chạy lúc 0h mỗi ngày
+cron.schedule('0 0 * * *', deleteExpiredVipCards);
+
+
 // Thiết lập cron job để xóa dữ liệu DailyTask của những ngày trước đó
 cron.schedule('0 0 * * *', async () => {
   const currentDate = new Date().setHours(0, 0, 0, 0);
