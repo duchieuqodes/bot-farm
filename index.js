@@ -533,18 +533,7 @@ const normalizeName = (name) => {
   return name.replace(/[^\w\s]/gi, '').toLowerCase().trim();
 };
 
-const groupCodes = {
-  "cđnbch": "-1002039100507",
-  "hn": "-1002004082575",
-  "dltc": "-1002123430691",
-  "cncs": "-1002143712364",
-  "httl": "-1002128975957",
-  "tđcv2": "-1002080535296",
-  "tđcv1": "-1002091101362",
-  "gimđcs": "-1002129896837",
-  "cf": "-1002108234982",
-  "oc": "-1002228252389", 
-};
+
 
 bot.onText(/\/edit (.+)/, async (msg, match) => {
     const chatId = msg.chat.id;
@@ -813,18 +802,29 @@ async function sendAggregatedData(chatId) {
   }
 }
 
-
+const groupCodes = {
+  "cđnbch": "-1002039100507",
+  "kttn": "-1002004082575",
+  "dltc": "-1002123430691",
+  "cncs": "-1002143712364",
+  "bđkn": "-1002128975957",
+  "tđcv2": "-1002080535296",
+  "tđcv1": "-1002091101362",
+  "gimđcs": "-1002129896837",
+  "cf": "-1002108234982",
+  "tgu": "-1002228252389", 
+};
 
 const groups = {
   "-1002039100507": "BẢNG CÔNG NHÓM CỘNG ĐỒNG NẮM BẮT CƠ HỘI",
-  "-1002004082575": "BẢNG CÔNG NHÓM HỘI NHÓM",
+  "-1002004082575": "BẢNG CÔNG NHÓM KIẾM THÊM THU NHẬP",
   "-1002123430691": "BẢNG CÔNG NHÓM DẪN LỐI THÀNH CÔNG",
   "-1002143712364": "BẢNG CÔNG NHÓM CÙNG NHAU CHIA SẺ",
-  "-1002128975957": "BẢNG CÔNG NHÓM HƯỚNG TỚI TƯƠNG LAI",
+  "-1002128975957": "BẢNG CÔNG NHÓM BƯỚC ĐI KHỞI NGHIỆP",
   "-1002080535296": "BẢNG CÔNG NHÓM TRAO ĐỔI CÔNG VIỆC 2",
   "-1002091101362": "BẢNG CÔNG NHÓM TRAO ĐỔI CÔNG VIỆC 1", 
   "-1002129896837": "BẢNG CÔNG NHÓM GROUP I MẠNH ĐỨC CHIA SẺ", 
-  "-1002228252389": "BẢNG CÔNG NHÓM OMARKET Comunity", 
+  "-1002228252389": "BẢNG CÔNG NHÓM TECH GEEK UNITES", 
 };
 
 
@@ -866,6 +866,16 @@ bot.onText(/\/add\s+\[([^\]]+)\]\s+(\d{1,2})\/(\d{1,2})/, (msg, match) => {
   });
 
   bot.sendMessage(chatId, `Đã ghi nhớ các nhóm: ${groupCodesToAdd.join(', ')} ngày ${dateStr} sẽ được tính thêm`);
+});
+
+ // Cập nhật tự động tên nhóm vào đối tượng groups
+bot.on('message', (msg) => {
+  const chatId = msg.chat.id.toString();
+  const chatTitle = msg.chat.title;
+
+  if (chatId && chatTitle) {
+    groups[chatId] = chatTitle;
+  }
 });
 
 // Chức năng tự động gửi hình ảnh vào 9h sáng mỗi ngày (theo giờ Việt Nam)
