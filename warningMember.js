@@ -1,3 +1,15 @@
+const groups = {
+  "-1002039100507": "BẢNG CÔNG NHÓM CỘNG ĐỒNG NẮM BẮT CƠ HỘI",
+  "-1002004082575": "BẢNG CÔNG NHÓM HỘI NHÓM",
+  "-1002123430691": "BẢNG CÔNG NHÓM DẪN LỐI THÀNH CÔNG",
+  "-1002143712364": "BẢNG CÔNG NHÓM CÙNG NHAU CHIA SẺ",
+  "-1002128975957": "BẢNG CÔNG NHÓM HƯỚNG TỚI TƯƠNG LAI",
+  "-1002080535296": "BẢNG CÔNG NHÓM TRAO ĐỔI CÔNG VIỆC 2",
+  "-1002091101362": "BẢNG CÔNG NHÓM TRAO ĐỔI CÔNG VIỆC 1", 
+  "-1002129896837": "BẢNG CÔNG NHÓM GROUP I MẠNH ĐỨC CHIA SẺ", 
+  "-1002228252389": "BẢNG CÔNG NHÓM OMARKET Comunity", 
+};
+
 const mongoose = require('mongoose');
 
 // Kết nối tới MongoDB
@@ -17,13 +29,14 @@ const WarningSchema = new mongoose.Schema({
 
 const Warning = mongoose.model('Warning', WarningSchema);
 
-const keywordRegex = /(ca\s?1|Ca\s?1|C\s?1|c\s?1|ca1|Ca1|C1|c1|ca\s?2|Ca\s?2|C\s?2|c\s?2|ca2|Ca2|C2|c2)\s*/gi;
+const keywordRegex = /\b(ca\s?1|c\s?1|ca\s?2|c\s?2)\b/gi;
 const warningGroupId = -1002103270166;
 
 function normalizeKeyword(keyword) {
-  if (/ca\s?1|Ca\s?1|C\s?1|c\s?1|ca1|Ca1|C1|c1/gi.test(keyword)) {
+  const lowerKeyword = keyword.toLowerCase().replace(/\s+/g, '');
+  if (lowerKeyword === 'ca1' || lowerKeyword === 'c1') {
     return 'Ca 1';
-  } else if (/ca\s?2|Ca\s?2|C\s?2|c\s?2|ca2|Ca2|C2|c2/gi.test(keyword)) {
+  } else if (lowerKeyword === 'ca2' || lowerKeyword === 'c2') {
     return 'Ca 2';
   }
   return keyword;
@@ -44,7 +57,7 @@ async function handleMessage(bot, msg, groupNames) {
   const userName = getMention(msg.from);
   const messageText = msg.text;
 
-  if (keywordRegex.test(messageText)) {
+  if (groups.hasOwnProperty(chatId) && keywordRegex.test(messageText)) {
     const currentDate = new Date().toLocaleDateString();
 
     const keywords = messageText.match(keywordRegex);
