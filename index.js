@@ -1923,6 +1923,27 @@ async function generateImageUrl(userId, fullname, level, starEmoji, totalQuayYes
   return url;
 }
 
+async function generateTaskImageUrl(userId, fullname, quayTask, keoTask, billTask, totalQuayToday, totalKeoToday, totalBillToday) {
+  // Lọc fullname để loại bỏ emoji và ký tự đặc biệt
+  const sanitizedFullname = sanitizeFullname(fullname);
+
+  // URL cơ bản của ảnh
+  let url = `https://res.cloudinary.com/${cloudinary.cloud_name}/image/upload/`;
+
+  // Thêm văn bản vào các vị trí xác định từ Photoshop
+  url += `l_text:arial_46_bold_italic_center:${sanitizedFullname},co_rgb:FFFFFF,g_north_west,x_100,y_100/`; // Full Name
+  url += `l_text:arial_46_bold_italic_center:Nhiệm_vụ_hôm_nay,co_rgb:FFFFFF,g_north_west,x_100,y_150/`; // Tiêu đề
+
+  // Thêm các nhiệm vụ và tiến độ
+  url += `l_text:arial_46_bold_italic_center:Quẩy:${totalQuayToday}/${quayTask},co_rgb:FFFFFF,g_north_west,x_100,y_250/`; // Quay Task
+  url += `l_text:arial_46_bold_italic_center:Kẹo:${totalKeoToday}/${keoTask},co_rgb:FFFFFF,g_north_west,x_100,y_350/`; // Keo Task
+  url += `l_text:arial_46_bold_italic_center:Bill_hoặc_ảnh_quẩy:${totalBillToday}/${billTask},co_rgb:FFFFFF,g_north_west,x_100,y_450/`; // Bill Task
+
+  // Thêm ảnh gốc
+  url += "v1717904160/Picsart_24-06-04_14-42-43-199_nrei7l.jpg"; // Thay thế "sample.jpg" bằng đường dẫn đến ảnh của bạn
+
+  return url;
+}
 
 // Xử lý sự kiện khi nút "Xem tài khoản" hoặc "Nhiệm vụ hôm nay" được nhấn
 bot.on('message', async (msg) => {
@@ -2053,6 +2074,9 @@ const responseMessage = `
           await dailyTask.save();
         }
 
+        const { quayTask, keoTask, billTask } = dailyTask;
+        const taskImageUrl = await generateTaskImageUrl(userId, fullname, quayTask, keoTask, billTask, totalQuayToday, totalKeoToday, totalBillToday);
+
         // Lấy thông tin từ BangCong2 cho hôm nay
         const bangCongRecordsToday = await BangCong2.find({ userId, date: { $gte: today, $lt: endOfToday } });
         const totalQuayToday = bangCongRecordsToday.reduce((acc, record) => acc + (record.quay || 0), 0);
@@ -2095,6 +2119,7 @@ const responseMessage = `
         
         }
         const gifUrl = 'https://iili.io/JQSaM6g.gif'; // Thay thế bằng URL của ảnh GIF
+  bot.sendPhoto(msg.chat.id, taskImageUrl, { caption: 'Nhiệm vụ hàng ngày' });
 
   bot.sendAnimation(msg.chat.id, gifUrl, {
   caption: taskMessage,
