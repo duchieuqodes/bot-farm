@@ -2079,14 +2079,15 @@ const responseMessage = `
           await dailyTask.save();
         }
 
-        const { quayTask, keoTask, billTask } = dailyTask;
-        const taskImageUrl = await generateTaskImageUrl(userId, fullname, quayTask, keoTask, billTask, totalQuayToday, totalKeoToday, totalBillToday);
-
+        
         // Lấy thông tin từ BangCong2 cho hôm nay
         const bangCongRecordsToday = await BangCong2.find({ userId, date: { $gte: today, $lt: endOfToday } });
         const totalQuayToday = bangCongRecordsToday.reduce((acc, record) => acc + (record.quay || 0), 0);
         const totalKeoToday = bangCongRecordsToday.reduce((acc, record) => acc + (record.keo || 0), 0);
         const totalBillToday = bangCongRecordsToday.reduce((acc, record) => acc + (record.nhan_anh_bill || 0), 0);
+
+        const { quayTask, keoTask, billTask } = dailyTask;
+        const taskImageUrl = await generateTaskImageUrl(userId, fullname, quayTask, keoTask, billTask, totalQuayToday, totalKeoToday, totalBillToday);
 
         let taskMessage = `Nhiệm vụ hôm nay của ${fullname}:\n\n`;
         const tasks = [
@@ -2124,8 +2125,7 @@ const responseMessage = `
         
         }
         const gifUrl = 'https://iili.io/JQSaM6g.gif'; // Thay thế bằng URL của ảnh GIF
-  bot.sendPhoto(msg.chat.id, taskImageUrl, { caption: 'Nhiệm vụ hàng ngày' });
-
+  
   bot.sendAnimation(msg.chat.id, gifUrl, {
   caption: taskMessage,
   reply_markup: {
@@ -2137,6 +2137,7 @@ const responseMessage = `
     one_time_keyboard: false
   }
 });
+   bot.sendPhoto(msg.chat.id, taskImageUrl, { caption: 'Nhiệm vụ hàng ngày' });
 
       }
     } catch (error) {
