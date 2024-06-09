@@ -1936,16 +1936,15 @@ async function generateTaskImageUrl(userId, fullname, quayTask, keoTask, billTas
   let url = `https://res.cloudinary.com/${cloudinary.cloud_name}/image/upload/`;
 
   // Thêm văn bản vào các vị trí xác định từ Photoshop
-  url += `l_text:arial_46_bold_italic_center:${sanitizedFullname},co_rgb:FFFFFF,g_north_west,x_100,y_100/`; // Full Name
-  url += `l_text:arial_46_bold_italic_center:Nhiệm_vụ_hôm_nay,co_rgb:FFFFFF,g_north_west,x_100,y_150/`; // Tiêu đề
+  url += `l_text:arial_46_bold_italic_center:${encodeURIComponent(sanitizedFullname)},co_rgb:FFFFFF,g_north_west,x_406,y_410/`; // Full Name
 
-  // Thêm các nhiệm vụ và tiến độ
-  url += `l_text:arial_46_bold_italic_center:Quẩy:${totalQuayToday}/${quayTask},co_rgb:FFFFFF,g_north_west,x_100,y_250/`; // Quay Task
-  url += `l_text:arial_46_bold_italic_center:Kẹo:${totalKeoToday}/${keoTask},co_rgb:FFFFFF,g_north_west,x_100,y_350/`; // Keo Task
-  url += `l_text:arial_46_bold_italic_center:Bill_hoặc_ảnh_quẩy:${totalBillToday}/${billTask},co_rgb:FFFFFF,g_north_west,x_100,y_450/`; // Bill Task
+  // Nhiệm vụ hàng ngày
+  url += `l_text:arial_70_bold_italic_center:${totalQuayToday}/${quayTask},co_rgb:FFFFFF,g_north_west,x_300,y_940/`; // Quay Task
+  url += `l_text:arial_70_bold_italic_center:${totalKeoToday}/${keoTask},co_rgb:FFFFFF,g_north_west,x_805,y_940/`; // Keo Task
+  url += `l_text:arial_70_bold_italic_center:${totalBillToday}/${billTask},co_rgb:FFFFFF,g_north_west,x_305,y_750/`; // Bill Task
 
   // Thêm ảnh gốc
-  url += "v1717904160/Picsart_24-06-04_14-42-43-199_nrei7l.jpg"; // Thay thế "sample.jpg" bằng đường dẫn đến ảnh của bạn
+  url += "v1717336612/kub77rwh14uuopyyykdt.jpg"; // Thay thế "sample.jpg" bằng đường dẫn đến ảnh của bạn
 
   return url;
 }
