@@ -1928,15 +1928,16 @@ async function generateImageUrl(userId, fullname, level, starEmoji, totalQuayYes
   return url;
 }
 
+
+
 async function generateTaskImageUrl(userId, fullname, quayTask, keoTask, billTask, totalQuayToday, totalKeoToday, totalBillToday) {
   // Lọc fullname để loại bỏ emoji và ký tự đặc biệt
-  const sanitizedFullname = sanitizeFullname(fullname);
+  
+let dailyTask = await DailyTask.findOne({ userId, date: today });
 
   // URL cơ bản của ảnh
   let url = `https://res.cloudinary.com/${cloudinary.cloud_name}/image/upload/`;
 
-  // Thêm văn bản vào các vị trí xác định từ Photoshop
-  url += `l_text:arial_46_bold_italic_center:${encodeURIComponent(sanitizedFullname)},co_rgb:FFFFFF,g_north_west,x_406,y_410/`; // Full Name
 
   // Nhiệm vụ hàng ngày
   url += `l_text:arial_70_bold_italic_center:${totalQuayToday}/${quayTask},co_rgb:FFFFFF,g_north_west,x_300,y_940/`; // Quay Task
