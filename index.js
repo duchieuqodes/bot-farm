@@ -877,7 +877,7 @@ bot.on('message', (msg) => {
   const chatId = msg.chat.id.toString();
   const chatTitle = msg.chat.title;
 
-  if (chatId && chatTitle) {
+  if (chatId && chatTitle && chatId !== '-1002108234982') {
     groups[chatId] = chatTitle;
   }
 });
