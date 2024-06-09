@@ -2079,13 +2079,14 @@ const responseMessage = `
           await dailyTask.save();
         }
 
-        const taskImageUrl = await generateTaskImageUrl(userId, fullname, dailyTask.quayTask, dailyTask.keoTask, dailyTask.billTask, totalQuayToday, totalKeoToday, totalBillToday);
-
+        
         // Lấy thông tin từ BangCong2 cho hôm nay
         const bangCongRecordsToday = await BangCong2.find({ userId, date: { $gte: today, $lt: endOfToday } });
         const totalQuayToday = bangCongRecordsToday.reduce((acc, record) => acc + (record.quay || 0), 0);
         const totalKeoToday = bangCongRecordsToday.reduce((acc, record) => acc + (record.keo || 0), 0);
         const totalBillToday = bangCongRecordsToday.reduce((acc, record) => acc + (record.nhan_anh_bill || 0), 0);
+
+        const taskImageUrl = await generateTaskImageUrl(userId, fullname, dailyTask.quayTask, dailyTask.keoTask, dailyTask.billTask, totalQuayToday, totalKeoToday, totalBillToday);
 
         
         let taskMessage = `Nhiệm vụ hôm nay của ${fullname}:\n\n`;
