@@ -1932,7 +1932,7 @@ async function generateImageUrl(userId, fullname, level, starEmoji, totalQuayYes
 
 async function generateTaskImageUrl(userId, fullname, quayTask, keoTask, billTask, totalQuayToday, totalKeoToday, totalBillToday) {
   // Lọc fullname để loại bỏ emoji và ký tự đặc biệt
-  
+  const today = new Date();
 let dailyTask = await DailyTask.findOne({ userId, date: today });
 
   // URL cơ bản của ảnh
