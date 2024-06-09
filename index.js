@@ -427,7 +427,8 @@ const groupNames = {
   "-1002080535296": "TRAO ĐỔI CÔNG VIỆC 2",
   "-1002091101362": "TRAO ĐỔI CÔNG VIỆC 1", 
   "-1002129896837": "GROUP I MẠNH ĐỨC CHIA SẺ", 
-  "-1002228252389": "ORMARKET community"
+  "-1002228252389": "ORMARKET community",
+  "-4201367303": "LÀM GIÀU CÙNG NHAU" 
 };
 
 bot.onText(/\/sum/, async (msg) => {
@@ -814,6 +815,7 @@ const groupCodes = {
   "gimđcs": "-1002129896837",
   "cf": "-1002108234982",
   "tgu": "-1002228252389", 
+  "lgcn": "-4201367303" 
 };
 
 const groups = {
@@ -826,6 +828,7 @@ const groups = {
   "-1002091101362": "BẢNG CÔNG NHÓM TRAO ĐỔI CÔNG VIỆC 1", 
   "-1002129896837": "BẢNG CÔNG NHÓM GROUP I MẠNH ĐỨC CHIA SẺ", 
   "-1002228252389": "BẢNG CÔNG NHÓM TECH GEEK UNITES", 
+  "-4201367303": "LÀM GIÀU CÙNG NHAU" 
 };
 
 
@@ -1551,6 +1554,7 @@ const groupNames2 = {
   "-1002228252389": "BƯỚC ĐI KHỞI NGHIỆP", 
   "-1002108234982": "Community free, be truly rich",
   "-1002128289933": "test", 
+  "-4201367303": "LÀM GIÀU CÙNG NHAU"
 
 };
 
