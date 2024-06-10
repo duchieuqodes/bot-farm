@@ -414,7 +414,7 @@ const kickbot = {
   "-1002128289933": "test",
   "-1002108234982": "community free",
   "-1002163768880": "tra sua",
-  "-4201367303": "LÀM GIÀU CÙNG NHAU"
+  "-1002198923074": "LÀM GIÀU CÙNG NHAU"
 };                                                        
           
 // Bảng tra cứu tên nhóm dựa trên ID nhóm
