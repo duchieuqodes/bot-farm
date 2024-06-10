@@ -892,9 +892,9 @@ async function generateAndSendImages(chatId) {
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
   const startOfYesterday = new Date(yesterday);
-  startOfYesterday.setHours(0, 0, 0, 0);
+  startOfYesterday.setHours(3, 0, 0, 0);
   const endOfYesterday = new Date(yesterday);
-  endOfYesterday.setHours(23, 59, 59, 999);
+  endOfYesterday.setHours(2, 59, 59, 999);
   const dateStr = `${yesterday.getDate()}/${yesterday.getMonth() + 1}`;
 
   try {
