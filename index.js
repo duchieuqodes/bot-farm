@@ -420,15 +420,15 @@ const kickbot = {
 // Bảng tra cứu tên nhóm dựa trên ID nhóm
 const groupNames = {
   "-1002039100507": "CỘNG ĐỒNG NẮM BẮT CƠ HỘI",
-  "-1002004082575": "Hội Nhóm",
+  "-1002004082575": "KIẾM THÊM THU NHẬP",
   "-1002123430691": "DẪN LỐI THÀNH CÔNG",
-  "-1002143712364": "CÙNG NHAU CHIA SẺ",
+  "-1002143712364": "QUY TẮC",
   "-1002128975957": "HƯỚNG TỚI TƯƠNG LAI",
-  "-1002080535296": "TRAO ĐỔI CÔNG VIỆC 2",
+  "-1002080535296": "CÙNG NHAU CHIA SẺ",
   "-1002091101362": "TRAO ĐỔI CÔNG VIỆC 1", 
   "-1002129896837": "GROUP I MẠNH ĐỨC CHIA SẺ", 
-  "-1002228252389": "ORMARKET community",
-  "-4201367303": "LÀM GIÀU CÙNG NHAU" 
+  "-1002228252389": "TECH GEEK UNITYS",
+  "-1002198923074": "LÀM GIÀU CÙNG NHAU" 
 };
 
 bot.onText(/\/sum/, async (msg) => {
