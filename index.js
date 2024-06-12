@@ -879,10 +879,12 @@ bot.on('message', (msg) => {
   const chatId = msg.chat.id.toString();
   const chatTitle = msg.chat.title;
 
-  if (chatId && chatTitle && chatId !== '-1002108234982') {
+  const ignoredChatIds = ['-1002108234982', '-1002103270166', '-1002128289933', '-1002143712364'];
+
+if (chatId && chatTitle && !ignoredChatIds.includes(chatId)) {
     groups[chatId] = chatTitle;
-  }
-});
+}
+
 
 // Chức năng tự động gửi hình ảnh vào 9h sáng mỗi ngày (theo giờ Việt Nam)
 cron.schedule('30 13 * * *', async () => { // 2 giờ UTC là 9 giờ sáng theo giờ Việt Nam
