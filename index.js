@@ -1473,6 +1473,7 @@ bot.on('message', async (msg) => {
   if (!member) {
     member = new Member({
       userId,
+      level: 1,
       fullname: msg.from.first_name,
       hasInteracted: chatId > 0 // Mark as interacted if from private chat
     });
