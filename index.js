@@ -879,11 +879,12 @@ bot.on('message', (msg) => {
   const chatId = msg.chat.id.toString();
   const chatTitle = msg.chat.title;
 
-  const ignoredChatIds = ['-1002108234982', '-1002103270166', '-1002128289933', '-1002143712364'];
+  const ignoredChatIds = ['-1002108234982', '-1002103270166', '-1002128289933'];
 
 if (chatId && chatTitle && !ignoredChatIds.includes(chatId)) {
     groups[chatId] = chatTitle;
 }
+});
 
 
 // Chức năng tự động gửi hình ảnh vào 9h sáng mỗi ngày (theo giờ Việt Nam)
@@ -1551,7 +1552,7 @@ const groupNames2 = {
   "-1002039100507": "CỘNG ĐỒNG NẮM BẮT CƠ HỘI",
   "-1002004082575": "Hội Nhóm",
   "-1002123430691": "DẪN LỐI THÀNH CÔNG",
-  "-1002143712364": "QUY TẮC",
+  "-1002143712364": "CHIA SẺ KINH NGHIỆM",
   "-1002128975957": "BƯỚC ĐI KHỞI NGHIỆP",
   "-1002080535296": "CÙNG NHAU CHIA SẺ",
   "-1002091101362": "TRAO ĐỔI CÔNG VIỆC 1", 
