@@ -661,16 +661,18 @@ bot.onText(/\/bangcong2/, async (msg) => {
   }
 });
 
-// Lệnh /reset2 để xóa bảng công của những ngày trước từ nhóm có chatId -1002050799248
 bot.onText(/\/xoa/, async (msg) => {
   const chatId = msg.chat.id;
 
   try {
-    const currentDate = new Date().toLocaleDateString();
+    // Tính toán ngày cách đây 3 ngày
+    const currentDate = new Date();
+    const threeDaysAgo = new Date(currentDate);
+    threeDaysAgo.setDate(currentDate.getDate() - 3);
 
-    // Xóa tất cả bảng công của những ngày trước cho nhóm có chatId -1002050799248
+    // Xóa tất cả bảng công của những ngày trước 3 ngày cho nhóm có chatId -1002050799248
     const result = await BangCong2.deleteMany({
-      date: { $lt: currentDate },
+      date: { $lt: threeDaysAgo },
       groupId: -1002108234982, // Chỉ xóa bảng công của nhóm này
     });
 
@@ -680,6 +682,7 @@ bot.onText(/\/xoa/, async (msg) => {
     bot.sendMessage(chatId, 'Đã xảy ra lỗi khi xóa bảng công. Vui lòng thử lại.');
   }
 });
+
 
 bot.onText(/\/delete(\d+)/, async (msg, match) => {
   const chatId = msg.chat.id;
@@ -733,7 +736,7 @@ async function sendAggregatedData(chatId) {
   try {
     // Tính ngày hôm qua
     const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate());
+    yesterday.setDate(yesterday.getDate() - 1);
     const startOfYesterday = new Date(yesterday.setHours(0, 0, 0, 0));
     const endOfYesterday = new Date(yesterday.setHours(23, 59, 59, 999));
     
