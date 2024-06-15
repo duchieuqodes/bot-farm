@@ -2014,9 +2014,17 @@ bot.on('message', async (msg) => {
       }
 
       
-      // Lấy thông tin từ BangCong2
-      const bangCongRecordsYesterday = await BangCong2.find({ userId: userId, date: { $gte: yesterday, $lt: endOfYesterday } });     
-      const bangCongRecordsToday = await BangCong2.find({ userId: userId, date: { $gte: today, $lt: endOfToday } });
+      // Lấy thông tin từ BangCong2 và bỏ qua groupId -1002108234982
+      const bangCongRecordsYesterday = await BangCong2.find({ 
+        userId: userId, 
+        groupId: { $ne: -1002108234982 },
+        date: { $gte: yesterday, $lt: endOfYesterday } 
+      });     
+      const bangCongRecordsToday = await BangCong2.find({ 
+        userId: userId, 
+        groupId: { $ne: -1002108234982 },
+        date: { $gte: today, $lt: endOfToday } 
+      });
       const totalQuayYesterday = bangCongRecordsYesterday.reduce((acc, record) => acc + (record.quay || 0), 0);
       const totalKeoYesterday = bangCongRecordsYesterday.reduce((acc, record) => acc + (record.keo || 0), 0);    
       const totalQuayToday = bangCongRecordsToday.reduce((acc, record) => acc + (record.quay || 0), 0);
@@ -2053,8 +2061,7 @@ const responseMessage = `
         Tổng tính tiền: ${bangCongRecordsToday.reduce((acc, record) => acc + (record.tinh_tien || 0), 0)} VNĐ   
         Tổng tiền VIP bonus: ${totalBonusToday} VNĐ ▲
 
-        Lưu ý ⚠: Tổng tài sản trên là bao gồm cả nhóm quẩy Comunity free và Be truly rich nếu có.
-      `;
+          `;
        bot.sendPhoto(msg.chat.id, imageUrl, { caption: 'Thông tin tài khoản' });
 
         bot.sendMessage(msg.chat.id, responseMessage, {
@@ -2086,8 +2093,12 @@ const responseMessage = `
         }
 
         
-        // Lấy thông tin từ BangCong2 cho hôm nay
-        const bangCongRecordsToday = await BangCong2.find({ userId, date: { $gte: today, $lt: endOfToday } });
+        
+        const bangCongRecordsToday = await BangCong2.find({ 
+        userId: userId, 
+        groupId: { $ne: -1002108234982 },
+        date: { $gte: today, $lt: endOfToday } 
+      });
         const totalQuayToday = bangCongRecordsToday.reduce((acc, record) => acc + (record.quay || 0), 0);
         const totalKeoToday = bangCongRecordsToday.reduce((acc, record) => acc + (record.keo || 0), 0);
         const totalBillToday = bangCongRecordsToday.reduce((acc, record) => acc + (record.nhan_anh_bill || 0), 0);
