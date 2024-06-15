@@ -733,7 +733,7 @@ async function sendAggregatedData(chatId) {
   try {
     // Tính ngày hôm qua
     const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setDate(yesterday.getDate());
     const startOfYesterday = new Date(yesterday.setHours(0, 0, 0, 0));
     const endOfYesterday = new Date(yesterday.setHours(23, 59, 59, 999));
     
