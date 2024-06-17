@@ -898,7 +898,7 @@ cron.schedule('30 13 * * *', async () => { // 2 giờ UTC là 9 giờ sáng theo
 
 async function generateAndSendImages(chatId) {
   const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
+  yesterday.setDate(yesterday.getDate() - 2);
   const startOfYesterday = new Date(yesterday);
   startOfYesterday.setHours(0, 0, 0, 0);
   const endOfYesterday = new Date(yesterday);
