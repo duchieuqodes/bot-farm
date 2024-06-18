@@ -420,9 +420,9 @@ const kickbot = {
 // Bảng tra cứu tên nhóm dựa trên ID nhóm
 const groupNames = {
   "-1002039100507": "CỘNG ĐỒNG NẮM BẮT CƠ HỘI",
-  "-1002004082575": "KIẾM THÊM THU NHẬP",
+  "-1002004082575": "NÂNG CAO ĐỜI SỐNG",
   "-1002123430691": "DẪN LỐI THÀNH CÔNG",
-  "-1002143712364": "QUY TẮC",
+  "-1002143712364": "CHIA SẺ KINH NGHIỆM",
   "-1002128975957": "HƯỚNG TỚI TƯƠNG LAI",
   "-1002080535296": "CÙNG NHAU CHIA SẺ",
   "-1002091101362": "TRAO ĐỔI CÔNG VIỆC 1", 
@@ -658,8 +658,80 @@ bot.onText(/\/bangcong2/, async (msg) => {
   } catch (error) {
     console.error('Lỗi khi truy vấn bảng công:', error);
     bot.sendMessage(chatId, 'Đã xảy ra lỗi khi truy vấn bảng công. Vui lòng thử lại.');
+ }
+});
+
+bot.onText(/\/bc2/, async (msg) => {
+  const chatId = msg.chat.id;
+
+  try {
+    // Tìm tất cả bảng công cho nhóm -1002108234982
+    const bangCongs = await BangCong2.find({ groupId: -1002108234982 });
+
+    if (bangCongs.length === 0) {
+      bot.sendMessage(chatId, "Không có bảng công nào cho nhóm Be truly rich");
+      return;
+    }
+
+    // Phân loại bảng công theo ngày
+    const groupedByDate = {};
+    bangCongs.forEach((bangCong) => {
+      const date = bangCong.date;
+      if (!groupedByDate[date]) {
+        groupedByDate[date] = [];
+      }
+      groupedByDate[date].push(bangCong);
+    });
+
+    // Lấy danh sách các ngày và sắp xếp theo thứ tự giảm dần
+    const sortedDates = Object.keys(groupedByDate).sort((a, b) => new Date(b) - new Date(a));
+
+    // Lấy tối đa 3 ngày gần nhất
+    const recentDates = sortedDates.slice(0, 3);
+
+    let response = '';
+
+    // Tạo bảng công cho từng ngày
+    recentDates.forEach((date) => {
+      const dayData = groupedByDate[date];
+      response += `Bảng công ngày ${date}:\n\n`;
+
+      dayData.forEach((bangCong) => {
+        const formattedTien = bangCong.tinh_tien.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        response += `${bangCong.ten}\t\t${bangCong.quay}q +\t${bangCong.keo}c\t${formattedTien}vnđ\n`;
+      });
+
+      response += '\n';
+    });
+
+    // Tính tổng số tiền của từng thành viên
+    const totalByMember = {};
+    bangCongs.forEach((bangCong) => {
+      if (!totalByMember[bangCong.ten]) {
+        totalByMember[bangCong.ten] = 0;
+      }
+      totalByMember[bangCong.ten] += bangCong.tinh_tien;
+    });
+
+    response += 'Bảng tổng số tiền của từng thành viên:\n\n';
+    let totalSum = 0;
+    for (const member in totalByMember) {
+      const formattedTotal = totalByMember[member].toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      response += `${member}: ${formattedTotal}vnđ\n`;
+      totalSum += totalByMember[member];
+    }
+
+    // Tính tổng số tiền của tất cả thành viên
+    const formattedTotalSum = totalSum.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    response += `\nTổng số tiền của tất cả thành viên: ${formattedTotalSum}vnđ\n`;
+
+    bot.sendMessage(chatId, response.trim());
+  } catch (error) {
+    console.error('Lỗi khi truy vấn bảng công:', error);
+    bot.sendMessage(chatId, 'Đã xảy ra lỗi khi truy vấn bảng công. Vui lòng thử lại.');
   }
 });
+
 
 bot.onText(/\/xoa/, async (msg) => {
   const chatId = msg.chat.id;
@@ -819,15 +891,14 @@ const groupCodes = {
   "cf": "-1002108234982",
   "tgu": "-1002228252389", 
   "lgcn": "-4201367303",
-  "cskn": "-1002198923074",
-  "qt": "-1002143712364" 
+  "cskn": "-1002143712364" 
 };
 
 const groups = {
   "-1002039100507": "BẢNG CÔNG NHÓM CỘNG ĐỒNG NẮM BẮT CƠ HỘI",
-  "-1002004082575": "BẢNG CÔNG NHÓM KIẾM THÊM THU NHẬP",
+  "-1002004082575": "BẢNG CÔNG NHÓM NÂNG CAO ĐỜI SỐNG",
   "-1002123430691": "BẢNG CÔNG NHÓM DẪN LỐI THÀNH CÔNG",
-  "-1002143712364": "NHÓM QUY TẮC",
+  "-1002143712364": "NHÓM CHIA SẺ KINH NGHIỆM",
   "-1002128975957": "BẢNG CÔNG NHÓM BƯỚC ĐI KHỞI NGHIỆP",
   "-1002080535296": "NHÓM CÙNG NHAU CHIA SẺ",
   "-1002091101362": "BẢNG CÔNG NHÓM TRAO ĐỔI CÔNG VIỆC 1", 
