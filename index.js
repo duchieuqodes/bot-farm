@@ -704,16 +704,19 @@ bot.onText(/\/bc2/, async (msg) => {
       response += '\n';
     });
 
-    // Tính tổng số tiền của từng thành viên
+    // Tính tổng số tiền của từng thành viên trong 3 ngày gần nhất
     const totalByMember = {};
-    bangCongs.forEach((bangCong) => {
-      if (!totalByMember[bangCong.ten]) {
-        totalByMember[bangCong.ten] = 0;
-      }
-      totalByMember[bangCong.ten] += bangCong.tinh_tien;
+    recentDates.forEach((date) => {
+      const dayData = groupedByDate[date];
+      dayData.forEach((bangCong) => {
+        if (!totalByMember[bangCong.ten]) {
+          totalByMember[bangCong.ten] = 0;
+        }
+        totalByMember[bangCong.ten] += bangCong.tinh_tien;
+      });
     });
 
-    response += 'Bảng tổng số tiền của từng thành viên:\n\n';
+    response += 'Bảng tổng số tiền của từng thành viên trong 3 ngày gần nhất:\n\n';
     let totalSum = 0;
     for (const member in totalByMember) {
       const formattedTotal = totalByMember[member].toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
@@ -721,9 +724,9 @@ bot.onText(/\/bc2/, async (msg) => {
       totalSum += totalByMember[member];
     }
 
-    // Tính tổng số tiền của tất cả thành viên
+    // Tính tổng số tiền của tất cả thành viên trong 3 ngày gần nhất
     const formattedTotalSum = totalSum.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    response += `\nTổng số tiền của tất cả thành viên: ${formattedTotalSum}vnđ\n`;
+    response += `\nTổng số tiền của tất cả thành viên trong 3 ngày gần nhất: ${formattedTotalSum}vnđ\n`;
 
     bot.sendMessage(chatId, response.trim());
   } catch (error) {
