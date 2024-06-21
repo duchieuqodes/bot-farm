@@ -427,7 +427,7 @@ const groupNames = {
   "-1002080535296": "CÙNG NHAU CHIA SẺ",
   "-1002091101362": "TRAO ĐỔI CÔNG VIỆC 1", 
   "-1002129896837": "GROUP I MẠNH ĐỨC CHIA SẺ", 
-  "-1002228252389": "TECH GEEK UNITYS",
+  "-1002228252389": "CHIA SẺ NẮM BẮT CƠ HỘI",
   "-1002198923074": "LÀM GIÀU CÙNG NHAU" 
 };
 
@@ -889,7 +889,7 @@ const groupCodes = {
   "tđcv1": "-1002091101362",
   "gimđcs": "-1002129896837",
   "cf": "-1002108234982",
-  "tgu": "-1002228252389", 
+  "csnbch": "-1002228252389", 
   "lgcn": "-4201367303",
   "cskn": "-1002143712364" 
 };
@@ -969,7 +969,7 @@ cron.schedule('30 13 * * *', async () => { // 2 giờ UTC là 9 giờ sáng theo
 
 async function generateAndSendImages(chatId) {
   const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 2);
+  yesterday.setDate(yesterday.getDate() - 1);
   const startOfYesterday = new Date(yesterday);
   startOfYesterday.setHours(0, 0, 0, 0);
   const endOfYesterday = new Date(yesterday);
@@ -1631,7 +1631,7 @@ const groupNames2 = {
   "-1002080535296": "CÙNG NHAU CHIA SẺ",
   "-1002091101362": "TRAO ĐỔI CÔNG VIỆC 1", 
   "-1002129896837": "GROUP I MẠNH ĐỨC CHIA SẺ", 
-  "-1002228252389": "BƯỚC ĐI KHỞI NGHIỆP", 
+  "-1002228252389": "CHIA SẺ NẮM BẮT CƠ HỘI", 
   "-1002108234982": "Community free, be truly rich",
   "-1002128289933": "test", 
   "-1002198923074": "LÀM GIÀU CÙNG NHAU"
