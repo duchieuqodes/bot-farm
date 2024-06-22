@@ -535,27 +535,28 @@ const normalizeName = (name) => {
   return name.replace(/[^\w\s]/gi, '').toLowerCase().trim();
 };
 
-
-
 bot.onText(/\/edit (.+)/, async (msg, match) => {
     const chatId = msg.chat.id;
+    const userId = msg.from.id;
     const input = match[1].split(',').map(item => item.trim());
-    const groupCode = input[0];
-    const ten = input[1];
-    const quay = input[2];
-    const keo = input[3];
-    const date = input[4];
+    const ten = input[0];
+    const quayInput = input[1];
+    const keoInput = input[2];
+    const date = input[3];
 
-    if (!groupCode || !ten || !quay || !keo || !date) {
-        bot.sendMessage(chatId, 'Sai cú pháp. Vui lòng nhập đúng định dạng: /edit groupId, tên thành viên, số quay, số keo, ngày/tháng');
+    if (!ten || !quayInput || !keoInput || !date) {
+        bot.sendMessage(chatId, 'Sai cú pháp. Vui lòng nhập đúng định dạng: /edit tên thành viên, số quay, số keo, ngày/tháng');
         return;
     }
 
-    const groupId = groupCodes[groupCode];
-    if (!groupId) {
-        bot.sendMessage(chatId, `Mã nhóm không hợp lệ: ${groupCode}`);
+    // Kiểm tra xem người dùng có phải admin hay không
+    const chatMember = await bot.getChatMember(chatId, userId);
+    if (chatMember.status !== 'administrator' && chatMember.status !== 'creator') {
+        bot.sendMessage(chatId, 'Chỉ có admin Hieu Gà mới được phép sử dụng lệnh này.');
         return;
     }
+
+    const groupId = chatId;
 
     const [day, month] = date.split('/');
     const year = new Date().getFullYear();
@@ -575,9 +576,14 @@ bot.onText(/\/edit (.+)/, async (msg, match) => {
             return;
         }
 
-        bangCong.quay = Number(quay);
-        bangCong.keo = Number(keo);
-        bangCong.tinh_tien = (Number(quay.trim()) * 500) + (Number(keo.trim()) * 1000); // Giả định tính tiền công là tổng số quay và keo nhân 1000
+        const quayCurrent = bangCong.quay;
+        const keoCurrent = bangCong.keo;
+        const quayNew = Number(quayInput);
+        const keoNew = Number(keoInput);
+
+        bangCong.quay = quayCurrent - quayNew;
+        bangCong.keo = keoCurrent - keoNew;
+        bangCong.tinh_tien = (bangCong.quay * 500) + (bangCong.keo * 1000); // Giả định tính tiền công là tổng số quay và keo nhân 1000
         await bangCong.save();
 
         bot.sendMessage(chatId, `Cập nhật thành công cho ${ten.trim()} vào ngày ${date}.`);
@@ -586,6 +592,7 @@ bot.onText(/\/edit (.+)/, async (msg, match) => {
         bot.sendMessage(chatId, 'Lỗi khi cập nhật dữ liệu.');
     }
 });
+
 
 // Các xử lý khác (ví dụ: xử lý message)
 bot.on('message', async (msg) => {
