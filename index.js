@@ -1333,16 +1333,7 @@ const groupChatId = -1002103270166; // Thay bằng ChatId của nhóm bạn
 // Thiết lập lịch trình gửi tin nhắn vào nhóm
 setupNewsSchedule(bot, groupChatId);
 
-//warningMember.js
-bot.on('message', (msg) => {
-  handleMessage(bot, msg, groupNames);
-});
 
-cron.schedule('50 6 * * *', async () => {
-  await resetKeywords();
-}, {
-  timezone: "Asia/Ho_Chi_Minh"
-});
 
 bot.onText(/\/reset/, async (msg) => {
   await resetKeywords();
