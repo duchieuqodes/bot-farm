@@ -693,7 +693,7 @@ bot.onText(/\/bc2/, async (msg) => {
     const sortedDates = Object.keys(groupedByDate).sort((a, b) => new Date(b) - new Date(a));
 
     // Lấy tối đa 3 ngày gần nhất
-    const recentDates = sortedDates.slice(1, 4);
+    const recentDates = sortedDates.slice(0, 4);
 
     let response = '';
 
