@@ -413,6 +413,7 @@ const kickbot = {
   "-1002128289933": "test",
   "-1002108234982": "community free",
   "-1002163768880": "tra sua",
+  "-1002179104664": "Diễn đàn khởi nghiệp",
   "-1002198923074": "LÀM GIÀU CÙNG NHAU"
 };                                                        
           
@@ -427,6 +428,7 @@ const groupNames = {
   "-1002091101362": "TRAO ĐỔI CÔNG VIỆC 1", 
   "-1002129896837": "GROUP I MẠNH ĐỨC CHIA SẺ", 
   "-1002228252389": "CHIA SẺ NẮM BẮT CƠ HỘI",
+  "-1002179104664": "Diễn đàn khởi nghiệp",
   "-1002198923074": "LÀM GIÀU CÙNG NHAU" 
 };
 
@@ -913,6 +915,7 @@ const groups = {
   "-1002091101362": "BẢNG CÔNG NHÓM TRAO ĐỔI CÔNG VIỆC 1", 
   "-1002129896837": "BẢNG CÔNG NHÓM GROUP I MẠNH ĐỨC CHIA SẺ", 
   "-1002228252389": "BẢNG CÔNG NHÓM TECH GEEK UNITES", 
+  "-1002179104664": "Diễn đàn khởi nghiệp",
   "-1002198923074": "CHIA SẺ KINH NGHIỆM TRẢI NGHIỆM" 
 };
 
