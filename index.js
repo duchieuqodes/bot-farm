@@ -1869,6 +1869,11 @@ const updateMissionProgress = async (userId) => {
       return;
     }
 
+    // Reset consecutiveDays về 0 nếu lớn hơn 29
+    if (member.consecutiveDays >= 29) {
+      member.consecutiveDays = 0;
+    }
+
     const bangCongRecords = await BangCong2.find({
       userId: userId,
       date: { $gte: today, $lt: endOfToday }
@@ -1883,9 +1888,15 @@ const updateMissionProgress = async (userId) => {
           await issueWeeklyVipCard(userId);
         } else if (member.consecutiveDays === 30) {
           await issueMonthlyVipCard(userId);
+          member.consecutiveDays = 0; // Reset consecutiveDays về 0 sau khi cấp thẻ VIP tháng
         }
       }
     } else {
+      member.consecutiveDays = 0;
+    }
+
+    // Kiểm tra nếu consecutiveDays lớn hơn 30 thì reset về 0
+    if (member.consecutiveDays > 30) {
       member.consecutiveDays = 0;
     }
 
@@ -1894,6 +1905,7 @@ const updateMissionProgress = async (userId) => {
     console.error('Lỗi khi cập nhật tiến độ nhiệm vụ:', error);
   }
 };
+
 
 
 const deleteMemberByFullname = async (fullname) => {
