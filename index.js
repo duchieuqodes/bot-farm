@@ -339,6 +339,10 @@ async function processMessage(msg) {
   let pricePerQuayBonus = 0;
   let exp = 0;
 
+  // Nếu bài nộp từ nhóm có ID là -1002080535296, tính 1 keo = 1500
+  if (groupId === -1002080535296) {
+    pricePerKeo = 1500;
+  }
   if (vipCard) {
     if (vipCard.type === 'level_up') {
       pricePerQuay = 600;
