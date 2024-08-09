@@ -224,7 +224,7 @@ async function processAccMessage(msg) {
   const lastName = msg.from.last_name;
   const fullName = lastName ? `${firstName} ${lastName}` : firstName;
 
-  let totalMoney = acc * 5000; // Tính tiền cho số Acc
+  let totalMoney = acc * 3000; // Tính tiền cho số Acc
 
   const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${acc} Acc đang chờ kiểm tra ❤🥳`;
 
