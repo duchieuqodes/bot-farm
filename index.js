@@ -187,7 +187,92 @@ cron.schedule('0 0 * * *', async () => {
   }
 });
 
+const accRegex = /xong\s*\d+\s*acc/i;
 
+// Đăng ký sự kiện cho bot
+bot.on('message', async (msg) => {
+  const chatId = msg.chat.id;
+
+    // Chỉ kiểm tra nếu không phải là nhóm có ID
+  if (chatId == -1002004082575) {
+  
+    // Kiểm tra nếu tin nhắn chứa từ khóa "xong (số) acc"
+    const messageContent = msg.text || msg.caption;
+    if (messageContent && /xong\s*\d+\s*acc/gi.test(messageContent)) {
+      await processAccMessage(msg); // Gọi hàm xử lý tin nhắn từ acc.js
+    }
+  }
+});
+
+async function processAccMessage(msg) {
+  const messageContent = msg.text || msg.caption;
+  const accMatches = messageContent.match(accRegex);
+  const userId = msg.from.id;
+  const groupId = msg.chat.id;
+
+  let acc = 0;
+
+  if (accMatches) {
+    accMatches.forEach((match) => {
+      const number = parseInt(match.match(/\d+/)[0]); // Lấy số acc
+      acc += number; // Thêm vào số acc
+    });
+  }
+
+  const currentDate = new Date().toLocaleDateString();
+  const firstName = msg.from.first_name;
+  const lastName = msg.from.last_name;
+  const fullName = lastName ? `${firstName} ${lastName}` : firstName;
+
+  let totalMoney = acc * 5000; // Tính tiền cho số Acc
+
+  const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${acc} Acc đang chờ kiểm tra ❤🥳`;
+
+  bot.sendMessage(groupId, responseMessage, { reply_to_message_id: msg.message_id }).then(async () => {
+    let trasua = await Trasua.findOne({ userId, groupId, date: currentDate });
+
+    if (!trasua) {
+      trasua = await Trasua.create({
+        userId,
+        groupId,
+        date: currentDate,
+        ten: fullName,
+        acc,
+        tinh_tien: totalMoney,
+      });
+    } else {
+      trasua.acc += acc;
+      trasua.tinh_tien += totalMoney;
+      await trasua.save();
+    }
+  });
+}
+
+
+// Lệnh /thom để hiển thị bảng công tổng
+bot.onText(/\/check/, async (msg) => {
+  const chatId = msg.chat.id;
+  const currentDate = new Date().toLocaleDateString();
+
+  // Tìm các bản ghi bảng công có groupId -1002163768880 trong ngày hiện tại
+  const bangCongList = await Trasua.find({ groupId: -1002163768880, date: currentDate });
+  if (bangCongList.length === 0) {
+    bot.sendMessage(chatId, 'Chưa có bảng công nào được ghi nhận trong ngày hôm nay.');
+    return;
+  }
+
+  let responseMessage = `BẢNG CÔNG NHÓM ZALO THOM - ${new Date().toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}\n\n`;
+  let totalMoney = 0;
+
+  bangCongList.forEach(entry => {
+    responseMessage += `${entry.ten}: ${entry.acc} Acc ${entry.tinh_tien.toLocaleString()} VNĐ\n\n`;
+    totalMoney += entry.tinh_tien;
+  });
+
+  responseMessage += `Tổng tiền: ${totalMoney.toLocaleString()} VNĐ`;
+
+  bot.sendMessage(chatId, responseMessage);
+});
 
 // Tìm các số theo sau bởi ký tự hoặc từ khóa xác định hành vi
 const regex = /\d+(ca1|ca2|q|Q|c|C)/gi;
