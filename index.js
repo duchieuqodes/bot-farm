@@ -250,6 +250,36 @@ async function processAccMessage(msg) {
 
 
 // Lệnh /thom để hiển thị bảng công tổng
+bot.onText(/\/yesterday/, async (msg) => {
+  const chatId = msg.chat.id;
+
+  // Lấy ngày hôm trước
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const formattedDate = yesterday.toLocaleDateString();
+
+  // Tìm các bản ghi bảng công có groupId -1002163768880 trong ngày hôm trước
+  const bangCongList = await Trasua.find({ groupId: -1002004082575, date: formattedDate });
+  if (bangCongList.length === 0) {
+    bot.sendMessage(chatId, 'Chưa có bảng công nào được ghi nhận trong ngày hôm qua.');
+    return;
+  }
+
+  let responseMessage = `BẢNG CÔNG NHÓM HÔM QUA- ${yesterday.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}\n\n`;
+  let totalMoney = 0;
+
+  bangCongList.forEach(entry => {
+    responseMessage += `${entry.ten}: ${entry.acc} Acc ${entry.tinh_tien.toLocaleString()} VNĐ\n\n`;
+    totalMoney += entry.tinh_tien;
+  });
+
+  responseMessage += `Tổng tiền: ${totalMoney.toLocaleString()} VNĐ`;
+
+  bot.sendMessage(chatId, responseMessage);
+});
+
+
+// Lệnh /thom để hiển thị bảng công tổng
 bot.onText(/\/check/, async (msg) => {
   const chatId = msg.chat.id;
   const currentDate = new Date().toLocaleDateString();
