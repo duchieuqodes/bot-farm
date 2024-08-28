@@ -2165,7 +2165,7 @@ bot.on('message', async (msg) => {
       
       if (msg.text === 'Xem tài khoản 🧾') {
         const rankEmoji = getRankEmoji(member.level);
-        const starEmoji = getStarEmoji(member.levelPercent);
+        const starEmoji = getStarEmoji(member.level, member.levelPercent);
         const level = `${member.level}`;
         const imageUrl = await generateImageUrl(userId, fullname, level, starEmoji, totalQuayYesterday, totalKeoYesterday, totalTinhTienYesterday, totalBonusYesterday, totalQuayToday, totalKeoToday, totalTinhTienToday, totalBonusToday);
         
