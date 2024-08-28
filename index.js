@@ -1428,13 +1428,18 @@ function getRankEmoji(level) {
 }
 
 // Hàm lấy emoji sao dựa theo phần trăm level
-function getStarEmoji(levelPercent) {
+function getStarEmoji(levelPercent, level) {
   if (levelPercent < 25) return '★☆☆☆☆';
   if (levelPercent < 50) return '★★☆☆☆';
   if (levelPercent < 75) return '★★★☆☆';
   if (levelPercent < 90) return '★★★★☆';
   if (levelPercent < 100) return '★★★★★';
   if (levelPercent >= 100) return '✪✪✪✪✪';
+  if (levelPercent < 25 && level >= 100) return '🌑🌒🌓🌔🌕';
+  if (levelPercent < 50 && level >= 100) return '🌑🌓🌔🌕🌕';
+  if (levelPercent < 75 && level >= 100) return '🌑🌔🌕🌖🌕';
+  if (levelPercent < 90 && level >= 100) return '🌑🌕🌖🌗🌘';
+  if (levelPercent < 100 && level >= 100) return '🌕🌕🌕🌕🌕';
   return '';
 }
 
@@ -1599,7 +1604,7 @@ bot.on('message', async (msg) => {
     const level = member.level;
     const levelPercent = member.levelPercent;
     const rankEmoji = getRankEmoji(level);
-    const starEmoji = getStarEmoji(levelPercent);
+    const starEmoji = getStarEmoji(levelPercent, level);
 
     const captionText = msg.caption || 'hình ảnh';
     const responseMessage = `Quẩy thủ: <a href="tg://user?id=${userId}">${fullname}</a> ${rankEmoji} (Level: ${level}):
