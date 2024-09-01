@@ -446,7 +446,8 @@ const kickbot = {
   "-1002108234982": "community free",
   "-1002163768880": "tra sua",
   "-1002179104664": "Diễn đàn khởi nghiệp",
-  "-1002198923074": "LÀM GIÀU CÙNG NHAU"
+  "-1002198923074": "LÀM GIÀU CÙNG NHAU",
+  "-1002208226506": "ABC" 
 };                                                        
           
 // Bảng tra cứu tên nhóm dựa trên ID nhóm
