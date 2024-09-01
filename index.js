@@ -448,7 +448,8 @@ const kickbot = {
   "-1002179104664": "Diễn đàn khởi nghiệp",
   "-1002198923074": "LÀM GIÀU CÙNG NHAU",
   "-1002208226506": "ABC",
-  "-1002155928492": "acb"
+  "-1002155928492": "acb",
+  "-1002187729317": "sisiso"
 };                                                        
           
 // Bảng tra cứu tên nhóm dựa trên ID nhóm
