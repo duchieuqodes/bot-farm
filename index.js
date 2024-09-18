@@ -194,8 +194,8 @@ bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
 
     // Chỉ kiểm tra nếu không phải là nhóm có ID
-  if (chatId == -1002303292016) {
-  
+  if (chatId == -1002303292016 || chatId == -1002247863313) {
+
     // Kiểm tra nếu tin nhắn chứa từ khóa "xong (số) acc"
     const messageContent = msg.text || msg.caption;
     if (messageContent && /xong\s*\d+\s*acc/gi.test(messageContent)) {
@@ -303,6 +303,62 @@ bot.onText(/\/ha/, async (msg) => {
 
   bot.sendMessage(chatId, responseMessage);
 });
+
+ // Lệnh /thom để hiển thị bảng công tổng
+bot.onText(/\/thomhomqua/, async (msg) => {
+  const chatId = msg.chat.id;
+
+  // Lấy ngày hôm trước
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const formattedDate = yesterday.toLocaleDateString();
+
+  // Tìm các bản ghi bảng công có groupId -1002163768880 trong ngày hôm trước
+  const bangCongList = await Trasua.find({ groupId: -1002247863313, date: formattedDate });
+  if (bangCongList.length === 0) {
+    bot.sendMessage(chatId, 'Chưa có bảng công nào được ghi nhận trong ngày hôm qua.');
+    return;
+  }
+
+  let responseMessage = `BẢNG CÔNG NHÓM HÀ HÔM QUA- ${yesterday.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}\n\n`;
+  let totalMoney = 0;
+
+  bangCongList.forEach(entry => {
+    responseMessage += `${entry.ten}: ${entry.acc} Acc ${entry.tinh_tien.toLocaleString()} VNĐ\n\n`;
+    totalMoney += entry.tinh_tien;
+  });
+
+  responseMessage += `Tổng tiền: ${totalMoney.toLocaleString()} VNĐ`;
+
+  bot.sendMessage(chatId, responseMessage);
+});
+
+
+// Lệnh /thom để hiển thị bảng công tổng
+bot.onText(/\/thom/, async (msg) => {
+  const chatId = msg.chat.id;
+  const currentDate = new Date().toLocaleDateString();
+
+  // Tìm các bản ghi bảng công có groupId -1002163768880 trong ngày hiện tại
+  const bangCongList = await Trasua.find({ groupId: -1002247863313, date: currentDate });
+  if (bangCongList.length === 0) {
+    bot.sendMessage(chatId, 'Chưa có bảng công nào được ghi nhận trong ngày hôm nay.');
+    return;
+  }
+
+  let responseMessage = `BẢNG CÔNG NHÓM ZALO HA HÔM NAY - ${new Date().toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}\n\n`;
+  let totalMoney = 0;
+
+  bangCongList.forEach(entry => {
+    responseMessage += `${entry.ten}: ${entry.acc} Acc ${entry.tinh_tien.toLocaleString()} VNĐ\n\n`;
+    totalMoney += entry.tinh_tien;
+  });
+
+  responseMessage += `Tổng tiền: ${totalMoney.toLocaleString()} VNĐ`;
+
+  bot.sendMessage(chatId, responseMessage);
+});
+
 
 // Tìm các số theo sau bởi ký tự hoặc từ khóa xác định hành vi
 const regex = /\d+(ca1|ca2|q|Q|c|C)/gi;
@@ -450,7 +506,8 @@ const kickbot = {
   "-1002208226506": "ABC",
   "-1002155928492": "acb",
   "-1002187729317": "sisiso",
-  "-1002303292016": "ha"
+  "-1002303292016": "ha",
+  "-1002247863313": "thom"
 };                                                        
           
 // Bảng tra cứu tên nhóm dựa trên ID nhóm
