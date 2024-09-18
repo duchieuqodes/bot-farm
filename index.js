@@ -224,7 +224,7 @@ async function processAccMessage(msg) {
   const lastName = msg.from.last_name;
   const fullName = lastName ? `${firstName} ${lastName}` : firstName;
 
-  let totalMoney = acc * 3000; // Tính tiền cho số Acc
+  let totalMoney = acc * 5000; // Tính tiền cho số Acc
 
   const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${acc} Acc đang chờ kiểm tra ❤🥳`;
 
@@ -250,7 +250,7 @@ async function processAccMessage(msg) {
 
 
 // Lệnh /thom để hiển thị bảng công tổng
-bot.onText(/\/yesterday/, async (msg) => {
+bot.onText(/\/hahomqua/, async (msg) => {
   const chatId = msg.chat.id;
 
   // Lấy ngày hôm trước
@@ -265,7 +265,7 @@ bot.onText(/\/yesterday/, async (msg) => {
     return;
   }
 
-  let responseMessage = `BẢNG CÔNG NHÓM HÔM QUA- ${yesterday.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}\n\n`;
+  let responseMessage = `BẢNG CÔNG NHÓM HÀ HÔM QUA- ${yesterday.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}\n\n`;
   let totalMoney = 0;
 
   bangCongList.forEach(entry => {
@@ -280,7 +280,7 @@ bot.onText(/\/yesterday/, async (msg) => {
 
 
 // Lệnh /thom để hiển thị bảng công tổng
-bot.onText(/\/check/, async (msg) => {
+bot.onText(/\/ha/, async (msg) => {
   const chatId = msg.chat.id;
   const currentDate = new Date().toLocaleDateString();
 
@@ -291,7 +291,7 @@ bot.onText(/\/check/, async (msg) => {
     return;
   }
 
-  let responseMessage = `BẢNG CÔNG NHÓM ZALO THOM - ${new Date().toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}\n\n`;
+  let responseMessage = `BẢNG CÔNG NHÓM ZALO HA HÔM NAY - ${new Date().toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}\n\n`;
   let totalMoney = 0;
 
   bangCongList.forEach(entry => {
@@ -449,7 +449,8 @@ const kickbot = {
   "-1002198923074": "LÀM GIÀU CÙNG NHAU",
   "-1002208226506": "ABC",
   "-1002155928492": "acb",
-  "-1002187729317": "sisiso"
+  "-1002187729317": "sisiso",
+  "-1002303292016": "ha"
 };                                                        
           
 // Bảng tra cứu tên nhóm dựa trên ID nhóm
