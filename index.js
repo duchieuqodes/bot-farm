@@ -187,19 +187,20 @@ cron.schedule('0 0 * * *', async () => {
   }
 });
 
-const accRegex = /xong\s*\d+\s*acc/i;
+
+ const accRegex = /xong\s*\d+\s*acc/i;
 
 // Đăng ký sự kiện cho bot
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
 
-    // Chỉ kiểm tra nếu không phải là nhóm có ID
+  // Chỉ kiểm tra nếu là nhóm có ID
   if (chatId == -1002303292016 || chatId == -1002247863313) {
 
     // Kiểm tra nếu tin nhắn chứa từ khóa "xong (số) acc"
     const messageContent = msg.text || msg.caption;
     if (messageContent && /xong\s*\d+\s*acc/gi.test(messageContent)) {
-      await processAccMessage(msg); // Gọi hàm xử lý tin nhắn từ acc.js
+      await processAccMessage(msg); // Gọi hàm xử lý tin nhắn
     }
   }
 });
@@ -217,6 +218,12 @@ async function processAccMessage(msg) {
       const number = parseInt(match.match(/\d+/)[0]); // Lấy số acc
       acc += number; // Thêm vào số acc
     });
+  }
+
+  // Nếu số acc lớn hơn 100, gửi thông báo nghịch linh tinh và không xử lý tiếp
+  if (acc > 100) {
+    bot.sendMessage(groupId, 'Nào, Nghịch linh tinh là xấu tính 😕', { reply_to_message_id: msg.message_id });
+    return;
   }
 
   const currentDate = new Date().toLocaleDateString();
@@ -247,6 +254,24 @@ async function processAccMessage(msg) {
     }
   });
 }
+
+bot.onText(/\/bo/, async (msg) => {
+  const chatId = msg.chat.id;
+
+  // Danh sách các groupId cần xóa
+  const groupIdsToDelete = [-1002247863313, -1002303292016];
+
+  try {
+    // Xóa tất cả các bản ghi có groupId nằm trong danh sách
+    const result = await Trasua.deleteMany({ groupId: { $in: groupIdsToDelete } });
+
+    // Gửi tin nhắn thông báo về số lượng bản ghi đã bị xóa
+    bot.sendMessage(chatId, `Đã xóa ${result.deletedCount} bản ghi bảng công từ các nhóm có groupId: -1002247863313, -1002303292016.`);
+  } catch (error) {
+    // Thông báo lỗi nếu có sự cố xảy ra
+    bot.sendMessage(chatId, `Đã xảy ra lỗi khi xóa dữ liệu: ${error.message}`);
+  }
+});
 
 
 // Lệnh /thom để hiển thị bảng công tổng
