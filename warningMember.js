@@ -68,7 +68,7 @@ async function handleMessage(bot, msg, groupNames) {
 
       const messageCount = await Warning.countDocuments({ userId, groupId: chatId, date: currentDate, keyword });
 
-      if (messageCount > 1) {
+      if (messageCount > 1000) {
         const groupName = groupNames[chatId] || `nhóm ${chatId}`;
         const warningMessage = `${userName} đã nộp ${keyword} quá 1 lần trong nhóm ${groupName} hôm nay, bạn vui lòng nộp cẩn thận hơn nhé`;
 
