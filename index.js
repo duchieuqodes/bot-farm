@@ -536,6 +536,7 @@ async function processMessage(msg) {
   switch (groupId) {
     case -1002186698265:
     case -1002300392959:
+    case -1002350493572:
       pricePerKeo = 1500;
       break;
     case -1002113921526:
@@ -613,7 +614,7 @@ async function processMessage(msg) {
 // Danh sách các groupId được phép
 const allowedGroupIds = [
   -1002230199552, -1002178207739, -1002235474314, -1002186698265,
-  -1002311358141, -1002245725621, -1002300392959, -1002113921526, -1002243393101
+  -1002311358141, -1002245725621, -1002350493572, -1002300392959, -1002113921526, -1002243393101
 ];
 
 // Xử lý lệnh /homqua để hiển thị bảng công cho các nhóm được phép
@@ -749,6 +750,7 @@ const kickbot = {
   // Thêm các groupId mới
   "-1002230199552": "12h-19h 2k 1k/c 500đ/q bill 2k qli 100",
   "-1002178207739": "12-19h15 1k/c 500đ/q bill 3k Qli 50",
+  "-1002350493572": "lan", 
   "-1002235474314": "11h30-19h30 1k/c 500đ/q bill 3k Qli 70",
   "-1002186698265": "10h45-19h45 11h-19h 1.5k/c 500đ/q bill 3k ảnh 2k qli 75",
   "-1002311358141": "13h10 1k/c 500d /q bill 3k Qli 50",
