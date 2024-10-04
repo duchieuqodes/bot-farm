@@ -465,8 +465,8 @@ bot.onText(/\/thom/, async (msg) => {
 
 
 
-   // Tìm các số theo sau bởi ký tự hoặc từ khóa xác định hành vi
-const regex = /(\d+)\s*(ca1|ca2|q|quay|quẩy|c|cong|cộng|\+|bill|anh|ảnh)(?:[,\s]+|$)/gi;
+// Tìm các số theo sau bởi ký tự hoặc từ khóa xác định hành vi
+const regex = /(\d+)\s*(ca1|ca2|q|Q|c|C|bill|ảnh|quay|quẩy|kéo|keo)/gi;
 
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
@@ -487,7 +487,7 @@ bot.on('message', async (msg) => {
 
 async function processMessage(msg) {
   const messageContent = msg.text || msg.caption;
-  const matches = messageContent.match(regex);
+  const matches = messageContent.matchAll(regex);
   const userId = msg.from.id;
   const groupId = msg.chat.id;
 
@@ -496,21 +496,19 @@ async function processMessage(msg) {
   let bill = 0;
   let anh = 0;
 
-  if (matches) {
-    matches.forEach((match) => {
-      const number = parseInt(match);
-      const suffix = match.slice(number.toString().length).toLowerCase();
+  for (const match of matches) {
+    const number = parseInt(match[1]);
+    const suffix = match[2].toLowerCase();
 
-      if (suffix === 'q' || suffix === 'quẩy') {
-        quay += number;
-      } else if (suffix === 'c' || suffix === 'cộng' || suffix === '+') {
-        keo += number;
-      } else if (suffix === 'bill') {
-        bill += number;
-      } else if (suffix === 'ảnh') {
-        anh += number;
-      }
-    });
+    if (suffix === 'q' || suffix === 'quay' || suffix === 'quẩy') {
+      quay += number;
+    } else if (suffix === 'c' || suffix === 'kéo' || suffix === 'keo') {
+      keo += number;
+    } else if (suffix === 'bill') {
+      bill += number;
+    } else if (suffix === 'ảnh') {
+      anh += number;
+    }
   }
 
   const currentDate = new Date().toLocaleDateString();
