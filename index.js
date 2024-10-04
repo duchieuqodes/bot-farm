@@ -464,9 +464,8 @@ bot.onText(/\/thom/, async (msg) => {
 });
 
 
-
 // Tìm các số theo sau bởi ký tự hoặc từ khóa xác định hành vi
-const regex = /(\d+)\s*(ca1|ca2|q|quay|quẩy|c|cong|cộng|\+|bill|anh|ảnh)/gi;
+const regex = /(\d+)\s*(ca1|ca2|q|quay|quẩy|c|cong|cộng|\+|bill|anh|ảnh)(?:[,\s]+|$)/gi;
 
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
@@ -496,10 +495,10 @@ async function processMessage(msg) {
   let bill = 0;
   let anh = 0;
 
-  if (matches) {
+  if (matches.length > 0) {
     matches.forEach(([, number, suffix]) => {
       const parsedNumber = parseInt(number);
-      const lowercaseSuffix = suffix.toLowerCase();
+      const lowercaseSuffix = suffix.toLowerCase().trim();
 
       if (['q', 'quay', 'quẩy'].includes(lowercaseSuffix)) {
         quay += parsedNumber;
@@ -512,6 +511,8 @@ async function processMessage(msg) {
       }
     });
   }
+
+  console.log(`Parsed values: quay=${quay}, keo=${keo}, bill=${bill}, anh=${anh}`);
 
   // Rest of the function remains the same
   const currentDate = new Date().toLocaleDateString();
