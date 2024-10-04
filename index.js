@@ -534,6 +534,7 @@ async function processMessage(msg) {
   switch (groupId) {
     case -1002186698265:
     case -1002300392959:
+    case -1002350493572:
       pricePerKeo = 1500;
       break;
     case -1002113921526:
@@ -1194,7 +1195,16 @@ async function sendAggregatedData(chatId) {
       }
 
       const groupData = groupedByGroupId[groupId];
-      const groupName = groupNames[groupId] || `Nhóm ${groupId}`;
+      
+      // Lấy thông tin nhóm từ Telegram API
+      let groupName;
+      try {
+        const chatInfo = await bot.getChat(groupId);
+        groupName = chatInfo.title || `Nhóm ${groupId}`;
+      } catch (error) {
+        console.error(`Không thể lấy thông tin nhóm ${groupId}:`, error);
+        groupName = `Nhóm ${groupId}`;
+      }
 
       response += `Bảng công nhóm ${groupName} (${yesterday.toLocaleDateString()}):\n\n`;
 
@@ -1231,6 +1241,7 @@ async function sendAggregatedData(chatId) {
   }
 }
 
+      
 const groupCodes = {
   "cđnbch": "-1002039100507",
   "kttn": "-1002004082575",
