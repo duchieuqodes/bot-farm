@@ -464,13 +464,14 @@ bot.onText(/\/thom/, async (msg) => {
 });
 
 
+
 // Tìm các số theo sau bởi ký tự hoặc từ khóa xác định hành vi
-const regex = /\d+(ca1|ca2|q|Q|c|C)/gi;
+const regex = /\d+(ca1|ca2|q|Q|c|C|bill|ảnh)/gi;
 
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
 
-// Chỉ kiểm tra nếu không phải là nhóm có ID
+  // Chỉ kiểm tra nếu không phải là nhóm có ID
   if (chatId !== -1002103270166 && chatId !== -1002163768880) {
     // Kiểm tra nếu tin nhắn chứa chuỗi cấm
     // Kiểm tra cả văn bản và chú thích
@@ -492,20 +493,22 @@ async function processMessage(msg) {
 
   let quay = 0;
   let keo = 0;
+  let bill = 0;
+  let anh = 0;
 
   if (matches) {
     matches.forEach((match) => {
-      const number = parseInt(match); // Lấy số
-      const suffix = match.slice(number.toString().length); // Lấy chữ cái hoặc từ theo sau số
+      const number = parseInt(match);
+      const suffix = match.slice(number.toString().length).toLowerCase();
 
-      if (suffix.toLowerCase() === 'q' || suffix.toLowerCase() === 'p') {
-        quay += number; // Nếu sau số là "q" hoặc "Q", thêm vào "quay"
-      } else if (suffix.toLowerCase() === 'c' || suffix === '+') {
-        keo += number; // Nếu sau số là "c", "C", hoặc "acc", thêm vào "keo"
-      } else if (suffix === 'quẩy') {
-        quay += number; // Nếu sau số là "quẩy", thêm vào "quay"
-      } else if (suffix === 'cộng') {
-        keo += number; // Nếu sau số là "cộng", thêm vào "keo"
+      if (suffix === 'q' || suffix === 'quẩy') {
+        quay += number;
+      } else if (suffix === 'c' || suffix === 'cộng' || suffix === '+') {
+        keo += number;
+      } else if (suffix === 'bill') {
+        bill += number;
+      } else if (suffix === 'ảnh') {
+        anh += number;
       }
     });
   }
@@ -523,38 +526,49 @@ async function processMessage(msg) {
 
   let pricePerQuay = 500;
   let pricePerKeo = 1000;
+  let pricePerBill = 3000;
+  let pricePerAnh = 3000;
   let pricePerKeoBonus = 0;
   let pricePerQuayBonus = 0;
   let exp = 0;
 
-  // Nếu bài nộp từ nhóm có ID là -1002080535296, tính 1 keo = 1500
-  if (groupId === -1002080535296) {
-    pricePerKeo = 1500;
+  // Tính giá keo dựa trên groupId
+  switch (groupId) {
+    case -1002186698265:
+    case -1002300392959:
+      pricePerKeo = 1500;
+      break;
+    case -1002113921526:
+      pricePerKeo = 500;
+      break;
+    default:
+      pricePerKeo = 1000;
   }
+
   if (vipCard) {
     if (vipCard.type === 'level_up') {
       pricePerQuay = 600;
-      pricePerKeo = 1100;
+      pricePerKeo += 100;
     } else if (vipCard.type === 'week' || vipCard.type === 'month') {
       pricePerQuay = 600;
-      pricePerKeo = 1100;
+      pricePerKeo += 100;
       exp = vipCard.expBonus;
     }
 
     if (vipCard.keoLimit && keo > vipCard.keoLimit) {
-      const remainingKeo = vipCard.keoLimit;
-      pricePerKeo = 1000;
+      const remainingKeo = keo - vipCard.keoLimit;
       pricePerKeoBonus = remainingKeo * 100;
     }
 
     if (vipCard.quayLimit && quay > vipCard.quayLimit) {
-      const remainingQuay = vipCard.quayLimit;
-      pricePerQuay = 500;
+      const remainingQuay = quay - vipCard.quayLimit;
       pricePerQuayBonus = remainingQuay * 100;
     }
   }
 
-  const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${quay}q, ${keo}c đang chờ kiểm tra ❤🥳`;
+  const totalMoney = (quay * pricePerQuay) + (keo * pricePerKeo) + (bill * pricePerBill) + (anh * pricePerAnh) + pricePerKeoBonus + pricePerQuayBonus;
+
+  const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${quay}q, ${keo}c, ${bill} bill, ${anh} ảnh đang chờ kiểm tra ❤🥳`;
 
   bot.sendMessage(groupId, responseMessage, { reply_to_message_id: msg.message_id }).then(async () => {
     let bangCong = await BangCong2.findOne({ userId, groupId, date: currentDate });
@@ -567,12 +581,16 @@ async function processMessage(msg) {
         ten: fullName,
         quay,
         keo,
-        tinh_tien: (quay * pricePerQuay + keo * pricePerKeo) + (pricePerKeoBonus + pricePerQuayBonus),
+        bill,
+        anh,
+        tinh_tien: totalMoney,
       });
     } else {
       bangCong.quay += quay;
       bangCong.keo += keo;
-      bangCong.tinh_tien += (quay * pricePerQuay + keo * pricePerKeo) + (pricePerKeoBonus + pricePerQuayBonus);
+      bangCong.bill += bill;
+      bangCong.anh += anh;
+      bangCong.tinh_tien += totalMoney;
 
       const member = await Member.findOne({ userId });
       member.exp += exp;
@@ -582,12 +600,14 @@ async function processMessage(msg) {
       }
 
       await bangCong.save();
+      await member.save();
     }
 
     await updateLevelPercent(userId);
     await updateMissionProgress(userId);
   });
-}
+      }
+    
 
         
        
