@@ -609,7 +609,121 @@ async function processMessage(msg) {
       }
     
 
-        
+   
+// Danh sách các groupId được phép
+const allowedGroupIds = [
+  -1002230199552, -1002178207739, -1002235474314, -1002186698265,
+  -1002311358141, -1002245725621, -1002300392959, -1002113921526, -1002243393101
+];
+
+// Xử lý lệnh /homqua để hiển thị bảng công cho các nhóm được phép
+bot.onText(/\/lan/, async (msg) => {
+  const chatId = msg.chat.id;
+  await sendAggregatedData(chatId);
+});
+
+async function sendAggregatedData(chatId) {
+  try {
+    // Tính ngày hôm qua
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const startOfYesterday = new Date(yesterday.setHours(0, 0, 0, 0));
+    const endOfYesterday = new Date(yesterday.setHours(23, 59, 59, 999));
+    
+    // Lấy bảng công của ngày hôm qua cho các nhóm được phép
+    const bangCongs = await BangCong2.find({
+      date: { $gte: startOfYesterday, $lte: endOfYesterday },
+      groupId: { $in: allowedGroupIds }
+    });
+
+    if (bangCongs.length === 0) {
+      bot.sendMessage(chatId, `Không có bảng công nào cho ngày ${yesterday.toLocaleDateString()}.`);
+      return;
+    }
+
+    // Tạo bảng công phân loại theo ID nhóm
+    const groupedByGroupId = {};
+    bangCongs.forEach((bangCong) => {
+      const groupId = bangCong.groupId.toString();
+      if (!groupedByGroupId[groupId]) {
+        groupedByGroupId[groupId] = [];
+      }
+      groupedByGroupId[groupId].push(bangCong);
+    });
+
+    let response = '';
+
+    // Tạo bảng công cho mỗi nhóm
+    for (const groupId of allowedGroupIds) {
+      const stringGroupId = groupId.toString();
+      const groupData = groupedByGroupId[stringGroupId] || [];
+
+      if (groupData.length === 0) continue;
+
+      // Lấy tên nhóm Telegram
+      let groupName;
+      try {
+        const chatInfo = await bot.getChat(groupId);
+        groupName = chatInfo.title || `Nhóm ${stringGroupId}`;
+      } catch (error) {
+        console.error(`Không thể lấy thông tin cho nhóm ${groupId}:`, error);
+        groupName = `Nhóm ${stringGroupId}`;
+      }
+
+      response += `Bảng công nhóm ${groupName} (${yesterday.toLocaleDateString()}):\n\n`;
+
+      let totalGroupMoney = 0;
+
+      groupData.forEach((bangCong) => {
+        if (bangCong.tinh_tien !== undefined) {
+          const formattedTien = bangCong.tinh_tien.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+          let line = `${bangCong.ten}\t\t${bangCong.quay}q +\t${bangCong.keo}c`;
+          if (bangCong.bill) line += `\t${bangCong.bill}bill`;
+          if (bangCong.anh) line += `\t${bangCong.anh}ảnh`;
+          line += `\t${formattedTien}vnđ\n`;
+          response += line;
+          totalGroupMoney += bangCong.tinh_tien;
+        }
+      });
+
+      const formattedTotal = totalGroupMoney.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      response += `Tổng tiền: ${formattedTotal}vnđ\n\n`;
+    }
+
+    // Kiểm tra độ dài response và gửi tin nhắn
+    if (response.length > 4000) {
+      const parts = splitMessage(response);
+      for (const part of parts) {
+        await bot.sendMessage(chatId, part);
+      }
+    } else {
+      bot.sendMessage(chatId, response.trim());
+    }
+  } catch (error) {
+    console.error('Lỗi khi truy vấn dữ liệu từ MongoDB:', error);
+    bot.sendMessage(chatId, 'Đã xảy ra lỗi khi truy vấn dữ liệu từ cơ sở dữ liệu.');
+  }
+}
+
+function splitMessage(message, maxLength = 4000) {
+  const parts = [];
+  let currentPart = '';
+
+  const lines = message.split('\n');
+  for (const line of lines) {
+    if (currentPart.length + line.length + 1 > maxLength) {
+      parts.push(currentPart.trim());
+      currentPart = '';
+    }
+    currentPart += line + '\n';
+  }
+
+  if (currentPart) {
+    parts.push(currentPart.trim());
+  }
+
+  return parts;
+}     
        
 const kickbot = {
   "-1002039100507": "CỘNG ĐỒNG NẮM BẮT CƠ HỘI",
@@ -631,8 +745,18 @@ const kickbot = {
   "-1002155928492": "acb",
   "-1002187729317": "sisiso",
   "-1002303292016": "ha",
-  "-1002247863313": "thom"
-};                                                        
+  "-1002247863313": "thom",
+  // Thêm các groupId mới
+  "-1002230199552": "12h-19h 2k 1k/c 500đ/q bill 2k qli 100",
+  "-1002178207739": "12-19h15 1k/c 500đ/q bill 3k Qli 50",
+  "-1002235474314": "11h30-19h30 1k/c 500đ/q bill 3k Qli 70",
+  "-1002186698265": "10h45-19h45 11h-19h 1.5k/c 500đ/q bill 3k ảnh 2k qli 75",
+  "-1002311358141": "13h10 1k/c 500d /q bill 3k Qli 50",
+  "-1002245725621": "11h45-19h45 1k/c 500d /q bill 3k qli 50",
+  "-1002300392959": "Combo giờ lam 1.5k/c 500đ/q bill 3k Qli 75",
+  "-1002113921526": "11h-15h30-19h20 500/c bill 3k 500d/q qli 90",
+  "-1002243393101": "12h30-20h 1k/c 500đ/q Bill 3k qli 50"
+};                                       
           
 // Bảng tra cứu tên nhóm dựa trên ID nhóm
 const groupNames = {
