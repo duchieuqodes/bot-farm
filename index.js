@@ -466,7 +466,7 @@ bot.onText(/\/thom/, async (msg) => {
 
 
 // Tìm các số theo sau bởi ký tự hoặc từ khóa xác định hành vi
-const regex = /\d+(ca1|ca2|q|Q|c|C|bill|ảnh)/gi;
+const regex = /(\d+)\s*(ca1|ca2|q|quay|quẩy|c|cong|cộng|\+|bill|anh|ảnh)/gi;
 
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
@@ -487,7 +487,7 @@ bot.on('message', async (msg) => {
 
 async function processMessage(msg) {
   const messageContent = msg.text || msg.caption;
-  const matches = messageContent.match(regex);
+  const matches = [...messageContent.matchAll(regex)];
   const userId = msg.from.id;
   const groupId = msg.chat.id;
 
@@ -497,22 +497,23 @@ async function processMessage(msg) {
   let anh = 0;
 
   if (matches) {
-    matches.forEach((match) => {
-      const number = parseInt(match);
-      const suffix = match.slice(number.toString().length).toLowerCase();
+    matches.forEach(([, number, suffix]) => {
+      const parsedNumber = parseInt(number);
+      const lowercaseSuffix = suffix.toLowerCase();
 
-      if (suffix === 'q' || suffix === 'quẩy') {
-        quay += number;
-      } else if (suffix === 'c' || suffix === 'cộng' || suffix === '+') {
-        keo += number;
-      } else if (suffix === 'bill') {
-        bill += number;
-      } else if (suffix === 'ảnh') {
-        anh += number;
+      if (['q', 'quay', 'quẩy'].includes(lowercaseSuffix)) {
+        quay += parsedNumber;
+      } else if (['c', 'cong', 'cộng', '+'].includes(lowercaseSuffix)) {
+        keo += parsedNumber;
+      } else if (lowercaseSuffix === 'bill') {
+        bill += parsedNumber;
+      } else if (['anh', 'ảnh'].includes(lowercaseSuffix)) {
+        anh += parsedNumber;
       }
     });
   }
 
+  // Rest of the function remains the same
   const currentDate = new Date().toLocaleDateString();
   const firstName = msg.from.first_name;
   const lastName = msg.from.last_name;
@@ -607,7 +608,8 @@ async function processMessage(msg) {
     await updateLevelPercent(userId);
     await updateMissionProgress(userId);
   });
-      }
+}
+ 
     
 
    
