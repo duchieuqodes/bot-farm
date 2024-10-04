@@ -464,7 +464,8 @@ bot.onText(/\/thom/, async (msg) => {
 });
 
 
-// Tìm các số theo sau bởi ký tự hoặc từ khóa xác định hành vi
+
+   // Tìm các số theo sau bởi ký tự hoặc từ khóa xác định hành vi
 const regex = /(\d+)\s*(ca1|ca2|q|quay|quẩy|c|cong|cộng|\+|bill|anh|ảnh)(?:[,\s]+|$)/gi;
 
 bot.on('message', async (msg) => {
@@ -486,7 +487,7 @@ bot.on('message', async (msg) => {
 
 async function processMessage(msg) {
   const messageContent = msg.text || msg.caption;
-  const matches = [...messageContent.matchAll(regex)];
+  const matches = messageContent.match(regex);
   const userId = msg.from.id;
   const groupId = msg.chat.id;
 
@@ -495,26 +496,23 @@ async function processMessage(msg) {
   let bill = 0;
   let anh = 0;
 
-  if (matches.length > 0) {
-    matches.forEach(([, number, suffix]) => {
-      const parsedNumber = parseInt(number);
-      const lowercaseSuffix = suffix.toLowerCase().trim();
+  if (matches) {
+    matches.forEach((match) => {
+      const number = parseInt(match);
+      const suffix = match.slice(number.toString().length).toLowerCase();
 
-      if (['q', 'quay', 'quẩy'].includes(lowercaseSuffix)) {
-        quay += parsedNumber;
-      } else if (['c', 'cong', 'cộng', '+'].includes(lowercaseSuffix)) {
-        keo += parsedNumber;
-      } else if (lowercaseSuffix === 'bill') {
-        bill += parsedNumber;
-      } else if (['anh', 'ảnh'].includes(lowercaseSuffix)) {
-        anh += parsedNumber;
+      if (suffix === 'q' || suffix === 'quẩy') {
+        quay += number;
+      } else if (suffix === 'c' || suffix === 'cộng' || suffix === '+') {
+        keo += number;
+      } else if (suffix === 'bill') {
+        bill += number;
+      } else if (suffix === 'ảnh') {
+        anh += number;
       }
     });
   }
 
-  console.log(`Parsed values: quay=${quay}, keo=${keo}, bill=${bill}, anh=${anh}`);
-
-  // Rest of the function remains the same
   const currentDate = new Date().toLocaleDateString();
   const firstName = msg.from.first_name;
   const lastName = msg.from.last_name;
@@ -538,7 +536,6 @@ async function processMessage(msg) {
   switch (groupId) {
     case -1002186698265:
     case -1002300392959:
-    case -1002350493572:
       pricePerKeo = 1500;
       break;
     case -1002113921526:
@@ -610,7 +607,6 @@ async function processMessage(msg) {
     await updateMissionProgress(userId);
   });
 }
- 
     
 
    
