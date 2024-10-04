@@ -466,7 +466,7 @@ bot.onText(/\/thom/, async (msg) => {
 
 
 // Tìm các số theo sau bởi ký tự hoặc từ khóa xác định hành vi
-const regex = /(\d+)\s*(ca1|ca2|q|Q|c|C|bill|ảnh|quay|quẩy|kéo|keo)/gi;
+const regex = /\d+\s*(quẩy|q|cộng|c|\+|bill|ảnh)/gi;
 
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
@@ -474,10 +474,8 @@ bot.on('message', async (msg) => {
   // Chỉ kiểm tra nếu không phải là nhóm có ID
   if (chatId !== -1002103270166 && chatId !== -1002163768880) {
     // Kiểm tra nếu tin nhắn chứa chuỗi cấm
-    // Kiểm tra cả văn bản và chú thích
     const messageContent = msg.text || msg.caption;
     if (messageContent) {
-      // Chỉ thực hiện kiểm tra bảng công nếu tin nhắn chứa chuỗi cấm
       if (regex.test(messageContent)) {
         processMessage(msg); // Xử lý tin nhắn trực tiếp
       }
@@ -487,7 +485,7 @@ bot.on('message', async (msg) => {
 
 async function processMessage(msg) {
   const messageContent = msg.text || msg.caption;
-  const matches = messageContent.matchAll(regex);
+  const matches = messageContent.match(regex);
   const userId = msg.from.id;
   const groupId = msg.chat.id;
 
@@ -496,19 +494,21 @@ async function processMessage(msg) {
   let bill = 0;
   let anh = 0;
 
-  for (const match of matches) {
-    const number = parseInt(match[1]);
-    const suffix = match[2].toLowerCase();
+  if (matches) {
+    matches.forEach((match) => {
+      const number = parseInt(match.match(/\d+/)[0]); // Tìm số
+      const suffix = match.replace(/\d+\s*/, '').toLowerCase(); // Xóa số và khoảng trắng để lấy từ khóa
 
-    if (suffix === 'q' || suffix === 'quay' || suffix === 'quẩy') {
-      quay += number;
-    } else if (suffix === 'c' || suffix === 'kéo' || suffix === 'keo') {
-      keo += number;
-    } else if (suffix === 'bill') {
-      bill += number;
-    } else if (suffix === 'ảnh') {
-      anh += number;
-    }
+      if (suffix === 'q' || suffix === 'quẩy') {
+        quay += number;
+      } else if (suffix === 'c' || suffix === 'cộng' || suffix === '+') {
+        keo += number;
+      } else if (suffix === 'bill') {
+        bill += number;
+      } else if (suffix === 'ảnh') {
+        anh += number;
+      }
+    });
   }
 
   const currentDate = new Date().toLocaleDateString();
@@ -566,7 +566,7 @@ async function processMessage(msg) {
 
   const totalMoney = (quay * pricePerQuay) + (keo * pricePerKeo) + (bill * pricePerBill) + (anh * pricePerAnh) + pricePerKeoBonus + pricePerQuayBonus;
 
-  const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${quay}q, ${keo}c, ${bill} bill, ${anh} ảnh đang chờ kiểm tra ❤🥳`;
+  const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${quay} quẩy, ${keo} cộng, ${bill} bill, ${anh} ảnh đang chờ kiểm tra ❤🥳`;
 
   bot.sendMessage(groupId, responseMessage, { reply_to_message_id: msg.message_id }).then(async () => {
     let bangCong = await BangCong2.findOne({ userId, groupId, date: currentDate });
@@ -605,6 +605,7 @@ async function processMessage(msg) {
     await updateMissionProgress(userId);
   });
 }
+
     
 
    
