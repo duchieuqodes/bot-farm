@@ -470,37 +470,21 @@ bot.onText(/\/thom/, async (msg) => {
 
 // Tìm các số theo sau bởi ký tự hoặc từ khóa xác định hành vi
 const regex = /\d+\s*(quẩy|q|cộng|c|\+|bill|ảnh)/gi;
-const groupIdsWithSubmissionCheck = [
-  -1002230199552, -1002178207739, -1002235474314, -1002186698265,
-  -1002311358141, -1002245725621, -1002350493572, -1002300392959,
-  -1002113921526, -1002243393101
-];
 
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
-  const messageContent = msg.text || msg.caption;
 
-  // Kiểm tra nếu tin nhắn thuộc nhóm ID được chỉ định
-  if (groupIdsWithSubmissionCheck.includes(chatId)) {
-    // Kiểm tra tiêu đề chủ đề (thread title)
-    const threadTitle = msg.message_thread_id 
-      ? (await bot.getForumTopic(msg.chat.id, msg.message_thread_id)).title 
-      : "";
-
-    if (threadTitle && /nộp/i.test(threadTitle)) {
-      // Nếu tiêu đề chứa chữ "Nộp", tiến hành kiểm tra tin nhắn
-      if (messageContent && regex.test(messageContent)) {
-        processMessage(msg); // Xử lý tin nhắn
+  // Chỉ kiểm tra nếu không phải là nhóm có ID
+  if (chatId !== -1002103270166 && chatId !== -1002163768880) {
+    // Kiểm tra nếu tin nhắn chứa chuỗi cấm
+    const messageContent = msg.text || msg.caption;
+    if (messageContent) {
+      if (regex.test(messageContent)) {
+        processMessage(msg); // Xử lý tin nhắn trực tiếp
       }
-    }
-  } else if (messageContent) {
-    // Xử lý cho các nhóm không có trong danh sách
-    if (regex.test(messageContent)) {
-      processMessage(msg); // Xử lý tin nhắn trực tiếp
     }
   }
 });
-
 
 async function processMessage(msg) {
   const messageContent = msg.text || msg.caption;
@@ -625,7 +609,6 @@ async function processMessage(msg) {
     await updateMissionProgress(userId);
   });
 }
-
 
     
 
