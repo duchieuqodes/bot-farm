@@ -197,7 +197,7 @@ bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
 
   // Chỉ kiểm tra nếu là nhóm có ID
-  if (chatId == -1002247863313) {
+  if (chatId == -1002336524767) {
 
     // Kiểm tra nếu tin nhắn chứa từ khóa "xong (số) acc"
     const messageContent = msg.text || msg.caption;
@@ -223,7 +223,7 @@ async function processAccMessage3(msg) {
   }
 
   // Nếu số acc lớn hơn 100, gửi thông báo nghịch linh tinh và không xử lý tiếp
-  if (acc > 100) {
+  if (acc > 20) {
     bot.sendMessage(groupId, 'Nào, Nghịch linh tinh là xấu tính 😕', { reply_to_message_id: msg.message_id });
     return;
   }
@@ -411,7 +411,7 @@ bot.onText(/\/ha/, async (msg) => {
 });
 
  // Lệnh /thom để hiển thị bảng công tổng
-bot.onText(/\/thomhomqua/, async (msg) => {
+bot.onText(/\/lanlan13h/, async (msg) => {
   const chatId = msg.chat.id;
 
   // Lấy ngày hôm trước
@@ -420,13 +420,13 @@ bot.onText(/\/thomhomqua/, async (msg) => {
   const formattedDate = yesterday.toLocaleDateString();
 
   // Tìm các bản ghi bảng công có groupId -1002163768880 trong ngày hôm trước
-  const bangCongList = await Trasua.find({ groupId: -1002247863313, date: formattedDate });
+  const bangCongList = await Trasua.find({ groupId: -1002336524767, date: formattedDate });
   if (bangCongList.length === 0) {
     bot.sendMessage(chatId, 'Chưa có bảng công nào được ghi nhận trong ngày hôm qua.');
     return;
   }
 
-  let responseMessage = `BẢNG CÔNG NHÓM HÀ HÔM QUA- ${yesterday.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}\n\n`;
+  let responseMessage = `BẢNG CÔNG NHÓM "LAN LAN 19H" HÔM QUA- ${yesterday.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}\n\n`;
   let totalMoney = 0;
 
   bangCongList.forEach(entry => {
