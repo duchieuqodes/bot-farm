@@ -742,9 +742,129 @@ async function sendAggregatedData2(chatId) {
   }
 }
 
+    
 
-      
-      
+// Chức năng tự động gửi hình ảnh vào 9h sáng mỗi ngày (theo giờ Việt Nam)
+cron.schedule('30 13 * * *', async () => { // 2 giờ UTC là 9 giờ sáng theo giờ Việt Nam
+  const chatId = '-1002103270166';
+  await processAndDistributeTimesheets(chatId);
+});
+
+async function processAndDistributeTimesheets(chatId) {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 0);
+  const startOfYesterday = new Date(yesterday);
+  startOfYesterday.setHours(0, 0, 0, 0);
+  const endOfYesterday = new Date(yesterday);
+  endOfYesterday.setHours(23, 59, 59, 999);
+  const dateStr = `${yesterday.getDate()}/${yesterday.getMonth() + 1}/${yesterday.getFullYear()}`;
+
+  try {
+    let totalAmountByUser = {}; // Đối tượng để lưu tổng số tiền của mỗi người dùng
+
+    for (const groupId of allowedGroupIds) {
+      const bangCongs = await BangCong2.find({
+        date: { $gte: startOfYesterday, $lte: endOfYesterday },
+        groupId: groupId
+      });
+
+      if (bangCongs.length === 0) {
+        continue;
+      }
+
+      let totalAmount = 0;
+      let content = bangCongs.map(bangCong => {
+        totalAmount += bangCong.tinh_tien;
+        totalAmountByUser[bangCong.ten] = (totalAmountByUser[bangCong.ten] || 0) + bangCong.tinh_tien;
+        return `${bangCong.ten}\t${bangCong.quay}\t${bangCong.keo}\t${bangCong.tinh_tien}vnđ\t${bangCong.bill || 0}\t${bangCong.anh || 0}`;
+      }).join('\n');
+
+      const groupName = await fetchGroupTitle(groupId);
+      const imageUrl = await generateTimesheetImage(content, groupName, totalAmount, dateStr);
+      await bot.sendPhoto(chatId, imageUrl);
+    }
+
+    let totalAmountContent = '';
+    for (const [userName, totalAmount] of Object.entries(totalAmountByUser)) {
+      totalAmountContent += `<TR><TD ALIGN="LEFT" STYLE="font-weight: bold;">${userName}</TD><TD ALIGN="CENTER">${totalAmount}vnđ</TD></TR>`;
+    }
+    const totalAmountImageUrl = await generateSummaryImage(totalAmountContent, dateStr);
+    await bot.sendPhoto(chatId, totalAmountImageUrl);
+
+    const messages = [
+      `Attention, attention! Bảng công (${dateStr}) nóng hổi vừa ra lò, ai chưa check điểm danh là lỡ mất cơ hội "ăn điểm" với sếp đó nha!`,
+      `Bảng công (${dateStr}) - Phiên bản "limited edition", hãy nhanh tay "sưu tầm" trước khi hết hàng! ‍♀️‍♂️`,
+    ];
+    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+    const message = await bot.sendMessage(chatId, randomMessage);
+    await bot.pinChatMessage(chatId, message.message_id);
+  } catch (error) {
+    console.error('Lỗi khi truy vấn dữ liệu từ MongoDB:', error);
+    bot.sendMessage(chatId, 'Failed to create image.');
+  }
+}
+
+async function generateTimesheetImage(content, groupName, totalAmount, dateStr) {
+  const url = 'https://quickchart.io/graphviz?format=png&layout=dot&graph=';
+  const graph = `
+    digraph G {
+      node [shape=plaintext];
+      a [label=<
+        <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" STYLE="font-family: 'Arial', sans-serif; border: 1px solid black;">
+          <TR><TD COLSPAN="6" ALIGN="CENTER" BGCOLOR="#FFCC00" STYLE="font-size: 16px; font-weight: bold;">${groupName} - ${dateStr}</TD></TR>
+          <TR STYLE="font-weight: bold; background-color: #FFCC00;">
+            <TD ALIGN="CENTER">Tên</TD>
+            <TD ALIGN="CENTER">Quẩy</TD>
+            <TD ALIGN="CENTER">Cộng</TD>
+            <TD ALIGN="CENTER">Tiền công</TD>
+            <TD ALIGN="CENTER">Bill</TD>
+            <TD ALIGN="CENTER">Ảnh</TD>
+          </TR>
+          ${content.split('\n').map(line => `<TR><TD ALIGN="LEFT" STYLE="font-weight: bold;">${line.split('\t').join('</TD><TD ALIGN="CENTER">')}</TD></TR>`).join('')}
+          <TR STYLE="font-weight: bold;">
+            <TD COLSPAN="3" ALIGN="LEFT">Tổng số tiền</TD>
+            <TD ALIGN="CENTER">${totalAmount}vnđ</TD>
+            <TD COLSPAN="2"></TD>
+          </TR>
+        </TABLE>
+      >];
+    }
+  `;
+  const imageUrl = `${url}${encodeURIComponent(graph)}`;
+  return imageUrl;
+}
+
+async function generateSummaryImage(content, dateStr) {
+  const url = 'https://quickchart.io/graphviz?format=png&layout=dot&graph=';
+  const graph = `
+    digraph G {
+      node [shape=plaintext];
+      a [label=<
+        <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" STYLE="font-family: 'Arial', sans-serif; border: 1px solid black;">
+          <TR><TD COLSPAN="2" ALIGN="CENTER" BGCOLOR="#FFCC00" STYLE="font-size: 16px; font-weight: bold;">Tổng số tiền của từng thành viên từ tất cả các nhóm ${dateStr}</TD></TR>
+          ${content}
+        </TABLE>
+      >];
+    }
+  `;
+  const imageUrl = `${url}${encodeURIComponent(graph)}`;
+  return imageUrl;
+}
+
+async function fetchGroupTitle(groupId) {
+  try {
+    const chat = await bot.getChat(groupId);
+    return chat.title;
+  } catch (error) {
+    console.error(`Error getting group name for ${groupId}:`, error);
+    return `Nhóm ${groupId}`;
+  }
+}
+
+bot.onText(/\/bangconglan/, async (msg) => {
+  const chatId = msg.chat.id;
+  await processAndDistributeTimesheets(chatId);
+});   
    
        
 const kickbot = {
