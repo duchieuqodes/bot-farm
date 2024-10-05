@@ -616,10 +616,10 @@ const allowedGroupIds = [
 
 bot.onText(/\/lan/, async (msg) => {
   const chatId = msg.chat.id;
-  await sendAggregatedData(chatId);
+  await sendAggregatedData2(chatId);
 });
 
-async function sendAggregatedData(chatId) {
+async function sendAggregatedData2(chatId) {
   try {
     // Tính ngày hôm qua
     const yesterday = new Date();
