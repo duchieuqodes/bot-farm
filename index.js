@@ -613,7 +613,7 @@ const allowedGroupIds = [
   -1002311358141, -1002245725621, -1002350493572, -1002300392959, -1002113921526, -1002243393101
 ];
 
-bot.onText(/\/homqua/, async (msg) => {
+bot.onText(/\/lan/, async (msg) => {
   const chatId = msg.chat.id;
   await sendAggregatedData2(chatId);
 });
