@@ -675,16 +675,26 @@ async function sendAggregatedData2(chatId) {
       let totalGroupMoney = 0;
 
       groupData.forEach((bangCong) => {
-        if (bangCong.tinh_tien !== undefined) {
-          const formattedTien = bangCong.tinh_tien.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-          let line = `${bangCong.ten}\t\t${bangCong.quay}q +\t${bangCong.keo}c`;
-          if (bangCong.bill) line += `\t${bangCong.bill}bill`;
-          if (bangCong.anh) line += `\t${bangCong.anh}ảnh`;
-          line += `\t${formattedTien}vnđ\n`;
-          response += line;
-          totalGroupMoney += bangCong.tinh_tien;
-        }
-      });
+  if (bangCong.tinh_tien !== undefined) {
+    const formattedTien = bangCong.tinh_tien.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    let line = `${bangCong.ten}\t\t${bangCong.quay}q +\t${bangCong.keo}c`;
+    
+    // Kiểm tra nếu bill có giá trị và là số
+    if (bangCong.bill !== undefined && bangCong.bill !== null && !isNaN(bangCong.bill)) {
+      line += `\t${bangCong.bill}bill`;
+    }
+    
+    // Kiểm tra nếu ảnh có giá trị và là số
+    if (bangCong.anh !== undefined && bangCong.anh !== null && !isNaN(bangCong.anh)) {
+      line += `\t${bangCong.anh}ảnh`;
+    }
+    
+    line += `\t${formattedTien}vnđ\n`;
+    response += line;
+    totalGroupMoney += bangCong.tinh_tien;
+  }
+});
+
 
       const formattedTotal = totalGroupMoney.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
       response += `Tổng tiền: ${formattedTotal}vnđ\n\n`;
