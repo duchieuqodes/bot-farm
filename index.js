@@ -200,12 +200,12 @@ bot.on('message', async (msg) => {
     // Kiểm tra nếu tin nhắn chứa từ khóa "xong (số) acc"
     const messageContent = msg.text || msg.caption;
     if (messageContent && /xong\s*\d+\s*acc/gi.test(messageContent)) {
-      await processAccMessage(msg); // Gọi hàm xử lý tin nhắn
+      await processAccMessage3(msg); // Gọi hàm xử lý tin nhắn
     }
   }
 });
 
-async function processAccMessage(msg) {
+async function processAccMessage3(msg) {
   const messageContent = msg.text || msg.caption;
   const accMatches = messageContent.match(accRegex);
   const userId = msg.from.id;
@@ -765,80 +765,8 @@ const groupNames = {
   "-1002198923074": "LÀM GIÀU CÙNG NHAU" 
 };
 
-bot.onText(/\/sum/, async (msg) => {
-  const chatId = msg.chat.id;
 
-  try {
-    // Gọi hàm tổng hợp dữ liệu và gửi bảng công tổng hợp
-    await sendAggregatedData(chatId);
-  } catch (error) {
-    console.error("Lỗi khi truy vấn dữ liệu từ MongoDB:", error);
-    bot.sendMessage(chatId, "Đã xảy ra lỗi khi truy vấn dữ liệu từ cơ sở dữ liệu.");
-  }
-});
 
-async function sendAggregatedData(chatId) {
-  try {
-    const currentDate = new Date();
-    currentDate.setDate(currentDate.getDate() - 1); // Ngày hôm qua
-
-    const startOfYesterday = new Date(currentDate.setHours(0, 0, 0, 0)); // Bắt đầu của ngày hôm qua
-    const endOfYesterday = new Date(currentDate.setHours(23, 59, 59, 999)); // Kết thúc của ngày hôm qua
-
-    // Lấy danh sách các groupId cần tính toán
-    const groupIds = Object.keys(groupNames).map(id => parseInt(id, 10));
-
-    // Truy vấn để tổng hợp bảng công của các thành viên trong ngày hôm qua
-    const aggregatedData = await BangCong2.aggregate([
-      {
-        $match: {
-          date: { $gte: startOfYesterday, $lte: endOfYesterday },
-          groupId: { $in: groupIds } // Chỉ lấy các nhóm trong groupNames
-        },
-      },
-      {
-        $group: {
-          _id: {
-            userId: "$userId",
-            ten: "$ten",
-          },
-          totalQuay: { $sum: "$quay" },
-          totalKeo: { $sum: "$keo" },
-          totalTinhTien: { $sum: "$tinh_tien" },
-        },
-      },
-      {
-        $sort: { totalTinhTien: -1 }, // Sắp xếp theo tổng tiền giảm dần
-      },
-    ]);
-
-    if (aggregatedData.length === 0) {
-      if (chatId) {
-        bot.sendMessage(chatId, "Không có bảng công nào cho ngày hôm qua.");
-      }
-      return;
-    }
-
-    let response = "Bảng công tổng hợp cho ngày hôm qua:\n\n";
-    response += "HỌ TÊN👩‍🎤\t\tQUẨY💃\tCỘNG➕\tTỔNG TIỀN💰\n";
-
-    aggregatedData.forEach((data) => {
-      const formattedTotal = data.totalTinhTien.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-      response += `${data._id.ten}\t\t${data.totalQuay}q +\t${data.totalKeo}c\t${formattedTotal}vnđ\n`;
-    });
-
-    if (chatId) {
-      bot.sendMessage(chatId, response);
-    } else {
-      // Bạn có thể thay đổi logic gửi tin nhắn nếu không có chatId
-    }
-  } catch (error) {
-    console.error("Lỗi khi truy vấn dữ liệu từ MongoDB:", error);
-    if (chatId) {
-      bot.sendMessage(chatId, "Đã xảy ra lỗi khi truy vấn dữ liệu từ cơ sở dữ liệu.");
-    }
-  }
-}
 
 
 
