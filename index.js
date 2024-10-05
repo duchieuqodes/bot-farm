@@ -466,20 +466,34 @@ bot.onText(/\/thom/, async (msg) => {
 });
 
 
-
 // Tìm các số theo sau bởi ký tự hoặc từ khóa xác định hành vi
 const regex = /\d+\s*(quẩy|q|cộng|c|\+|bill|ảnh)/gi;
+
+// Danh sách các groupId cần kiểm tra tiêu đề topic
+const specialGroupIds = [
+  -1002230199552, -1002178207739, -1002235474314, -1002186698265,
+  -1002311358141, -1002245725621, -1002350493572, -1002300392959,
+  -1002113921526, -1002243393101
+];
 
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
 
-  // Chỉ kiểm tra nếu không phải là nhóm có ID
-  if (chatId !== -1002103270166 && chatId !== -1002163768880) {
-    // Kiểm tra nếu tin nhắn chứa chuỗi cấm
-    const messageContent = msg.text || msg.caption;
-    if (messageContent) {
+  // Kiểm tra nếu tin nhắn chứa chuỗi cấm
+  const messageContent = msg.text || msg.caption;
+  if (messageContent) {
+    if (specialGroupIds.includes(chatId)) {
+      // Kiểm tra tiêu đề topic cho các nhóm đặc biệt
+      const topicInfo = await bot.getChat(chatId);
+      if (topicInfo.title && topicInfo.title.toLowerCase().includes('nộp')) {
+        if (regex.test(messageContent)) {
+          processMessage(msg);
+        }
+      }
+    } else {
+      // Xử lý bình thường cho các nhóm khác
       if (regex.test(messageContent)) {
-        processMessage(msg); // Xử lý tin nhắn trực tiếp
+        processMessage(msg);
       }
     }
   }
