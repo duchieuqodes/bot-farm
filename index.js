@@ -625,7 +625,7 @@ async function sendAggregatedData2(chatId) {
   try {
     // Tính ngày hôm qua
     const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 0);
+    yesterday.setDate(yesterday.getDate() - 0); // Điều chỉnh ngày hiện tại
     const startOfYesterday = new Date(yesterday.setHours(0, 0, 0, 0));
     const endOfYesterday = new Date(yesterday.setHours(23, 59, 59, 999));
 
@@ -640,14 +640,24 @@ async function sendAggregatedData2(chatId) {
       return;
     }
 
-    // Tạo bảng công phân loại theo ID nhóm
+    // Tạo bảng công phân loại theo ID nhóm và tính tổng tiền của mỗi thành viên
     const groupedByGroupId = {};
+    const totalByMember = {}; // Tổng tiền của từng thành viên
+
     bangCongs.forEach((bangCong) => {
       const groupId = bangCong.groupId ? bangCong.groupId.toString() : '';
       if (!groupedByGroupId[groupId]) {
         groupedByGroupId[groupId] = [];
       }
       groupedByGroupId[groupId].push(bangCong);
+
+      // Cộng dồn tổng tiền cho mỗi thành viên từ các nhóm
+      if (bangCong.ten && bangCong.tinh_tien !== undefined) {
+        if (!totalByMember[bangCong.ten]) {
+          totalByMember[bangCong.ten] = 0;
+        }
+        totalByMember[bangCong.ten] += bangCong.tinh_tien;
+      }
     });
 
     let response = '';
@@ -679,10 +689,20 @@ async function sendAggregatedData2(chatId) {
       groupData.forEach((bangCong) => {
         if (bangCong.tinh_tien !== undefined) {
           const formattedTien = bangCong.tinh_tien.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-          response += `${bangCong.ten}\t\t${bangCong.quay}q +\t${bangCong.keo}c\t${formattedTien}vnđ`;
 
-          // Thêm số "bill" và "ảnh"
-          response += `\t${bangCong.bill} bill\t${bangCong.anh} ảnh\n`;
+          // Hiển thị số bill và ảnh chỉ khi chúng có giá trị lớn hơn 0
+          let billInfo = '';
+          let imageInfo = '';
+
+          if (bangCong.bill > 0) {
+            billInfo = `${bangCong.bill} bill\t`;
+          }
+
+          if (bangCong.anh > 0) {
+            imageInfo = `${bangCong.anh} ảnh\t`;
+          }
+
+          response += `${bangCong.ten}\t\t${billInfo}${imageInfo}${bangCong.quay}q +\t${bangCong.keo}c\t${formattedTien}vnđ\n`;
 
           totalGroupMoney += bangCong.tinh_tien;
           totalBills += bangCong.bill;
@@ -694,6 +714,13 @@ async function sendAggregatedData2(chatId) {
       response += `Tổng tiền: ${formattedTotal}vnđ\n`;
       response += `Tổng bill: ${totalBills}\n`;
       response += `Tổng ảnh: ${totalImages}\n\n`;
+    }
+
+    // Tổng tiền của từng thành viên từ tất cả các nhóm
+    response += `\nTổng tiền của từng thành viên từ tất cả các nhóm:\n`;
+    for (const member in totalByMember) {
+      const formattedTotalMember = totalByMember[member].toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      response += `${member}: ${formattedTotalMember}vnđ\n`;
     }
 
     // Kiểm tra độ dài response và gửi tin nhắn
@@ -715,6 +742,8 @@ async function sendAggregatedData2(chatId) {
   }
 }
 
+
+      
       
    
        
