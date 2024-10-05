@@ -483,9 +483,9 @@ bot.on('message', async (msg) => {
   const messageContent = msg.text || msg.caption;
   if (messageContent) {
     if (specialGroupIds.includes(chatId)) {
-      // Kiểm tra tiêu đề topic cho các nhóm đặc biệt
-      const topicInfo = await bot.getChat(chatId);
-      if (topicInfo.title && topicInfo.title.toLowerCase().includes('nộp')) {
+      // Kiểm tra tiêu đề topic con cho các nhóm đặc biệt
+      const topicInfo = await bot.getForumTopicByMessageId(chatId, msg.message_thread_id);
+      if (topicInfo && topicInfo.name && topicInfo.name.toLowerCase().includes('nộp')) {
         if (regex.test(messageContent)) {
           processMessage(msg);
         }
