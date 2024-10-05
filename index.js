@@ -776,20 +776,22 @@ async function deleteOldData(chatId) {
     // Tính ngày hôm kia
     const dayBeforeYesterday = new Date();
     dayBeforeYesterday.setDate(dayBeforeYesterday.getDate() - 2);
-    const startOfDayBeforeYesterday = new Date(dayBeforeYesterday.setHours(0, 0, 0, 0));
+    const endOfDayBeforeYesterday = new Date(dayBeforeYesterday.setHours(23, 59, 59, 999));
 
-    // Xóa tất cả dữ liệu bảng công từ hôm kia trở đi
+    // Xóa tất cả dữ liệu bảng công từ ngày hôm kia và các ngày trước đó
     const result = await BangCong2.deleteMany({
-      date: { $gte: startOfDayBeforeYesterday }
+      date: { $lte: endOfDayBeforeYesterday }
     });
 
     // Gửi thông báo về số lượng dữ liệu đã xóa
-    bot.sendMessage(chatId, `Đã xóa ${result.deletedCount} bản ghi bảng công từ ngày ${dayBeforeYesterday.toLocaleDateString()} trở đi.`);
+    bot.sendMessage(chatId, `Đã xóa ${result.deletedCount} bản ghi bảng công từ ngày ${dayBeforeYesterday.toLocaleDateString()} trở về trước.`);
   } catch (error) {
     console.error('Lỗi khi xóa dữ liệu:', error);
     bot.sendMessage(chatId, 'Đã xảy ra lỗi khi xóa dữ liệu.');
   }
 }
+
+
 
 
 
