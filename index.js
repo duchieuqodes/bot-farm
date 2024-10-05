@@ -614,7 +614,7 @@ const allowedGroupIds = [
   -1002311358141, -1002245725621, -1002350493572, -1002300392959, -1002113921526, -1002243393101
 ];
 
-bot.onText(/\/homqua/, async (msg) => {
+bot.onText(/\/lan/, async (msg) => {
   const chatId = msg.chat.id;
   await sendAggregatedData(chatId);
 });
@@ -623,7 +623,7 @@ async function sendAggregatedData(chatId) {
   try {
     // Tính ngày hôm qua
     const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setDate(yesterday.getDate() - 0);
     const startOfYesterday = new Date(yesterday.setHours(0, 0, 0, 0));
     const endOfYesterday = new Date(yesterday.setHours(23, 59, 59, 999));
 
