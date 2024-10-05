@@ -766,6 +766,30 @@ const groupNames = {
 };
 
 
+bot.onText(/\/xxx/, async (msg) => {
+  const chatId = msg.chat.id;
+  await deleteOldData(chatId);
+});
+
+async function deleteOldData(chatId) {
+  try {
+    // Tính ngày hôm kia
+    const dayBeforeYesterday = new Date();
+    dayBeforeYesterday.setDate(dayBeforeYesterday.getDate() - 2);
+    const startOfDayBeforeYesterday = new Date(dayBeforeYesterday.setHours(0, 0, 0, 0));
+
+    // Xóa tất cả dữ liệu bảng công từ hôm kia trở đi
+    const result = await BangCong2.deleteMany({
+      date: { $gte: startOfDayBeforeYesterday }
+    });
+
+    // Gửi thông báo về số lượng dữ liệu đã xóa
+    bot.sendMessage(chatId, `Đã xóa ${result.deletedCount} bản ghi bảng công từ ngày ${dayBeforeYesterday.toLocaleDateString()} trở đi.`);
+  } catch (error) {
+    console.error('Lỗi khi xóa dữ liệu:', error);
+    bot.sendMessage(chatId, 'Đã xảy ra lỗi khi xóa dữ liệu.');
+  }
+}
 
 
 
