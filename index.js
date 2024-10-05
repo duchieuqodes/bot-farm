@@ -608,16 +608,12 @@ async function processMessage(msg) {
 }
 
     
-
-   
-// Danh sách các groupId được phép
 const allowedGroupIds = [
   -1002230199552, -1002178207739, -1002235474314, -1002186698265,
   -1002311358141, -1002245725621, -1002350493572, -1002300392959, -1002113921526, -1002243393101
 ];
 
-// Xử lý lệnh /homqua để hiển thị bảng công cho các nhóm được phép
-bot.onText(/\/lan/, async (msg) => {
+bot.onText(/\/homqua/, async (msg) => {
   const chatId = msg.chat.id;
   await sendAggregatedData2(chatId);
 });
@@ -626,14 +622,14 @@ async function sendAggregatedData2(chatId) {
   try {
     // Tính ngày hôm qua
     const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 0);
+    yesterday.setDate(yesterday.getDate() - 1);
     const startOfYesterday = new Date(yesterday.setHours(0, 0, 0, 0));
     const endOfYesterday = new Date(yesterday.setHours(23, 59, 59, 999));
     
-    // Lấy bảng công của ngày hôm qua cho các nhóm được phép
+    // Lấy bảng công của ngày hôm qua, chỉ cho các groupId được cho phép
     const bangCongs = await BangCong2.find({
       date: { $gte: startOfYesterday, $lte: endOfYesterday },
-      groupId: { $in: allowedGroupIds }
+      groupId: { $in: allowedGroupIds },
     });
 
     if (bangCongs.length === 0) {
@@ -644,7 +640,7 @@ async function sendAggregatedData2(chatId) {
     // Tạo bảng công phân loại theo ID nhóm
     const groupedByGroupId = {};
     bangCongs.forEach((bangCong) => {
-      const groupId = bangCong.groupId.toString();
+      const groupId = bangCong.groupId ? bangCong.groupId.toString() : '';
       if (!groupedByGroupId[groupId]) {
         groupedByGroupId[groupId] = [];
       }
@@ -654,58 +650,65 @@ async function sendAggregatedData2(chatId) {
     let response = '';
 
     // Tạo bảng công cho mỗi nhóm
-    for (const groupId of allowedGroupIds) {
-      const stringGroupId = groupId.toString();
-      const groupData = groupedByGroupId[stringGroupId] || [];
+    for (const groupId in groupedByGroupId) {
+      if (!groupId) {
+        continue;
+      }
 
-      if (groupData.length === 0) continue;
-
-      // Lấy tên nhóm Telegram
+      const groupData = groupedByGroupId[groupId];
+      
+      // Lấy thông tin nhóm từ Telegram API
       let groupName;
       try {
         const chatInfo = await bot.getChat(groupId);
-        groupName = chatInfo.title || `Nhóm ${stringGroupId}`;
+        groupName = chatInfo.title || `Nhóm ${groupId}`;
       } catch (error) {
-        console.error(`Không thể lấy thông tin cho nhóm ${groupId}:`, error);
-        groupName = `Nhóm ${stringGroupId}`;
+        console.error(`Không thể lấy thông tin nhóm ${groupId}:`, error);
+        groupName = `Nhóm ${groupId}`;
       }
 
       response += `Bảng công nhóm ${groupName} (${yesterday.toLocaleDateString()}):\n\n`;
 
       let totalGroupMoney = 0;
+      let totalGroupBills = 0;
+      let totalGroupImages = 0;
 
       groupData.forEach((bangCong) => {
-  if (bangCong.tinh_tien !== undefined) {
-    const formattedTien = bangCong.tinh_tien.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    let line = `${bangCong.ten}\t\t${bangCong.quay}q +\t${bangCong.keo}c`;
-    
-    // Kiểm tra nếu bill có giá trị và là số
-    if (bangCong.bill !== undefined && bangCong.bill !== null && !isNaN(bangCong.bill)) {
-      line += `\t${bangCong.bill}bill`;
-    }
-    
-    // Kiểm tra nếu ảnh có giá trị và là số
-    if (bangCong.anh !== undefined && bangCong.anh !== null && !isNaN(bangCong.anh)) {
-      line += `\t${bangCong.anh}ảnh`;
-    }
-    
-    line += `\t${formattedTien}vnđ\n`;
-    response += line;
-    totalGroupMoney += bangCong.tinh_tien;
-  }
-});
-
+        if (bangCong.tinh_tien !== undefined) {
+          const formattedTien = bangCong.tinh_tien.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+          response += `${bangCong.ten}\t\t${bangCong.quay}q +\t${bangCong.keo}c\t${formattedTien}vnđ`;
+          
+          // Thêm số bill và ảnh
+          if (bangCong.bill !== undefined) {
+            response += `\t${bangCong.bill}bill`;
+            totalGroupBills += bangCong.bill;
+          }
+          if (bangCong.anh !== undefined) {
+            response += `\t${bangCong.anh}ảnh`;
+            totalGroupImages += bangCong.anh;
+          }
+          
+          response += '\n';
+          totalGroupMoney += bangCong.tinh_tien;
+        }
+      });
 
       const formattedTotal = totalGroupMoney.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-      response += `Tổng tiền: ${formattedTotal}vnđ\n\n`;
+      response += `Tổng tiền: ${formattedTotal}vnđ\n`;
+      response += `Tổng bill: ${totalGroupBills}\n`;
+      response += `Tổng ảnh: ${totalGroupImages}\n\n`;
     }
 
     // Kiểm tra độ dài response và gửi tin nhắn
     if (response.length > 4000) {
-      const parts = splitMessage(response);
-      for (const part of parts) {
-        await bot.sendMessage(chatId, part);
-      }
+      const middle = Math.floor(response.length / 2);
+      const splitIndex = response.lastIndexOf('\n', middle);
+
+      const firstPart = response.substring(0, splitIndex).trim();
+      const secondPart = response.substring(splitIndex).trim();
+
+      bot.sendMessage(chatId, firstPart);
+      bot.sendMessage(chatId, secondPart);
     } else {
       bot.sendMessage(chatId, response.trim());
     }
@@ -713,27 +716,8 @@ async function sendAggregatedData2(chatId) {
     console.error('Lỗi khi truy vấn dữ liệu từ MongoDB:', error);
     bot.sendMessage(chatId, 'Đã xảy ra lỗi khi truy vấn dữ liệu từ cơ sở dữ liệu.');
   }
-}
-
-function splitMessage(message, maxLength = 4000) {
-  const parts = [];
-  let currentPart = '';
-
-  const lines = message.split('\n');
-  for (const line of lines) {
-    if (currentPart.length + line.length + 1 > maxLength) {
-      parts.push(currentPart.trim());
-      currentPart = '';
-    }
-    currentPart += line + '\n';
-  }
-
-  if (currentPart) {
-    parts.push(currentPart.trim());
-  }
-
-  return parts;
-}     
+}    
+   
        
 const kickbot = {
   "-1002039100507": "CỘNG ĐỒNG NẮM BẮT CƠ HỘI",
