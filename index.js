@@ -466,11 +466,11 @@ bot.onText(/\/thom/, async (msg) => {
 });
 
 
+
+
 // Tìm các số theo sau bởi ký tự hoặc từ khóa xác định hành vi
 const regex = /\d+\s*(quẩy|q|cộng|c|\+|bill|ảnh)/gi;
-
-// Danh sách các groupId cần kiểm tra tiêu đề topic
-const specialGroupIds = [
+const groupIdsWithSubmissionCheck = [
   -1002230199552, -1002178207739, -1002235474314, -1002186698265,
   -1002311358141, -1002245725621, -1002350493572, -1002300392959,
   -1002113921526, -1002243393101
@@ -478,23 +478,22 @@ const specialGroupIds = [
 
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
-
-  // Kiểm tra nếu tin nhắn chứa chuỗi cấm
   const messageContent = msg.text || msg.caption;
-  if (messageContent) {
-    if (specialGroupIds.includes(chatId)) {
-      // Kiểm tra tiêu đề topic con cho các nhóm đặc biệt
-      const topicInfo = await bot.getForumTopicByMessageId(chatId, msg.message_thread_id);
-      if (topicInfo && topicInfo.name && topicInfo.name.toLowerCase().includes('nộp')) {
-        if (regex.test(messageContent)) {
-          processMessage(msg);
-        }
+
+  // Kiểm tra nếu tin nhắn thuộc nhóm ID được chỉ định và tiêu đề chứa "Nộp"
+  if (groupIdsWithSubmissionCheck.includes(chatId)) {
+    const threadTitle = msg.is_topic_message ? msg.message_thread_title : "";
+    
+    if (threadTitle && /nộp/i.test(threadTitle)) {
+      // Tiêu đề chứa chữ "Nộp", tiến hành kiểm tra tin nhắn
+      if (messageContent && regex.test(messageContent)) {
+        processMessage(msg); // Xử lý tin nhắn chứa "Nộp"
       }
-    } else {
-      // Xử lý bình thường cho các nhóm khác
-      if (regex.test(messageContent)) {
-        processMessage(msg);
-      }
+    }
+  } else if (messageContent) {
+    // Xử lý cho các nhóm không có trong danh sách
+    if (regex.test(messageContent)) {
+      processMessage(msg); // Xử lý tin nhắn trực tiếp
     }
   }
 });
@@ -622,6 +621,9 @@ async function processMessage(msg) {
     await updateMissionProgress(userId);
   });
 }
+
+
+    
 
     
 
