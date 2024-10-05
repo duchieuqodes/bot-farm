@@ -480,14 +480,17 @@ bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
   const messageContent = msg.text || msg.caption;
 
-  // Kiểm tra nếu tin nhắn thuộc nhóm ID được chỉ định và tiêu đề chứa "Nộp"
+  // Kiểm tra nếu tin nhắn thuộc nhóm ID được chỉ định
   if (groupIdsWithSubmissionCheck.includes(chatId)) {
-    const threadTitle = msg.is_topic_message ? msg.message_thread_title : "";
-    
+    // Kiểm tra tiêu đề chủ đề (thread title)
+    const threadTitle = msg.message_thread_id 
+      ? (await bot.getForumTopic(msg.chat.id, msg.message_thread_id)).title 
+      : "";
+
     if (threadTitle && /nộp/i.test(threadTitle)) {
-      // Tiêu đề chứa chữ "Nộp", tiến hành kiểm tra tin nhắn
+      // Nếu tiêu đề chứa chữ "Nộp", tiến hành kiểm tra tin nhắn
       if (messageContent && regex.test(messageContent)) {
-        processMessage(msg); // Xử lý tin nhắn chứa "Nộp"
+        processMessage(msg); // Xử lý tin nhắn
       }
     }
   } else if (messageContent) {
@@ -497,6 +500,7 @@ bot.on('message', async (msg) => {
     }
   }
 });
+
 
 async function processMessage(msg) {
   const messageContent = msg.text || msg.caption;
