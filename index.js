@@ -608,28 +608,29 @@ async function processMessage(msg) {
 }
 
     
+
 const allowedGroupIds = [
   -1002230199552, -1002178207739, -1002235474314, -1002186698265,
   -1002311358141, -1002245725621, -1002350493572, -1002300392959, -1002113921526, -1002243393101
 ];
 
-bot.onText(/\/lan/, async (msg) => {
+bot.onText(/\/homqua/, async (msg) => {
   const chatId = msg.chat.id;
-  await sendAggregatedData2(chatId);
+  await sendAggregatedData(chatId);
 });
 
-async function sendAggregatedData2(chatId) {
+async function sendAggregatedData(chatId) {
   try {
     // Tính ngày hôm qua
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     const startOfYesterday = new Date(yesterday.setHours(0, 0, 0, 0));
     const endOfYesterday = new Date(yesterday.setHours(23, 59, 59, 999));
-    
-    // Lấy bảng công của ngày hôm qua, chỉ cho các groupId được cho phép
+
+    // Lấy bảng công của ngày hôm qua cho các nhóm trong allowedGroupIds
     const bangCongs = await BangCong2.find({
       date: { $gte: startOfYesterday, $lte: endOfYesterday },
-      groupId: { $in: allowedGroupIds },
+      groupId: { $in: allowedGroupIds }, // Chỉ bao gồm các nhóm trong allowedGroupIds
     });
 
     if (bangCongs.length === 0) {
@@ -656,7 +657,7 @@ async function sendAggregatedData2(chatId) {
       }
 
       const groupData = groupedByGroupId[groupId];
-      
+
       // Lấy thông tin nhóm từ Telegram API
       let groupName;
       try {
@@ -670,33 +671,27 @@ async function sendAggregatedData2(chatId) {
       response += `Bảng công nhóm ${groupName} (${yesterday.toLocaleDateString()}):\n\n`;
 
       let totalGroupMoney = 0;
-      let totalGroupBills = 0;
-      let totalGroupImages = 0;
+      let totalBills = 0;
+      let totalImages = 0;
 
       groupData.forEach((bangCong) => {
         if (bangCong.tinh_tien !== undefined) {
           const formattedTien = bangCong.tinh_tien.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
           response += `${bangCong.ten}\t\t${bangCong.quay}q +\t${bangCong.keo}c\t${formattedTien}vnđ`;
-          
-          // Thêm số bill và ảnh
-          if (bangCong.bill !== undefined) {
-            response += `\t${bangCong.bill}bill`;
-            totalGroupBills += bangCong.bill;
-          }
-          if (bangCong.anh !== undefined) {
-            response += `\t${bangCong.anh}ảnh`;
-            totalGroupImages += bangCong.anh;
-          }
-          
-          response += '\n';
+
+          // Thêm số "bill" và "ảnh"
+          response += `\t${bangCong.bill} bill\t${bangCong.anh} ảnh\n`;
+
           totalGroupMoney += bangCong.tinh_tien;
+          totalBills += bangCong.bill;
+          totalImages += bangCong.anh;
         }
       });
 
       const formattedTotal = totalGroupMoney.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
       response += `Tổng tiền: ${formattedTotal}vnđ\n`;
-      response += `Tổng bill: ${totalGroupBills}\n`;
-      response += `Tổng ảnh: ${totalGroupImages}\n\n`;
+      response += `Tổng bill: ${totalBills}\n`;
+      response += `Tổng ảnh: ${totalImages}\n\n`;
     }
 
     // Kiểm tra độ dài response và gửi tin nhắn
@@ -716,7 +711,9 @@ async function sendAggregatedData2(chatId) {
     console.error('Lỗi khi truy vấn dữ liệu từ MongoDB:', error);
     bot.sendMessage(chatId, 'Đã xảy ra lỗi khi truy vấn dữ liệu từ cơ sở dữ liệu.');
   }
-}    
+}
+
+      
    
        
 const kickbot = {
