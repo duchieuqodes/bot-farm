@@ -747,10 +747,10 @@ async function sendAggregatedData2(chatId) {
 // Chức năng tự động gửi hình ảnh vào 9h sáng mỗi ngày (theo giờ Việt Nam)
 cron.schedule('30 13 * * *', async () => { // 2 giờ UTC là 9 giờ sáng theo giờ Việt Nam
   const chatId = '-1002103270166';
-  await processAndDistributeTimesheets(chatId);
+  await processAndDistributeTimesheets(chatId, false);
 });
 
-async function processAndDistributeTimesheets(chatId) {
+async function processAndDistributeTimesheets(chatId, excludeAllowedGroups = false) {
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 0);
   const startOfYesterday = new Date(yesterday);
@@ -760,9 +760,23 @@ async function processAndDistributeTimesheets(chatId) {
   const dateStr = `${yesterday.getDate()}/${yesterday.getMonth() + 1}/${yesterday.getFullYear()}`;
 
   try {
-    let totalAmountByUser = {}; // Đối tượng để lưu tổng số tiền của mỗi người dùng
+    let totalAmountByUser = {};
 
-    for (const groupId of allowedGroupIds) {
+    // Fetch all groups
+    const allGroups = await BangCong2.distinct('groupId', {
+      date: { $gte: startOfYesterday, $lte: endOfYesterday }
+    });
+
+    for (const groupId of allGroups) {
+      // Skip the group if it's in allowedGroupIds and we're excluding them
+      if (excludeAllowedGroups && allowedGroupIds.includes(groupId)) {
+        continue;
+      }
+      // Skip the group if it's not in allowedGroupIds and we're not excluding them
+      if (!excludeAllowedGroups && !allowedGroupIds.includes(groupId)) {
+        continue;
+      }
+
       const bangCongs = await BangCong2.find({
         date: { $gte: startOfYesterday, $lte: endOfYesterday },
         groupId: groupId
@@ -816,9 +830,9 @@ async function generateTimesheetImage(content, groupName, totalAmount, dateStr) 
             <TD ALIGN="CENTER">Tên</TD>
             <TD ALIGN="CENTER">Quẩy</TD>
             <TD ALIGN="CENTER">Cộng</TD>
-            <TD ALIGN="CENTER">Tiền công</TD>
             <TD ALIGN="CENTER">Bill</TD>
             <TD ALIGN="CENTER">Ảnh</TD>
+            <TD ALIGN="CENTER">Tiền công</TD>            
           </TR>
           ${content.split('\n').map(line => `<TR><TD ALIGN="LEFT" STYLE="font-weight: bold;">${line.split('\t').join('</TD><TD ALIGN="CENTER">')}</TD></TR>`).join('')}
           <TR STYLE="font-weight: bold;">
@@ -863,9 +877,15 @@ async function fetchGroupTitle(groupId) {
 
 bot.onText(/\/bangconglan/, async (msg) => {
   const chatId = msg.chat.id;
-  await processAndDistributeTimesheets(chatId);
-});   
-   
+  await processAndDistributeTimesheets(chatId, false);
+});
+
+bot.onText(/\/bangconghieu/, async (msg) => {
+  const chatId = msg.chat.id;
+  await processAndDistributeTimesheets(chatId, true);
+});
+
+
        
 const kickbot = {
   "-1002039100507": "CỘNG ĐỒNG NẮM BẮT CƠ HỘI",
