@@ -25,6 +25,8 @@ const BangCongSchema = new mongoose.Schema({
   ten: String,
   quay: Number,
   keo: Number,
+  bill: Number,
+  anh: Number,
   tinh_tien: Number,
   giftWon: { type: Boolean, default: false },
   prizeAmount: { type: Number, default: 0 },
