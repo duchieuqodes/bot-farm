@@ -744,15 +744,16 @@ async function sendAggregatedData2(chatId) {
 
     
 
+
 // Chức năng tự động gửi hình ảnh vào 9h sáng mỗi ngày (theo giờ Việt Nam)
 cron.schedule('30 13 * * *', async () => { // 2 giờ UTC là 9 giờ sáng theo giờ Việt Nam
   const chatId = '-1002103270166';
-  await processAndDistributeTimesheets(chatId, false);
+  await processAndDistributeTimesheets(chatId);
 });
 
-async function processAndDistributeTimesheets(chatId, excludeAllowedGroups = false) {
+async function processAndDistributeTimesheets(chatId) {
   const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 0);
+  yesterday.setDate(yesterday.getDate() - 1);
   const startOfYesterday = new Date(yesterday);
   startOfYesterday.setHours(0, 0, 0, 0);
   const endOfYesterday = new Date(yesterday);
@@ -760,23 +761,9 @@ async function processAndDistributeTimesheets(chatId, excludeAllowedGroups = fal
   const dateStr = `${yesterday.getDate()}/${yesterday.getMonth() + 1}/${yesterday.getFullYear()}`;
 
   try {
-    let totalAmountByUser = {};
+    let totalAmountByUser = {}; // Đối tượng để lưu tổng số tiền của mỗi người dùng
 
-    // Fetch all groups
-    const allGroups = await BangCong2.distinct('groupId', {
-      date: { $gte: startOfYesterday, $lte: endOfYesterday }
-    });
-
-    for (const groupId of allGroups) {
-      // Skip the group if it's in allowedGroupIds and we're excluding them
-      if (excludeAllowedGroups && allowedGroupIds.includes(groupId)) {
-        continue;
-      }
-      // Skip the group if it's not in allowedGroupIds and we're not excluding them
-      if (!excludeAllowedGroups && !allowedGroupIds.includes(groupId)) {
-        continue;
-      }
-
+    for (const groupId of allowedGroupIds) {
       const bangCongs = await BangCong2.find({
         date: { $gte: startOfYesterday, $lte: endOfYesterday },
         groupId: groupId
@@ -790,7 +777,7 @@ async function processAndDistributeTimesheets(chatId, excludeAllowedGroups = fal
       let content = bangCongs.map(bangCong => {
         totalAmount += bangCong.tinh_tien;
         totalAmountByUser[bangCong.ten] = (totalAmountByUser[bangCong.ten] || 0) + bangCong.tinh_tien;
-        return `${bangCong.ten}\t${bangCong.quay}\t${bangCong.keo}\t${bangCong.tinh_tien}vnđ\t${bangCong.bill || 0}\t${bangCong.anh || 0}`;
+        return `${bangCong.ten}\t${bangCong.quay}\t${bangCong.keo}\t${bangCong.bill || 0}\t${bangCong.anh || 0}\t${bangCong.tinh_tien}vnđ`;
       }).join('\n');
 
       const groupName = await fetchGroupTitle(groupId);
@@ -832,7 +819,8 @@ async function generateTimesheetImage(content, groupName, totalAmount, dateStr) 
             <TD ALIGN="CENTER">Cộng</TD>
             <TD ALIGN="CENTER">Bill</TD>
             <TD ALIGN="CENTER">Ảnh</TD>
-            <TD ALIGN="CENTER">Tiền công</TD>            
+            <TD ALIGN="CENTER">Tiền công</TD>
+            
           </TR>
           ${content.split('\n').map(line => `<TR><TD ALIGN="LEFT" STYLE="font-weight: bold;">${line.split('\t').join('</TD><TD ALIGN="CENTER">')}</TD></TR>`).join('')}
           <TR STYLE="font-weight: bold;">
@@ -877,13 +865,70 @@ async function fetchGroupTitle(groupId) {
 
 bot.onText(/\/bangconglan/, async (msg) => {
   const chatId = msg.chat.id;
-  await processAndDistributeTimesheets(chatId, false);
+  await processAndDistributeTimesheets(chatId);
 });
 
 bot.onText(/\/bangconghieu/, async (msg) => {
   const chatId = msg.chat.id;
-  await processAndDistributeTimesheets(chatId, true);
+  await processAndDistributeOtherTimesheets(chatId);
 });
+
+async function processAndDistributeOtherTimesheets(chatId) {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const startOfYesterday = new Date(yesterday);
+  startOfYesterday.setHours(0, 0, 0, 0);
+  const endOfYesterday = new Date(yesterday);
+  endOfYesterday.setHours(23, 59, 59, 999);
+  const dateStr = `${yesterday.getDate()}/${yesterday.getMonth() + 1}/${yesterday.getFullYear()}`;
+
+  try {
+    let totalAmountByUser = {}; // Đối tượng để lưu tổng số tiền của mỗi người dùng
+
+    // Fetch all unique groupIds from the database
+    const allGroupIds = await BangCong2.distinct('groupId', {
+      date: { $gte: startOfYesterday, $lte: endOfYesterday }
+    });
+
+    // Filter out the allowedGroupIds
+    const otherGroupIds = allGroupIds.filter(id => !allowedGroupIds.includes(id));
+
+    for (const groupId of otherGroupIds) {
+      const bangCongs = await BangCong2.find({
+        date: { $gte: startOfYesterday, $lte: endOfYesterday },
+        groupId: groupId
+      });
+
+      if (bangCongs.length === 0) {
+        continue;
+      }
+
+      let totalAmount = 0;
+      let content = bangCongs.map(bangCong => {
+        totalAmount += bangCong.tinh_tien;
+        totalAmountByUser[bangCong.ten] = (totalAmountByUser[bangCong.ten] || 0) + bangCong.tinh_tien;
+        return `${bangCong.ten}\t${bangCong.quay}\t${bangCong.keo}\t${bangCong.bill || 0}\t${bangCong.anh || 0}\t${bangCong.tinh_tien}vnđ`;
+      }).join('\n');
+
+      const groupName = await fetchGroupTitle(groupId);
+      const imageUrl = await generateTimesheetImage(content, groupName, totalAmount, dateStr);
+      await bot.sendPhoto(chatId, imageUrl);
+    }
+
+    let totalAmountContent = '';
+    for (const [userName, totalAmount] of Object.entries(totalAmountByUser)) {
+      totalAmountContent += `<TR><TD ALIGN="LEFT" STYLE="font-weight: bold;">${userName}</TD><TD ALIGN="CENTER">${totalAmount}vnđ</TD></TR>`;
+    }
+    const totalAmountImageUrl = await generateSummaryImage(totalAmountContent, dateStr);
+    await bot.sendPhoto(chatId, totalAmountImageUrl);
+
+    const message = await bot.sendMessage(chatId, `Bảng công các nhóm khác (${dateStr}) đã được tạo và gửi thành công!`);
+    await bot.pinChatMessage(chatId, message.message_id);
+  } catch (error) {
+    console.error('Lỗi khi truy vấn dữ liệu từ MongoDB:', error);
+    bot.sendMessage(chatId, 'Failed to create images for other groups.');
+  }
+}
 
 
        
