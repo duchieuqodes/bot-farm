@@ -1043,6 +1043,7 @@ const normalizeName = (name) => {
 bot.onText(/\/edit (.+)/, async (msg, match) => {
     const chatId = msg.chat.id;
     const userId = msg.from.id;
+    const username = msg.from.username; // Lấy username của người dùng
     const input = match[1].split(',').map(item => item.trim());
     const ten = input[0];
     const quayInput = input[1];
@@ -1055,12 +1056,12 @@ bot.onText(/\/edit (.+)/, async (msg, match) => {
     }
 
     // Kiểm tra xem người dùng có quyền sử dụng lệnh
-    if (userId === 5867504772) {
+    if (username === 'Hieu_ga') {
         // Người dùng này luôn có quyền sử dụng lệnh
     } else {
         const chatMember = await bot.getChatMember(chatId, userId);
         if (chatMember.status !== 'administrator' && chatMember.status !== 'creator') {
-            bot.sendMessage(chatId, 'Chỉ có admin Hieu Gà hoặc người dùng đặc biệt mới được phép sử dụng lệnh này.');
+            bot.sendMessage(chatId, 'Chỉ có admin hoặc người dùng đặc biệt mới được phép sử dụng lệnh này.');
             return;
         }
     }
@@ -1100,8 +1101,7 @@ bot.onText(/\/edit (.+)/, async (msg, match) => {
         console.error('Lỗi khi cập nhật dữ liệu:', error);
         bot.sendMessage(chatId, 'Lỗi khi cập nhật dữ liệu.');
     }
-});        
-
+});
 
 // Các xử lý khác (ví dụ: xử lý message)
 bot.on('message', async (msg) => {
