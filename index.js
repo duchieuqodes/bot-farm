@@ -467,10 +467,7 @@ bot.onText(/\/thom/, async (msg) => {
 });
 
 
-
-
-const regex = /(\d+)\s*(quẩy|quay|q|cộng|c|\+|bill|ảnh|hình)(?!\S)|(\d+)([qc+])(\d+)?([qc+])?/gi;
-
+const regex = /\b\d+\s*(quẩy|q|cộng|c|\+|bill|ảnh|quay)\b/gi;
 
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
@@ -489,7 +486,7 @@ bot.on('message', async (msg) => {
 
 async function processMessage(msg) {
   const messageContent = msg.text || msg.caption;
-  const matches = Array.from(messageContent.matchAll(regex));
+  const matches = messageContent.match(regex);
   const userId = msg.from.id;
   const groupId = msg.chat.id;
 
@@ -498,37 +495,24 @@ async function processMessage(msg) {
   let bill = 0;
   let anh = 0;
 
-  matches.forEach((match, index) => {
-    const [fullMatch, num1, suffix1, num2, suffix2, num3, suffix3] = match;
-    
-    function processNumberAndSuffix(number, suffix) {
-      number = parseInt(number);
-      suffix = suffix.toLowerCase();
-      if (suffix === 'q' || suffix === 'quẩy' || suffix === 'quay') {
+  if (matches) {
+    matches.forEach((match) => {
+      const number = parseInt(match.match(/\d+/)[0]); // Tìm số
+      const suffix = match.replace(/\d+\s*/, '').toLowerCase(); // Xóa số và khoảng trắng để lấy từ khóa
+
+      // Xử lý các từ khóa liên quan đến "quay" hoặc "quẩy"
+      if (['q', 'quẩy', 'quay'].includes(suffix)) {
         quay += number;
-      } else if (suffix === 'c' || suffix === 'cộng' || suffix === '+') {
+      // Xử lý các từ khóa liên quan đến "cộng" hoặc "+"
+      } else if (['c', 'cộng', '+'].includes(suffix)) {
         keo += number;
       } else if (suffix === 'bill') {
         bill += number;
-      } else if (suffix === 'ảnh' || suffix === 'hình') {
+      } else if (suffix === 'ảnh') {
         anh += number;
       }
-    }
-
-    if (num1) {
-      processNumberAndSuffix(num1, suffix1);
-    }
-    
-    if (num2 && suffix2) {
-      processNumberAndSuffix(num2, suffix2);
-      if (num3 && suffix3) {
-        processNumberAndSuffix(num3, suffix3);
-      }
-    }
-  });
-
-  // Rest of the function remains the same
-}
+    });
+  }
 
   const currentDate = new Date().toLocaleDateString();
   const firstName = msg.from.first_name;
