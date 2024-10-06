@@ -411,7 +411,7 @@ bot.onText(/\/ha/, async (msg) => {
 });
 
  // Lệnh /thom để hiển thị bảng công tổng
-bot.onText(/\/lanlan13h/, async (msg) => {
+bot.onText(/\/13hlan/, async (msg) => {
   const chatId = msg.chat.id;
 
   // Lấy ngày hôm trước
@@ -2240,7 +2240,7 @@ const issueLevelUpVipCard = async (userId, level) => {
   // Tính số ngày sử dụng dựa trên level
   let daysValid = (level % 20) / 5;
   if (daysValid === 0) {
-    daysValid = 4; // Nếu level là bội số của 20, thẻ có thời hạn 4 ngày
+    daysValid = 1; // Nếu level là bội số của 20, thẻ có thời hạn 4 ngày
   }
   
   const now = new Date();
@@ -2256,8 +2256,8 @@ const issueLevelUpVipCard = async (userId, level) => {
     validFrom,
     validUntil,
     expBonus: 0, // Không tăng exp
-    keoBonus: 100,
-    quayBonus: 100, // Tính 600đ/quẩy
+    keoBonus: 0,
+    quayBonus: 0, // Tính 600đ/quẩy
     keoLimit: 3,
     quayLimit: 3
   });
@@ -2301,8 +2301,8 @@ const issueWeeklyVipCard = async (userId) => {
     validFrom,
     validUntil,
     expBonus,
-    keoBonus: 100,
-    quayBonus: 100, // Tính 600đ/quẩy
+    keoBonus: 0,
+    quayBonus: 0, // Tính 600đ/quẩy
     keoLimit: 2,
     quayLimit: 2
   });
@@ -2400,9 +2400,9 @@ const updateMissionProgress = async (userId) => {
         member.consecutiveDays += 1;
         member.lastConsecutiveUpdate = today;
 
-        if (member.consecutiveDays === 7) {
+        if (member.consecutiveDays === 70000) {
           await issueWeeklyVipCard(userId);
-        } else if (member.consecutiveDays === 30) {
+        } else if (member.consecutiveDays === 30000) {
           await issueMonthlyVipCard(userId);
           member.consecutiveDays = 0; // Reset consecutiveDays về 0 sau khi cấp thẻ VIP tháng
         }
