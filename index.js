@@ -469,8 +469,7 @@ bot.onText(/\/thom/, async (msg) => {
 
 
 
-// Tìm các số theo sau bởi ký tự hoặc từ khóa xác định hành vi
-const regex = /\d+\s*(quẩy|quay|q|cộng|c|+|bill|ảnh|hình)(?!\S)/gi;
+const regex = /(\d+)\s*(quẩy|quay|q|cộng|c|\+|bill|ảnh|hình)(?!\S)|(\d+)([qc+])/gi;
 
 
 bot.on('message', async (msg) => {
@@ -490,7 +489,7 @@ bot.on('message', async (msg) => {
 
 async function processMessage(msg) {
   const messageContent = msg.text || msg.caption;
-  const matches = messageContent.match(regex);
+  const matches = Array.from(messageContent.matchAll(regex));
   const userId = msg.from.id;
   const groupId = msg.chat.id;
 
@@ -499,22 +498,34 @@ async function processMessage(msg) {
   let bill = 0;
   let anh = 0;
 
-  if (matches) {
-    matches.forEach((match) => {
-      const number = parseInt(match.match(/\d+/)[0]); // Tìm số
-      const suffix = match.replace(/\d+\s*/, '').toLowerCase(); // Xóa số và khoảng trắng để lấy từ khóa
+  matches.forEach((match, index) => {
+    const [fullMatch, num1, suffix1, num2, suffix2] = match;
+    const number = parseInt(num1 || num2);
+    const suffix = (suffix1 || suffix2).toLowerCase();
 
-      if (suffix === 'q' || suffix === 'quẩy' || suffix === 'quay') {
+    // Xử lý trường hợp đặc biệt: nếu suffix là '+' và có một 'quẩy' hoặc 'q' ngay sau
+    if (suffix === '+' && index < matches.length - 1) {
+      const nextMatch = matches[index + 1];
+      const nextSuffix = (nextMatch[2] || nextMatch[4]).toLowerCase();
+      if (nextSuffix === 'quẩy' || nextSuffix === 'quay' || nextSuffix === 'q') {
         quay += number;
-      } else if (suffix === 'c' || suffix === 'cộng' || suffix === '+') {
-        keo += number;
-      } else if (suffix === 'bill') {
-        bill += number;
-      } else if (suffix === 'ảnh' || suffix === 'hình') {
-        anh += number;
+        return; // Bỏ qua việc xử lý '+' như 'keo'
       }
-    });
-  }
+    }
+
+    if (suffix === 'q' || suffix === 'quẩy' || suffix === 'quay') {
+      quay += number;
+    } else if (suffix === 'c' || suffix === 'cộng' || suffix === '+') {
+      keo += number;
+    } else if (suffix === 'bill') {
+      bill += number;
+    } else if (suffix === 'ảnh' || suffix === 'hình') {
+      anh += number;
+    }
+  });
+
+  // Rest of the function remains the same
+        }
 
   const currentDate = new Date().toLocaleDateString();
   const firstName = msg.from.first_name;
