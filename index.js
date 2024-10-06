@@ -467,7 +467,8 @@ bot.onText(/\/thom/, async (msg) => {
 });
 
 
-const regex = /\b\d+\s*(quẩy|q|cộng|c|\+|bill|ảnh|quay)\b/gi;
+// Tìm các số theo sau bởi ký tự hoặc từ khóa xác định hành vi
+const regex = /\d+\s*(?:quẩy|q|cộng|c|\+|bill|ảnh)\b/gi;
 
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
@@ -498,13 +499,11 @@ async function processMessage(msg) {
   if (matches) {
     matches.forEach((match) => {
       const number = parseInt(match.match(/\d+/)[0]); // Tìm số
-      const suffix = match.replace(/\d+\s*/, '').toLowerCase(); // Xóa số và khoảng trắng để lấy từ khóa
+      const suffix = match.replace(/\d+\s*/, '').toLowerCase().trim(); // Xóa số và khoảng trắng để lấy từ khóa
 
-      // Xử lý các từ khóa liên quan đến "quay" hoặc "quẩy"
-      if (['q', 'quẩy', 'quay'].includes(suffix)) {
+      if (suffix === 'q' || suffix === 'quẩy') {
         quay += number;
-      // Xử lý các từ khóa liên quan đến "cộng" hoặc "+"
-      } else if (['c', 'cộng', '+'].includes(suffix)) {
+      } else if (suffix === 'c' || suffix === 'cộng' || suffix === '+') {
         keo += number;
       } else if (suffix === 'bill') {
         bill += number;
@@ -609,8 +608,6 @@ async function processMessage(msg) {
     await updateMissionProgress(userId);
   });
 }
-
-    
 
     
 
