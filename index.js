@@ -751,7 +751,7 @@ async function sendAggregatedData2(chatId) {
 // Chức năng tự động gửi hình ảnh vào 9h sáng mỗi ngày (theo giờ Việt Nam)
 cron.schedule('30 13 * * *', async () => { // 2 giờ UTC là 9 giờ sáng theo giờ Việt Nam
   const chatId = '-1002103270166';
-  await processAndDistributeTimesheets(chatId);
+  await processAndDistributeOtherTimesheets(chatId);
 });
 
 async function processAndDistributeTimesheets(chatId) {
@@ -960,6 +960,7 @@ const kickbot = {
   "-1002230199552": "12h-19h 2k 1k/c 500đ/q bill 2k qli 100",
   "-1002178207739": "12-19h15 1k/c 500đ/q bill 3k Qli 50",
   "-1002350493572": "lan", 
+  "-1002336524767": "lan 13h", 
   "-1002235474314": "11h30-19h30 1k/c 500đ/q bill 3k Qli 70",
   "-1002186698265": "10h45-19h45 11h-19h 1.5k/c 500đ/q bill 3k ảnh 2k qli 75",
   "-1002311358141": "13h10 1k/c 500d /q bill 3k Qli 50",
@@ -1490,11 +1491,6 @@ if (chatId && chatTitle && !ignoredChatIds.includes(chatId)) {
 });
 
 
-// Chức năng tự động gửi hình ảnh vào 9h sáng mỗi ngày (theo giờ Việt Nam)
-cron.schedule('30 13 * * *', async () => { // 2 giờ UTC là 9 giờ sáng theo giờ Việt Nam
-  const chatId = '-1002103270166';
-  await generateAndSendImages(chatId);
-});
 
 async function generateAndSendImages(chatId) {
   const yesterday = new Date();
