@@ -982,12 +982,13 @@ const groupNames = {
 };
 
 
-bot.onText(/\/xxx/, async (msg) => {
-  const chatId = msg.chat.id;
-  await deleteOldData(chatId);
+// Tự động xóa bảng công từ 2 ngày trước vào 0h mỗi ngày
+cron.schedule('0 0 * * *', async () => {
+  await deleteOldData();
+  console.log('Đã xóa các bản ghi bảng công từ 2 ngày trước và cũ hơn.');
 });
 
-async function deleteOldData(chatId) {
+async function deleteOldData() {
   try {
     // Tính ngày hôm kia
     const dayBeforeYesterday = new Date();
@@ -999,15 +1000,33 @@ async function deleteOldData(chatId) {
       date: { $lte: endOfDayBeforeYesterday }
     });
 
-    // Gửi thông báo về số lượng dữ liệu đã xóa
-    bot.sendMessage(chatId, `Đã xóa ${result.deletedCount} bản ghi bảng công từ ngày ${dayBeforeYesterday.toLocaleDateString()} trở về trước.`);
+    console.log(`Đã xóa ${result.deletedCount} bản ghi bảng công từ ngày ${dayBeforeYesterday.toLocaleDateString()} trở về trước.`);
   } catch (error) {
     console.error('Lỗi khi xóa dữ liệu:', error);
-    bot.sendMessage(chatId, 'Đã xảy ra lỗi khi xóa dữ liệu.');
   }
 }
 
 
+
+
+// Xử lý lệnh /delca
+bot.onText(/\/delca/, async (msg) => {
+  const chatId = msg.chat.id;
+
+  try {
+    // Xóa tất cả các bản ghi VipCard
+    const result = await VipCard.deleteMany({});
+
+    if (result.deletedCount > 0) {
+      bot.sendMessage(chatId, `Đã xóa thành công ${result.deletedCount} bản ghi VipCard. 😊`);
+    } else {
+      bot.sendMessage(chatId, "Không có bản ghi nào để xóa. 😕");
+    }
+  } catch (error) {
+    bot.sendMessage(chatId, "Có lỗi xảy ra khi xóa các bản ghi. 😓");
+    console.error("Error deleting VipCards:", error);
+  }
+});
 
 
 
