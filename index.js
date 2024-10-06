@@ -1056,7 +1056,7 @@ bot.onText(/\/edit (.+)/, async (msg, match) => {
     }
 
     // Kiểm tra xem người dùng có quyền sử dụng lệnh
-    if (username === 'Hieu_ga') {
+    if (username === 'Donghieu23') {
         // Người dùng này luôn có quyền sử dụng lệnh
     } else {
         const chatMember = await bot.getChatMember(chatId, userId);
