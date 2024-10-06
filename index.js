@@ -469,7 +469,8 @@ bot.onText(/\/thom/, async (msg) => {
 
 
 // Tìm các số theo sau bởi ký tự hoặc từ khóa xác định hành vi
-const regex = /\d+\s*(quẩy|q|cộng|c|\+|bill|ảnh)/gi;
+const regex = /\d+\s*(quẩy|quay|q|cộng|c|\+|bill|ảnh|hình)(?!\S)/gi;
+
 
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
@@ -502,13 +503,13 @@ async function processMessage(msg) {
       const number = parseInt(match.match(/\d+/)[0]); // Tìm số
       const suffix = match.replace(/\d+\s*/, '').toLowerCase(); // Xóa số và khoảng trắng để lấy từ khóa
 
-      if (suffix === 'q' || suffix === 'quẩy') {
+      if (suffix === 'q' || suffix === 'quẩy' || suffix === 'quay') {
         quay += number;
       } else if (suffix === 'c' || suffix === 'cộng' || suffix === '+') {
         keo += number;
       } else if (suffix === 'bill') {
         bill += number;
-      } else if (suffix === 'ảnh') {
+      } else if (suffix === 'ảnh' || suffix === 'hình') {
         anh += number;
       }
     });
