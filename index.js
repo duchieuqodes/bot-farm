@@ -469,7 +469,7 @@ bot.onText(/\/thom/, async (msg) => {
 
 
 
-const regex = /(\d+)\s*(quẩy|quay|q|cộng|c|\+|bill|ảnh|hình)(?!\S)|(\d+)([qc+])/gi;
+const regex = /(\d+)\s*(quẩy|quay|q|cộng|c|\+|bill|ảnh|hình)(?!\S)|(\d+)([qc+])(\d+)?([qc+])?/gi;
 
 
 bot.on('message', async (msg) => {
@@ -499,33 +499,36 @@ async function processMessage(msg) {
   let anh = 0;
 
   matches.forEach((match, index) => {
-    const [fullMatch, num1, suffix1, num2, suffix2] = match;
-    const number = parseInt(num1 || num2);
-    const suffix = (suffix1 || suffix2).toLowerCase();
-
-    // Xử lý trường hợp đặc biệt: nếu suffix là '+' và có một 'quẩy' hoặc 'q' ngay sau
-    if (suffix === '+' && index < matches.length - 1) {
-      const nextMatch = matches[index + 1];
-      const nextSuffix = (nextMatch[2] || nextMatch[4]).toLowerCase();
-      if (nextSuffix === 'quẩy' || nextSuffix === 'quay' || nextSuffix === 'q') {
+    const [fullMatch, num1, suffix1, num2, suffix2, num3, suffix3] = match;
+    
+    function processNumberAndSuffix(number, suffix) {
+      number = parseInt(number);
+      suffix = suffix.toLowerCase();
+      if (suffix === 'q' || suffix === 'quẩy' || suffix === 'quay') {
         quay += number;
-        return; // Bỏ qua việc xử lý '+' như 'keo'
+      } else if (suffix === 'c' || suffix === 'cộng' || suffix === '+') {
+        keo += number;
+      } else if (suffix === 'bill') {
+        bill += number;
+      } else if (suffix === 'ảnh' || suffix === 'hình') {
+        anh += number;
       }
     }
 
-    if (suffix === 'q' || suffix === 'quẩy' || suffix === 'quay') {
-      quay += number;
-    } else if (suffix === 'c' || suffix === 'cộng' || suffix === '+') {
-      keo += number;
-    } else if (suffix === 'bill') {
-      bill += number;
-    } else if (suffix === 'ảnh' || suffix === 'hình') {
-      anh += number;
+    if (num1) {
+      processNumberAndSuffix(num1, suffix1);
+    }
+    
+    if (num2 && suffix2) {
+      processNumberAndSuffix(num2, suffix2);
+      if (num3 && suffix3) {
+        processNumberAndSuffix(num3, suffix3);
+      }
     }
   });
 
   // Rest of the function remains the same
-        }
+}
 
   const currentDate = new Date().toLocaleDateString();
   const firstName = msg.from.first_name;
