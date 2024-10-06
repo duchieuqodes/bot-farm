@@ -470,7 +470,7 @@ bot.onText(/\/thom/, async (msg) => {
 
 
 // Tìm các số theo sau bởi ký tự hoặc từ khóa xác định hành vi
-const regex = /\d+\s*(quẩy|quay|q|cộng|c|\+|bill|ảnh|hình)(?!\S)/gi;
+const regex = /\d+\s*(quẩy|quay|q|cộng|c|+|bill|ảnh|hình)(?!\S)/gi;
 
 
 bot.on('message', async (msg) => {
