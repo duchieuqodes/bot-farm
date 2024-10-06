@@ -384,39 +384,7 @@ bot.onText(/\/hahomqua/, async (msg) => {
   bot.sendMessage(chatId, responseMessage);
 });
 
-// Assuming you're using a Telegram bot library like node-telegram-bot-api
-bot.onText(/\/delca/, async (msg) => {
-  const chatId = msg.chat.id;
-  const userId = msg.from.id;
 
-  // Check if the user has admin privileges (you should implement this function)
-  if (!isAdmin(userId)) {
-    bot.sendMessage(chatId, "Bạn không có quyền sử dụng lệnh này.");
-    return;
-  }
-
-  try {
-    // Delete all documents in the VipCard collection
-    const result = await VipCard.deleteMany({});
-
-    if (result.deletedCount > 0) {
-      bot.sendMessage(chatId, `Đã xóa thành công ${result.deletedCount} bản ghi VIP Card.`);
-    } else {
-      bot.sendMessage(chatId, "Không có bản ghi VIP Card nào để xóa.");
-    }
-  } catch (error) {
-    console.error("Error deleting VIP Cards:", error);
-    bot.sendMessage(chatId, "Đã xảy ra lỗi khi xóa dữ liệu VIP Card. Vui lòng thử lại sau.");
-  }
-});
-
-// Helper function to check if a user is an admin
-function isAdmin(userId) {
-  // Implement your admin check logic here
-  // For example, you could have an array of admin user IDs
-  const adminIds = [123456789, 987654321]; // Replace with actual admin user IDs
-  return adminIds.includes(userId);
-}
 
 // Lệnh /thom để hiển thị bảng công tổng
 bot.onText(/\/ha/, async (msg) => {
