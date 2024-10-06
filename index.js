@@ -1033,6 +1033,7 @@ bot.onText(/\/reset/, async (msg) => {
   }
 });
 
+
 // Hàm loại bỏ icon và emoji từ tên
 const normalizeName = (name) => {
   // Loại bỏ các icon, emoji hoặc ký tự đặc biệt không phải chữ cái
@@ -1053,11 +1054,15 @@ bot.onText(/\/edit (.+)/, async (msg, match) => {
         return;
     }
 
-    // Kiểm tra xem người dùng có phải admin hay không
-    const chatMember = await bot.getChatMember(chatId, userId);
-    if (chatMember.status !== 'administrator' && chatMember.status !== 'creator') {
-        bot.sendMessage(chatId, 'Chỉ có admin Hieu Gà mới được phép sử dụng lệnh này.');
-        return;
+    // Kiểm tra xem người dùng có quyền sử dụng lệnh
+    if (userId === 5867504772) {
+        // Người dùng này luôn có quyền sử dụng lệnh
+    } else {
+        const chatMember = await bot.getChatMember(chatId, userId);
+        if (chatMember.status !== 'administrator' && chatMember.status !== 'creator') {
+            bot.sendMessage(chatId, 'Chỉ có admin Hieu Gà hoặc người dùng đặc biệt mới được phép sử dụng lệnh này.');
+            return;
+        }
     }
 
     const groupId = chatId;
@@ -1095,7 +1100,7 @@ bot.onText(/\/edit (.+)/, async (msg, match) => {
         console.error('Lỗi khi cập nhật dữ liệu:', error);
         bot.sendMessage(chatId, 'Lỗi khi cập nhật dữ liệu.');
     }
-});
+});        
 
 
 // Các xử lý khác (ví dụ: xử lý message)
