@@ -467,7 +467,7 @@ bot.onText(/\/thom/, async (msg) => {
 });
 
 
-const regex = /\d+\s*(quẩy|q|cộng|c|\+|bill|ảnh)/gi;
+const regex = /\d+\s*(quẩy|q|cộng|c|\+|bill|ảnh|hình)/gi;
 
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
@@ -506,7 +506,7 @@ async function processMessage(msg) {
         keo += number;
       } else if (suffix === 'bill') {
         bill += number;
-      } else if (suffix === 'ảnh') {
+      } else if (suffix === 'ảnh' || suffix === 'hình') {
         anh += number;
       }
     });
