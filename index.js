@@ -764,21 +764,20 @@ const managementFees = {
   '-1002243393101': 50000
 };
 
-async function processAndDistributeTimesheets(chatId) {
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const startOfYesterday = new Date(yesterday);
-  startOfYesterday.setHours(0, 0, 0, 0);
-  const endOfYesterday = new Date(yesterday);
-  endOfYesterday.setHours(23, 59, 59, 999);
-  const dateStr = `${yesterday.getDate()}/${yesterday.getMonth() + 1}/${yesterday.getFullYear()}`;
+async function processAndDistributeTimesheets(chatId, isToday) {
+  const targetDate = isToday ? new Date() : new Date(Date.now() - 86400000); // Today or Yesterday
+  const startOfDay = new Date(targetDate);
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date(targetDate);
+  endOfDay.setHours(23, 59, 59, 999);
+  const dateStr = `${targetDate.getDate()}/${targetDate.getMonth() + 1}/${targetDate.getFullYear()}`;
 
   try {
     let totalAmountByUser = {}; // Đối tượng để lưu tổng số tiền của mỗi người dùng
 
     for (const groupId of allowedGroupIds) {
       const bangCongs = await BangCong2.find({
-        date: { $gte: startOfYesterday, $lte: endOfYesterday },
+        date: { $gte: startOfDay, $lte: endOfDay },
         groupId: groupId
       });
 
@@ -812,18 +811,21 @@ async function processAndDistributeTimesheets(chatId) {
     const totalAmountImageUrl = await generateSummaryImage(totalAmountContent, dateStr);
     await bot.sendPhoto(chatId, totalAmountImageUrl);
 
-    const messages = [
-      `Attention, attention! Bảng công (${dateStr}) nóng hổi vừa ra lò, ai chưa check điểm danh là lỡ mất cơ hội "ăn điểm" với sếp đó nha!`,
-      `Bảng công (${dateStr}) - Phiên bản "limited edition", hãy nhanh tay "sưu tầm" trước khi hết hàng! ‍♀️‍♂️`,
-    ];
-    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-    const message = await bot.sendMessage(chatId, randomMessage);
-    await bot.pinChatMessage(chatId, message.message_id);
+    if (!isToday) {
+      const messages = [
+        `Attention, attention! Bảng công (${dateStr}) nóng hổi vừa ra lò, ai chưa check điểm danh là lỡ mất cơ hội "ăn điểm" với sếp đó nha!`,
+        `Bảng công (${dateStr}) - Phiên bản "limited edition", hãy nhanh tay "sưu tầm" trước khi hết hàng! ‍♀️‍♂️`,
+      ];
+      const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+      const message = await bot.sendMessage(chatId, randomMessage);
+      await bot.pinChatMessage(chatId, message.message_id);
+    }
   } catch (error) {
     console.error('Lỗi khi truy vấn dữ liệu từ MongoDB:', error);
     bot.sendMessage(chatId, 'Failed to create image.');
   }
 }
+
 
 async function generateTimesheetImage(content, groupName, totalAmount, dateStr) {
   const url = 'https://quickchart.io/graphviz?format=png&layout=dot&graph=';
@@ -882,9 +884,15 @@ async function fetchGroupTitle(groupId) {
   }
 }
 
+
 bot.onText(/\/bangconglan/, async (msg) => {
   const chatId = msg.chat.id;
-  await processAndDistributeTimesheets(chatId);
+  await processAndDistributeTimesheets(chatId, false);
+});
+
+bot.onText(/\/bangconglanhomnay/, async (msg) => {
+  const chatId = msg.chat.id;
+  await processAndDistributeTimesheets(chatId, true);
 });
 
 
