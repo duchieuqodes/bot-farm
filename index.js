@@ -1147,72 +1147,72 @@ bot.onText(/\/edit (.+)/, async (msg, match) => {
 });
 
 
-// Lắng nghe tất cả các tin nhắn
-bot.on('message', async (msg) => {
-  // Kiểm tra nếu tin nhắn này là trả lời (reply) tin nhắn của bot
-  if (msg.reply_to_message && msg.reply_to_message.from.username === 'cukhoainong_bot') {
-    const replyText = msg.reply_to_message.text;
-    
-    // Kiểm tra xem tin nhắn có khớp với nội dung yêu cầu không
-    const regex = /Bài nộp của (.+) đã được ghi nhận với (\d+) quẩy, (\d+) cộng, (\d+) bill, (\d+) ảnh đang chờ kiểm tra/;
-    const matches = replyText.match(regex);
 
-    if (matches) {
-      // Extract các thông tin từ tin nhắn
-      const fullName = matches[1];
-      const quay = parseInt(matches[2], 10);
-      const keo = parseInt(matches[3], 10);
-      const bill = parseInt(matches[4], 10);
-      const anh = parseInt(matches[5], 10);
 
-      // Lấy thông tin chatId và userId của người gửi tin nhắn hiện tại
-      const chatId = msg.chat.id;
-      const userId = msg.from.id;
-      const username = msg.from.username;
+bot.onText(/Cập nhật/, async (msg) => {
+  if (!msg.reply_to_message || !msg.reply_to_message.text) {
+    bot.sendMessage(msg.chat.id, 'Hãy trả lời vào đúng tin nhắn xác nhận của bot để cập nhật.');
+    return;
+  }
 
-      // Kiểm tra xem người dùng có quyền sử dụng lệnh
-      if (username !== 'Donghieu23') {
-        const chatMember = await bot.getChatMember(chatId, userId);
-        if (chatMember.status !== 'administrator' && chatMember.status !== 'creator') {
-          bot.sendMessage(chatId, 'Chỉ có admin hoặc người dùng đặc biệt mới được phép sử dụng lệnh này.');
-          return;
-        }
-      }
+  // Lấy thông tin từ tin nhắn bot mà người dùng trả lời
+  const chatId = msg.chat.id;
+  const userId = msg.from.id;
+  const username = msg.from.username; // Lấy username của người dùng
 
-      const groupId = chatId;
+  const replyText = msg.reply_to_message.text;
+  const matched = replyText.match(/Bài nộp của (.+) đã được ghi nhận với (\d+) quẩy, (\d+) cộng, (\d+) bill, (\d+) ảnh/);
+  
+  if (!matched) {
+    bot.sendMessage(chatId, 'Tin nhắn trả lời không đúng định dạng xác nhận của bot.');
+    return;
+  }
 
-      try {
-        // Tìm kiếm thành viên gần đúng theo tên
-        const regexName = new RegExp(fullName.split('').join('.*'), 'i');
-        const bangCong = await BangCong2.findOne({
-          groupId: Number(groupId),
-          ten: { $regex: regexName },
-          date: new Date().setHours(0, 0, 0, 0) // Giả định là cập nhật cho ngày hôm nay
-        });
+  // Lấy thông tin từ tin nhắn trả lời
+  const ten = matched[1];
+  const quay = parseInt(matched[2]);
+  const keo = parseInt(matched[3]);
+  const bill = parseInt(matched[4]);
+  const anh = parseInt(matched[5]);
 
-        if (!bangCong) {
-          bot.sendMessage(chatId, `Không tìm thấy bản ghi để cập nhật cho ${fullName.trim()}.`);
-          return;
-        }
+  // Lấy ngày từ tin nhắn của bot (msg.reply_to_message.date)
+  const messageDate = new Date(msg.reply_to_message.date * 1000);
+  const startOfDay = new Date(messageDate.setHours(0, 0, 0, 0));
+  const endOfDay = new Date(messageDate.setHours(23, 59, 59, 999));
 
-        // Cập nhật dữ liệu cho thành viên
-        bangCong.quay -= quay;
-        bangCong.keo -= keo;
-        bangCong.bill -= bill;
-        bangCong.anh -= anh;
-        bangCong.tinh_tien = (bangCong.quay * 500) + (bangCong.keo * 1000); // Giả định tính tiền công
-        await bangCong.save();
+  try {
+    // Tìm kiếm bản ghi thành viên dựa trên tên và ngày gửi tin nhắn của bot
+    const regex = new RegExp(ten.split('').join('.*'), 'i');
+    const bangCong = await BangCong2.findOne({
+      groupId: chatId,
+      ten: { $regex: regex },
+      date: { $gte: startOfDay, $lte: endOfDay }
+    });
 
-        bot.sendMessage(chatId, `Cập nhật thành công cho ${fullName.trim()}.`);
-      } catch (error) {
-        console.error('Lỗi khi cập nhật dữ liệu:', error);
-        bot.sendMessage(chatId, 'Lỗi khi cập nhật dữ liệu.');
-      }
+    if (!bangCong) {
+      bot.sendMessage(chatId, `Không tìm thấy bản ghi để cập nhật cho ${ten.trim()}.`);
+      return;
     }
+
+    // Cập nhật số liệu dựa trên thông tin đã lấy
+    bangCong.quay -= quay;
+    bangCong.keo -= keo;
+    bangCong.bill -= bill;
+    bangCong.anh -= anh;
+    bangCong.tinh_tien = (bangCong.quay * 500) + (bangCong.keo * 1000); // Giả định tính tiền công là tổng số quay và keo nhân hệ số
+
+    // Lưu lại bản ghi đã chỉnh sửa
+    await bangCong.save();
+
+    bot.sendMessage(chatId, `Cập nhật thành công cho ${ten.trim()}.`);
+  } catch (error) {
+    console.error('Lỗi khi cập nhật dữ liệu:', error);
+    bot.sendMessage(chatId, 'Đã xảy ra lỗi khi cập nhật dữ liệu.');
   }
 });
 
 
+        
 // Các xử lý khác (ví dụ: xử lý message)
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
