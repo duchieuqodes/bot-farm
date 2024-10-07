@@ -1146,7 +1146,7 @@ const normalizeName = (name) => {
   return name.replace(/[^\w\s]/gi, '').toLowerCase().trim();
 };
 
-bot.onText(/Cập nhật/, async (msg) => {
+bot.onText(/Trừ/, async (msg) => {
   if (!msg.reply_to_message || !msg.reply_to_message.text) {
     bot.sendMessage(msg.chat.id, 'Hãy trả lời vào đúng tin nhắn xác nhận của bot để cập nhật.');
     return;
@@ -1202,7 +1202,7 @@ bot.onText(/Cập nhật/, async (msg) => {
     // Lưu lại bản ghi đã chỉnh sửa
     await bangCong.save();
 
-    bot.sendMessage(chatId, `Cập nhật thành công cho ${ten.trim()}.`);
+    bot.sendMessage(chatId, `Trừ thành công bài nộp này cho ${ten.trim()}.`);
   } catch (error) {
     console.error('Lỗi khi cập nhật dữ liệu:', error);
     bot.sendMessage(chatId, 'Đã xảy ra lỗi khi cập nhật dữ liệu.');
