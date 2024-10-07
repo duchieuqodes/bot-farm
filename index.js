@@ -1360,6 +1360,7 @@ cron.schedule('31 7 * * *', async () => {
   timezone: "Asia/Ho_Chi_Minh"
 });
 
+
 // Xử lý lệnh /homqua để hiển thị bảng công cho tất cả các nhóm
 bot.onText(/\/homqua/, async (msg) => {
   const chatId = msg.chat.id;
@@ -1373,7 +1374,7 @@ async function sendAggregatedData(chatId) {
     yesterday.setDate(yesterday.getDate() - 1);
     const startOfYesterday = new Date(yesterday.setHours(0, 0, 0, 0));
     const endOfYesterday = new Date(yesterday.setHours(23, 59, 59, 999));
-    
+
     // Lấy bảng công của ngày hôm qua, loại trừ nhóm có chatId -1002108234982
     const bangCongs = await BangCong2.find({
       date: { $gte: startOfYesterday, $lte: endOfYesterday },
@@ -1397,14 +1398,29 @@ async function sendAggregatedData(chatId) {
 
     let response = '';
 
-    // Tạo bảng công cho mỗi nhóm
+    // Tạo bảng công cho mỗi nhóm và kiểm tra xem user ID 5867504772 có trong nhóm hay không
     for (const groupId in groupedByGroupId) {
       if (!groupId) {
         continue;
       }
 
+      // Kiểm tra xem user 5867504772 có trong nhóm không
+      let isUserInGroup = false;
+      try {
+        const chatMembers = await bot.getChatMember(groupId, 5867504772);
+        if (chatMembers && (chatMembers.status === 'member' || chatMembers.status === 'administrator' || chatMembers.status === 'creator')) {
+          isUserInGroup = true;
+        }
+      } catch (error) {
+        console.error(`Không thể lấy thông tin thành viên của nhóm ${groupId}:`, error);
+      }
+
+      if (!isUserInGroup) {
+        continue; // Bỏ qua nhóm nếu user không có trong nhóm
+      }
+
       const groupData = groupedByGroupId[groupId];
-      
+
       // Lấy thông tin nhóm từ Telegram API
       let groupName;
       try {
