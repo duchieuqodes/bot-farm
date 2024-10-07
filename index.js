@@ -749,6 +749,7 @@ cron.schedule('30 13 * * *', async () => { // 2 giờ UTC là 9 giờ sáng theo
   await processAndDistributeOtherTimesheets(chatId);
 });
 
+
 async function processAndDistributeTimesheets(chatId) {
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
@@ -757,6 +758,20 @@ async function processAndDistributeTimesheets(chatId) {
   const endOfYesterday = new Date(yesterday);
   endOfYesterday.setHours(23, 59, 59, 999);
   const dateStr = `${yesterday.getDate()}/${yesterday.getMonth() + 1}/${yesterday.getFullYear()}`;
+
+  const managementFees = {
+    '-1002230199552': 100000,
+    '-1002178207739': 50000,
+    '-1002205826480': 50000,
+    '-1002235474314': 70000,
+    '-1002186698265': 75000,
+    '-1002350493572': 75000,
+    '-1002311358141': 50000,
+    '-1002245725621': 50000,
+    '-1002300392959': 75000,
+    '-1002113921526': 90000,
+    '-1002243393101': 50000
+  };
 
   try {
     let totalAmountByUser = {}; // Đối tượng để lưu tổng số tiền của mỗi người dùng
@@ -773,13 +788,14 @@ async function processAndDistributeTimesheets(chatId) {
 
       let totalAmount = 0;
       let content = bangCongs.map(bangCong => {
-        totalAmount += bangCong.tinh_tien;
-        totalAmountByUser[bangCong.ten] = (totalAmountByUser[bangCong.ten] || 0) + bangCong.tinh_tien;
-        return `${bangCong.ten}\t${bangCong.quay}\t${bangCong.keo}\t${bangCong.bill || 0}\t${bangCong.anh || 0}\t${bangCong.tinh_tien}vnđ`;
+        const tinhTienWithFee = bangCong.tinh_tien + (managementFees[groupId] || 0);
+        totalAmount += tinhTienWithFee;
+        totalAmountByUser[bangCong.ten] = (totalAmountByUser[bangCong.ten] || 0) + tinhTienWithFee;
+        return `${bangCong.ten}\t${bangCong.quay}\t${bangCong.keo}\t${bangCong.bill || 0}\t${bangCong.anh || 0}\t${tinhTienWithFee}vnđ`;
       }).join('\n');
 
       const groupName = await fetchGroupTitle(groupId);
-      const imageUrl = await generateTimesheetImage(content, groupName, totalAmount, dateStr);
+      const imageUrl = await generateTimesheetImage(content, groupName, totalAmount, dateStr, managementFees[groupId] || 0);
       await bot.sendPhoto(chatId, imageUrl);
     }
 
@@ -803,7 +819,7 @@ async function processAndDistributeTimesheets(chatId) {
   }
 }
 
-async function generateTimesheetImage(content, groupName, totalAmount, dateStr) {
+async function generateTimesheetImage(content, groupName, totalAmount, dateStr, managementFee) {
   const url = 'https://quickchart.io/graphviz?format=png&layout=dot&graph=';
   const graph = `
     digraph G {
@@ -818,14 +834,17 @@ async function generateTimesheetImage(content, groupName, totalAmount, dateStr) 
             <TD ALIGN="CENTER">Bill</TD>
             <TD ALIGN="CENTER">Ảnh</TD>
             <TD ALIGN="CENTER">Tiền công</TD>
-            
           </TR>
           ${content.split('\n').map(line => `<TR><TD ALIGN="LEFT" STYLE="font-weight: bold;">${line.split('\t').join('</TD><TD ALIGN="CENTER">')}</TD></TR>`).join('')}
           <TR STYLE="font-weight: bold;">
-            <TD COLSPAN="3" ALIGN="LEFT">Tổng số tiền</TD>
-            <TD ALIGN="CENTER">${totalAmount}vnđ</TD>
-            <TD COLSPAN="2"></TD>
+            <TD COLSPAN="6" ALIGN="LEFT">Quản lý</TD>
+            <TD ALIGN="RIGHT">${managementFee}vnđ</TD>
           </TR>
+          <TR STYLE="font-weight: bold;">
+            <TD COLSPAN="6" ALIGN="LEFT">Tổng số tiền</TD>
+            <TD ALIGN="RIGHT">${totalAmount}vnđ</TD>
+          </TR>
+          
         </TABLE>
       >];
     }
