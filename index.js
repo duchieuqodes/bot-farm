@@ -1077,11 +1077,6 @@ bot.onText(/\/reset/, async (msg) => {
 });
 
 
-// Hàm loại bỏ icon và emoji từ tên
-const normalizeName = (name) => {
-  // Loại bỏ các icon, emoji hoặc ký tự đặc biệt không phải chữ cái
-  return name.replace(/[^\w\s]/gi, '').toLowerCase().trim();
-};
 
 bot.onText(/\/edit (.+)/, async (msg, match) => {
     const chatId = msg.chat.id;
@@ -1147,7 +1142,9 @@ bot.onText(/\/edit (.+)/, async (msg, match) => {
 });
 
 
-
+const normalizeName = (name) => {
+  return name.replace(/[^\w\s]/gi, '').toLowerCase().trim();
+};
 
 bot.onText(/Cập nhật/, async (msg) => {
   if (!msg.reply_to_message || !msg.reply_to_message.text) {
@@ -1169,7 +1166,7 @@ bot.onText(/Cập nhật/, async (msg) => {
   }
 
   // Lấy thông tin từ tin nhắn trả lời
-  const ten = matched[1];
+  const ten = matched[1].trim();
   const quay = parseInt(matched[2]);
   const keo = parseInt(matched[3]);
   const bill = parseInt(matched[4]);
@@ -1177,16 +1174,17 @@ bot.onText(/Cập nhật/, async (msg) => {
 
   // Lấy ngày từ tin nhắn của bot (msg.reply_to_message.date)
   const messageDate = new Date(msg.reply_to_message.date * 1000);
-  const startOfDay = new Date(messageDate.setHours(0, 0, 0, 0));
-  const endOfDay = new Date(messageDate.setHours(23, 59, 59, 999));
+  const normalizedMessageDate = new Date(messageDate.setHours(0, 0, 0, 0)); // Ngày không giờ phút giây
 
   try {
     // Tìm kiếm bản ghi thành viên dựa trên tên và ngày gửi tin nhắn của bot
-    const regex = new RegExp(ten.split('').join('.*'), 'i');
+    const regex = new RegExp(normalizeName(ten).split('').join('.*'), 'i');
+    
+    // Đảm bảo rằng truy vấn sẽ sử dụng ngày cụ thể, không phải khoảng thời gian
     const bangCong = await BangCong2.findOne({
       groupId: chatId,
       ten: { $regex: regex },
-      date: { $gte: startOfDay, $lte: endOfDay }
+      date: normalizedMessageDate // So sánh trực tiếp với ngày đã chuẩn hóa
     });
 
     if (!bangCong) {
@@ -1210,6 +1208,7 @@ bot.onText(/Cập nhật/, async (msg) => {
     bot.sendMessage(chatId, 'Đã xảy ra lỗi khi cập nhật dữ liệu.');
   }
 });
+
 
 
         
