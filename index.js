@@ -190,7 +190,7 @@ cron.schedule('0 0 * * *', async () => {
 });
 
 
- const accRegex = /xong\s*\d+\s*acc/i;
+const accRegex = /xong.*?(\d+).*?acc/i;
 
 // Đăng ký sự kiện cho bot
 bot.on('message', async (msg) => {
@@ -201,7 +201,7 @@ bot.on('message', async (msg) => {
 
     // Kiểm tra nếu tin nhắn chứa từ khóa "xong (số) acc"
     const messageContent = msg.text || msg.caption;
-    if (messageContent && /xong\s*\d+\s*acc/gi.test(messageContent)) {
+    if (messageContent && accRegex.test(messageContent)) {
       await processAccMessage3(msg); // Gọi hàm xử lý tin nhắn
     }
   }
@@ -216,13 +216,10 @@ async function processAccMessage3(msg) {
   let acc = 0;
 
   if (accMatches) {
-    accMatches.forEach((match) => {
-      const number = parseInt(match.match(/\d+/)[0]); // Lấy số acc
-      acc += number; // Thêm vào số acc
-    });
+    acc = parseInt(accMatches[1]); // Lấy số acc từ nhóm bắt được
   }
 
-  // Nếu số acc lớn hơn 100, gửi thông báo nghịch linh tinh và không xử lý tiếp
+  // Nếu số acc lớn hơn 20, gửi thông báo nghịch linh tinh và không xử lý tiếp
   if (acc > 20) {
     bot.sendMessage(groupId, 'Nào, Nghịch linh tinh là xấu tính 😕', { reply_to_message_id: msg.message_id });
     return;
@@ -256,6 +253,7 @@ async function processAccMessage3(msg) {
     }
   });
 }
+    
 
 const accRegex2 = /xong\s*(\d+)\s*acc\s*(\d+)\s*nhóm/i;
 
