@@ -890,7 +890,7 @@ bot.onText(/\/bangconglan/, async (msg) => {
   await processAndDistributeTimesheets(chatId, false);
 });
 
-bot.onText(/\/bangconglanhomnay/, async (msg) => {
+bot.onText(/\/homnaylan/, async (msg) => {
   const chatId = msg.chat.id;
   await processAndDistributeTimesheets(chatId, true);
 });
