@@ -537,7 +537,7 @@ async function processMessage(msg) {
       pricePerKeo = 1500;
       break;
     case -1002113921526:
-      pricePerKeo = 500;
+      pricePerKeo = 2000;
       break;
     default:
       pricePerKeo = 1000;
@@ -621,7 +621,7 @@ async function sendAggregatedData2(chatId) {
   try {
     // Tính ngày hôm qua
     const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 0); // Điều chỉnh ngày hiện tại
+    yesterday.setDate(yesterday.getDate() - 1); // Điều chỉnh ngày hiện tại
     const startOfYesterday = new Date(yesterday.setHours(0, 0, 0, 0));
     const endOfYesterday = new Date(yesterday.setHours(23, 59, 59, 999));
 
