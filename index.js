@@ -537,6 +537,7 @@ async function processMessage(msg) {
       pricePerKeo = 1500;
       break;
     case -1002113921526:
+    case -1002230199552:
       pricePerKeo = 2000;
       break;
     default:
