@@ -514,7 +514,7 @@ bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
 
   // Chỉ kiểm tra nếu không phải là nhóm có ID
-  if (chatId !== -1002103270166 && chatId !== -1002336524767) {
+  if (chatId !== -1002103270166 && chatId !== -1002336524767 && chatId !== -1002247863313 && chatId !== -1002303292016) {
     // Kiểm tra nếu tin nhắn chứa chuỗi cấm
     const messageContent = msg.text || msg.caption;
     if (messageContent) {
