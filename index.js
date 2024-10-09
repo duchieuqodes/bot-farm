@@ -353,39 +353,29 @@ bot.onText(/\/bo/, async (msg) => {
 });
 
 
-
 bot.onText(/\/ha/, async (msg) => {
   const chatId = msg.chat.id;
-  const today = new Date();
-  const startOfToday = new Date(today.setHours(0, 0, 0, 0));
-  const endOfToday = new Date(today.setHours(23, 59, 59, 999));
-  await sendAttendanceReport(chatId, startOfToday, endOfToday, 'HÔM NAY');
+  const currentDate = moment().tz('Asia/Ho_Chi_Minh').format('DD/MM/YYYY');
+  await sendAttendanceReport(chatId, currentDate, 'HÔM NAY');
 });
 
 bot.onText(/\/hqha/, async (msg) => {
   const chatId = msg.chat.id;
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const startOfYesterday = new Date(yesterday.setHours(0, 0, 0, 0));
-  const endOfYesterday = new Date(yesterday.setHours(23, 59, 59, 999));
-  await sendAttendanceReport(chatId, startOfYesterday, endOfYesterday, 'HÔM QUA');
+  const yesterdayDate = moment().tz('Asia/Ho_Chi_Minh').subtract(1, 'days').format('DD/MM/YYYY');
+  await sendAttendanceReport(chatId, yesterdayDate, 'HÔM QUA');
 });
 
-async function sendAttendanceReport(chatId, startDate, endDate, dayLabel) {
+async function sendAttendanceReport(chatId, date, dayLabel) {
   const groupIds = [-1002247863313, -1002303292016];
   const groupNames = {
     '-1002247863313': 'Nhóm Hà 11h30 -14h-19h30-21h',
     '-1002303292016': 'Nhóm Hà 11h30, 19h30'
   };
 
-  const dateString = moment(startDate).tz('Asia/Ho_Chi_Minh').format('DD/MM');
-  let responseMessage = `BẢNG CÔNG NHÓM ZALO HA ${dayLabel} - ${dateString}\n\n`;
+  let responseMessage = `BẢNG CÔNG NHÓM ZALO HA ${dayLabel} - ${moment(date, 'DD/MM/YYYY').format('DD/MM')}\n\n`;
 
   for (const groupId of groupIds) {
-    const bangCongList = await Trasua.find({
-      groupId: groupId,
-      date: { $gte: startDate, $lte: endDate }
-    });
+    const bangCongList = await Trasua.find({ groupId: groupId, date: date });
     
     if (bangCongList.length > 0) {
       responseMessage += `${groupNames[groupId]}:\n`;
@@ -400,7 +390,7 @@ async function sendAttendanceReport(chatId, startDate, endDate, dayLabel) {
     }
   }
 
-  if (responseMessage === `BẢNG CÔNG NHÓM ZALO HA ${dayLabel} - ${dateString}\n\n`) {
+  if (responseMessage === `BẢNG CÔNG NHÓM ZALO HA ${dayLabel} - ${moment(date, 'DD/MM/YYYY').format('DD/MM')}\n\n`) {
     responseMessage = `Chưa có bảng công nào được ghi nhận cho ${dayLabel.toLowerCase()}.`;
   }
 
