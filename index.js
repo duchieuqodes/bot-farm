@@ -334,7 +334,7 @@ async function processAccMessage2(msg) {
 }
 
 
-bot.onText(/\/bo/, async (msg) => {
+bot.onText(/\/khoiphuc/, async (msg) => {
   const chatId = msg.chat.id;
 
   // Danh sách các groupId cần xóa
@@ -450,10 +450,6 @@ bot.onText(/\/thom/, async (msg) => {
 
 
 // Assuming you have already set up your MongoDB connection and Trasua model
-
-const normalizeName = (name) => {
-  return name.replace(/[^\w\s]/gi, '').toLowerCase().trim();
-};
 
 bot.onText(/Bỏ/, async (msg) => {
   if (!msg.reply_to_message || !msg.reply_to_message.text) {
