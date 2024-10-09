@@ -449,7 +449,6 @@ bot.onText(/\/thom/, async (msg) => {
 });
 
 
-// Assuming you have already set up your MongoDB connection and Trasua model
 
 bot.onText(/Bỏ/, async (msg) => {
   if (!msg.reply_to_message || !msg.reply_to_message.text) {
@@ -462,7 +461,7 @@ bot.onText(/Bỏ/, async (msg) => {
   const username = msg.from.username;
 
   const replyText = msg.reply_to_message.text;
-  const matched = replyText.match(/Bài nộp của (.+) đã được ghi nhận với (\d+) Acc. Tổng tiền: (\d+) VNĐ/);
+  const matched = replyText.match(/Bài nộp của (.+) đã được ghi nhận với (\d+) Acc, (\d+) nhóm. Tổng tiền: ([\d,]+) VNĐ/);
 
   if (!matched) {
     bot.sendMessage(chatId, 'Tin nhắn trả lời không đúng định dạng xác nhận của bot.');
@@ -471,9 +470,10 @@ bot.onText(/Bỏ/, async (msg) => {
 
   const ten = matched[1].trim();
   const acc = parseInt(matched[2]);
-  const tinh_tien = parseInt(matched[3]);
+  const nhom = parseInt(matched[3]);
+  const tinh_tien = parseInt(matched[4].replace(/,/g, ''));
 
-  // Get the date from the bot's message and format it as month/day/year
+  // Lấy ngày từ tin nhắn của bot và định dạng là tháng/ngày/năm
   const messageDate = new Date(msg.reply_to_message.date * 1000);
   const formattedDate = `${messageDate.getMonth() + 1}/${messageDate.getDate()}/${messageDate.getFullYear()}`;
 
@@ -491,14 +491,15 @@ bot.onText(/Bỏ/, async (msg) => {
       return;
     }
 
-    // Update the record
+    // Cập nhật bản ghi
     trasua.acc -= acc;
+    trasua.nhom -= nhom;
     trasua.tinh_tien -= tinh_tien;
 
-    // Save the updated record
+    // Lưu bản ghi đã cập nhật
     await trasua.save();
 
-    bot.sendMessage(chatId, `Trừ thành công bài nộp này cho ${ten}. Acc: -${acc}, Tiền: -${tinh_tien} VNĐ`);
+    bot.sendMessage(chatId, `Trừ thành công bài nộp này cho ${ten}. Acc: -${acc}, Nhóm: -${nhom}, Tiền: -${tinh_tien.toLocaleString()} VNĐ`);
   } catch (error) {
     console.error('Lỗi khi cập nhật dữ liệu:', error);
     bot.sendMessage(chatId, 'Đã xảy ra lỗi khi cập nhật dữ liệu.');
