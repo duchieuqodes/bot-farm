@@ -354,7 +354,7 @@ bot.onText(/\/bo/, async (msg) => {
 
 
 // Lệnh /thom để hiển thị bảng công tổng
-bot.onText(/\/hahomqua/, async (msg) => {
+bot.onText(/\/hqha/, async (msg) => {
   const chatId = msg.chat.id;
 
   // Lấy ngày hôm trước
@@ -390,7 +390,7 @@ bot.onText(/\/ha/, async (msg) => {
   const currentDate = new Date().toLocaleDateString();
 
   // Tìm các bản ghi bảng công có groupId -1002163768880 trong ngày hiện tại
-  const bangCongList = await Trasua.find({ groupId: -1002303292016, date: currentDate });
+  const bangCongList = await Trasua.find({ groupId: { $in: [-1002303292016, -1002247863313] }, date: formattedDate });
   if (bangCongList.length === 0) {
     bot.sendMessage(chatId, 'Chưa có bảng công nào được ghi nhận trong ngày hôm nay.');
     return;
