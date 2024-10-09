@@ -449,6 +449,68 @@ bot.onText(/\/thom/, async (msg) => {
 });
 
 
+// Assuming you have already set up your MongoDB connection and Trasua model
+
+const normalizeName = (name) => {
+  return name.replace(/[^\w\s]/gi, '').toLowerCase().trim();
+};
+
+bot.onText(/Bỏ/, async (msg) => {
+  if (!msg.reply_to_message || !msg.reply_to_message.text) {
+    bot.sendMessage(msg.chat.id, 'Hãy trả lời vào đúng tin nhắn xác nhận của bot để cập nhật.');
+    return;
+  }
+
+  const chatId = msg.chat.id;
+  const userId = msg.from.id;
+  const username = msg.from.username;
+
+  const replyText = msg.reply_to_message.text;
+  const matched = replyText.match(/Bài nộp của (.+) đã được ghi nhận với (\d+) Acc. Tổng tiền: (\d+) VNĐ/);
+
+  if (!matched) {
+    bot.sendMessage(chatId, 'Tin nhắn trả lời không đúng định dạng xác nhận của bot.');
+    return;
+  }
+
+  const ten = matched[1].trim();
+  const acc = parseInt(matched[2]);
+  const tinh_tien = parseInt(matched[3]);
+
+  // Get the date from the bot's message and format it as month/day/year
+  const messageDate = new Date(msg.reply_to_message.date * 1000);
+  const formattedDate = `${messageDate.getMonth() + 1}/${messageDate.getDate()}/${messageDate.getFullYear()}`;
+
+  try {
+    const regex = new RegExp(normalizeName(ten).split('').join('.*'), 'i');
+
+    const trasua = await Trasua.findOne({
+      groupId: chatId,
+      ten: { $regex: regex },
+      date: formattedDate
+    });
+
+    if (!trasua) {
+      bot.sendMessage(chatId, `Không tìm thấy bản ghi để cập nhật cho ${ten}.`);
+      return;
+    }
+
+    // Update the record
+    trasua.acc -= acc;
+    trasua.tinh_tien -= tinh_tien;
+
+    // Save the updated record
+    await trasua.save();
+
+    bot.sendMessage(chatId, `Trừ thành công bài nộp này cho ${ten}. Acc: -${acc}, Tiền: -${tinh_tien} VNĐ`);
+  } catch (error) {
+    console.error('Lỗi khi cập nhật dữ liệu:', error);
+    bot.sendMessage(chatId, 'Đã xảy ra lỗi khi cập nhật dữ liệu.');
+  }
+});
+
+
+
 const regex = /\d+\s*(quẩy|q|cộng|c|\+|bill|ảnh|hình)/gi;
 
 bot.on('message', async (msg) => {
