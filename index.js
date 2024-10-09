@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const axios = require('axios');
 const express = require('express');
 const bodyParser = require('body-parser');
-const moment = require('moment');
+const moment = require('moment-timezone');
 const request = require('request');
 const cron = require('node-cron'); // Thư viện để thiết lập cron jobs
 const keep_alive = require('./keep_alive.js');
@@ -354,87 +354,58 @@ bot.onText(/\/bo/, async (msg) => {
 
 
 
-
-// Hàm hiển thị bảng công theo ngày, có thể là hôm nay hoặc hôm qua
-async function sendBangCong(chatId, isYesterday = false) {
-  // Tính toán ngày hôm nay hoặc hôm qua
-  const targetDate = new Date();
-  if (isYesterday) {
-    targetDate.setDate(targetDate.getDate() - 1); // Trừ 1 ngày nếu là hôm qua
-  }
-
-  // Lấy thời gian bắt đầu và kết thúc của ngày
-  const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0)); // 00:00:00
-  const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999)); // 23:59:59
-
-  try {
-    // Tìm các bản ghi bảng công cho cả hai nhóm trong khoảng thời gian cần tìm
-    const bangCongList = await Trasua.find({
-      groupId: { $in: [-1002303292016, -1002247863313] },
-      date: { $gte: startOfDay, $lte: endOfDay } // Tìm kiếm theo khoảng thời gian
-    });
-
-    if (bangCongList.length === 0) {
-      const dayText = isYesterday ? 'hôm qua' : 'hôm nay';
-      bot.sendMessage(chatId, `Chưa có bảng công nào được ghi nhận trong ngày ${dayText}.`);
-      return;
-    }
-
-    let responseMessage = `BẢNG CÔNG NHÓM ZALO HA NGÀY ${startOfDay.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}\n\n`;
-
-    // Chia bản ghi theo từng groupId
-    let groupData = {
-      '-1002303292016': {
-        title: 'Nhóm Hà 11h30, 19h30',
-        data: [],
-        totalMoney: 0
-      },
-      '-1002247863313': {
-        title: 'Nhóm Hà 11h30 - 14h - 19h30 - 21h',
-        data: [],
-        totalMoney: 0
-      }
-    };
-
-    // Phân loại dữ liệu bảng công theo groupId
-    bangCongList.forEach(entry => {
-      const group = groupData[entry.groupId];
-      group.data.push(entry);
-      group.totalMoney += entry.tinh_tien;
-    });
-
-    // Xử lý từng nhóm riêng
-    for (const groupId in groupData) {
-      const group = groupData[groupId];
-      responseMessage += `${group.title}\n`;
-
-      group.data.forEach(entry => {
-        responseMessage += `${entry.ten}: ${entry.acc} Acc ${entry.tinh_tien.toLocaleString()} VNĐ\n\n`;
-      });
-
-      responseMessage += `Tổng tiền: ${group.totalMoney.toLocaleString()} VNĐ\n\n`;
-    }
-
-    // Gửi tin nhắn bảng công đã phân loại
-    bot.sendMessage(chatId, responseMessage.trim());
-
-  } catch (error) {
-    console.error('Lỗi khi truy vấn dữ liệu từ MongoDB:', error);
-    bot.sendMessage(chatId, 'Đã xảy ra lỗi khi truy vấn dữ liệu từ cơ sở dữ liệu.');
-  }
-}
-
-// Lệnh /ha để hiển thị bảng công tổng cho hôm nay
 bot.onText(/\/ha/, async (msg) => {
   const chatId = msg.chat.id;
-  await sendBangCong(chatId, false); // false để lấy ngày hôm nay
+  const today = new Date();
+  const startOfToday = new Date(today.setHours(0, 0, 0, 0));
+  const endOfToday = new Date(today.setHours(23, 59, 59, 999));
+  await sendAttendanceReport(chatId, startOfToday, endOfToday, 'HÔM NAY');
 });
 
-// Lệnh /hqha để hiển thị bảng công tổng cho ngày hôm qua
 bot.onText(/\/hqha/, async (msg) => {
   const chatId = msg.chat.id;
-  await sendBangCong(chatId, true); // true để lấy ngày hôm qua
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const startOfYesterday = new Date(yesterday.setHours(0, 0, 0, 0));
+  const endOfYesterday = new Date(yesterday.setHours(23, 59, 59, 999));
+  await sendAttendanceReport(chatId, startOfYesterday, endOfYesterday, 'HÔM QUA');
 });
+
+async function sendAttendanceReport(chatId, startDate, endDate, dayLabel) {
+  const groupIds = [-1002247863313, -1002303292016];
+  const groupNames = {
+    '-1002247863313': 'Nhóm Hà 11h30 -14h-19h30-21h',
+    '-1002303292016': 'Nhóm Hà 11h30, 19h30'
+  };
+
+  const dateString = moment(startDate).tz('Asia/Ho_Chi_Minh').format('DD/MM');
+  let responseMessage = `BẢNG CÔNG NHÓM ZALO HA ${dayLabel} - ${dateString}\n\n`;
+
+  for (const groupId of groupIds) {
+    const bangCongList = await Trasua.find({
+      groupId: groupId,
+      date: { $gte: startDate, $lte: endDate }
+    });
+    
+    if (bangCongList.length > 0) {
+      responseMessage += `${groupNames[groupId]}:\n`;
+      let groupTotal = 0;
+
+      bangCongList.forEach(entry => {
+        responseMessage += `${entry.ten}: ${entry.acc} Acc ${entry.tinh_tien.toLocaleString()} VNĐ\n`;
+        groupTotal += entry.tinh_tien;
+      });
+
+      responseMessage += `Tổng tiền nhóm: ${groupTotal.toLocaleString()} VNĐ\n\n`;
+    }
+  }
+
+  if (responseMessage === `BẢNG CÔNG NHÓM ZALO HA ${dayLabel} - ${dateString}\n\n`) {
+    responseMessage = `Chưa có bảng công nào được ghi nhận cho ${dayLabel.toLowerCase()}.`;
+  }
+
+  bot.sendMessage(chatId, responseMessage);
+}
 
 
 
