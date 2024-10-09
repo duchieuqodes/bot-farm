@@ -262,7 +262,7 @@ bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
 
   // Chỉ kiểm tra nếu là nhóm có ID
-  if (chatId == -1002303292016) {
+  if (chatId == -1002247863313 || chatId == -1002303292016) {
 
     // Kiểm tra nếu tin nhắn chứa từ khóa "xong (số) acc (số) nhóm"
     const messageContent = msg.text || msg.caption;
@@ -363,7 +363,7 @@ bot.onText(/\/hahomqua/, async (msg) => {
   const formattedDate = yesterday.toLocaleDateString();
 
   // Tìm các bản ghi bảng công có groupId -1002163768880 trong ngày hôm trước
-  const bangCongList = await Trasua.find({ groupId: -1002303292016, date: formattedDate });
+  const bangCongList = await Trasua.find({ groupId: { $in: [-1002303292016, -1002247863313] }, date: formattedDate });
   if (bangCongList.length === 0) {
     bot.sendMessage(chatId, 'Chưa có bảng công nào được ghi nhận trong ngày hôm qua.');
     return;
