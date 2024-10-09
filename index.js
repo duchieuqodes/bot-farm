@@ -353,6 +353,8 @@ bot.onText(/\/bo/, async (msg) => {
 });
 
 
+
+
 // Hàm hiển thị bảng công theo ngày, có thể là hôm nay hoặc hôm qua
 async function sendBangCong(chatId, isYesterday = false) {
   // Tính toán ngày hôm nay hoặc hôm qua
@@ -360,13 +362,16 @@ async function sendBangCong(chatId, isYesterday = false) {
   if (isYesterday) {
     targetDate.setDate(targetDate.getDate() - 1); // Trừ 1 ngày nếu là hôm qua
   }
-  const formattedDate = targetDate.toISOString().split('T')[0]; // Định dạng YYYY-MM-DD
+
+  // Lấy thời gian bắt đầu và kết thúc của ngày
+  const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0)); // 00:00:00
+  const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999)); // 23:59:59
 
   try {
-    // Tìm các bản ghi bảng công cho cả hai nhóm trong ngày cần tìm
+    // Tìm các bản ghi bảng công cho cả hai nhóm trong khoảng thời gian cần tìm
     const bangCongList = await Trasua.find({
       groupId: { $in: [-1002303292016, -1002247863313] },
-      date: formattedDate
+      date: { $gte: startOfDay, $lte: endOfDay } // Tìm kiếm theo khoảng thời gian
     });
 
     if (bangCongList.length === 0) {
@@ -375,7 +380,7 @@ async function sendBangCong(chatId, isYesterday = false) {
       return;
     }
 
-    let responseMessage = `BẢNG CÔNG NHÓM ZALO HA NGÀY ${targetDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}\n\n`;
+    let responseMessage = `BẢNG CÔNG NHÓM ZALO HA NGÀY ${startOfDay.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}\n\n`;
 
     // Chia bản ghi theo từng groupId
     let groupData = {
@@ -430,6 +435,7 @@ bot.onText(/\/hqha/, async (msg) => {
   const chatId = msg.chat.id;
   await sendBangCong(chatId, true); // true để lấy ngày hôm qua
 });
+
 
 
  // Lệnh /thom để hiển thị bảng công tổng
