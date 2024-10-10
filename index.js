@@ -3172,9 +3172,10 @@ bot.onText(/\/tangvipcard (@\w+|.+)/, async (msg, match) => {
       user = await bot.getChatMember(chatId, username);
     } else {
       const chatMembers = await bot.getChatAdministrators(chatId);
-      user = chatMembers.find(member => 
-        (member.user.first_name + ' ' + (member.user.last_name || '')).trim() === username
-      );
+      user = chatMembers.find(member => {
+        const fullName = (member.user.first_name + ' ' + (member.user.last_name || '')).trim();
+        return fullName.toLowerCase().includes(username.toLowerCase());
+      });
     }
 
     if (!user) {
