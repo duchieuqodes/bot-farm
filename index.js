@@ -3156,3 +3156,73 @@ bot.on('message', (msg) => {
 
 // Gọi hàm resetKeywords nếu cần thiết
 // resetKeywords();
+
+
+
+// Hàm tạo VIP card
+const tangVipCard = async (userId) => {
+  const now = new Date();
+  const randomDay = new Date(now);
+  randomDay.setDate(now.getDate() - Math.floor(Math.random() * 7));
+
+  const validFrom = new Date(randomDay);
+  validFrom.setHours(0, 0, 0, 0);
+  const validUntil = new Date(validFrom);
+  validUntil.setDate(validFrom.getDate() + 2);
+  validUntil.setHours(1, 0, 0, 0);
+
+  const vipCard = new VipCard({
+    userId,
+    type: 'week',
+    validFrom,
+    validUntil,
+    expBonus: 100,
+    keoBonus: 100,
+    quayBonus: 100,
+    keoLimit: 3,
+    quayLimit: 3
+  });
+
+  await vipCard.save();
+  return vipCard;
+};
+
+// Xử lý lệnh /Tangvipcard
+bot.onText(/\/Tangvipcard (.+)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const target = match[1];
+  let user;
+
+  try {
+    if (target.startsWith('@')) {
+      // Tìm user bằng username
+      const username = target.substring(1);
+      const chatMember = await bot.getChatMember(chatId, `@${username}`);
+      user = chatMember.user;
+    } else {
+      // Tìm user bằng họ tên
+      const chatMembers = await bot.getChatAdministrators(chatId);
+      const foundMember = chatMembers.find(member => 
+        `${member.user.first_name} ${member.user.last_name || ''}`.trim() === target
+      );
+      if (foundMember) {
+        user = foundMember.user;
+      }
+    }
+
+    if (!user) {
+      return bot.sendMessage(chatId, 'Không tìm thấy thành viên trong nhóm.');
+    }
+
+    const vipCard = await tangVipCard(user.id);
+    bot.sendMessage(chatId, `Đã tặng VIP card cho ${user.first_name} ${user.last_name || ''}!
+Thời hạn: ${vipCard.validFrom.toLocaleDateString()} - ${vipCard.validUntil.toLocaleDateString()}
+Loại: ${vipCard.type}
+Bonus: EXP +${vipCard.expBonus}%, Kéo +${vipCard.keoBonus}%, Quay +${vipCard.quayBonus}%
+Giới hạn: Kéo ${vipCard.keoLimit} lần/ngày, Quay ${vipCard.quayLimit} lần/ngày`);
+  } catch (error) {
+    console.error('Lỗi khi tặng VIP card:', error);
+    bot.sendMessage(chatId, 'Có lỗi xảy ra khi tặng VIP card. Vui lòng thử lại sau.');
+  }
+});
+
