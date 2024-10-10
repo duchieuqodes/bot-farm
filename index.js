@@ -3157,59 +3157,70 @@ bot.on('message', (msg) => {
 // Gọi hàm resetKeywords nếu cần thiết
 // resetKeywords();
 
-
-
-
-const tangVipCard = async (userId) => {
-  const now = new Date();
-  const randomDay = new Date(now);
-  randomDay.setDate(now.getDate() - Math.floor(Math.random() * 7));
-
-  const validFrom = new Date(randomDay);
-  validFrom.setHours(0, 0, 0, 0);
-  const validUntil = new Date(validFrom);
-  validUntil.setDate(validFrom.getDate() + 2);
-  validUntil.setHours(1, 0, 0, 0);
-
-  const vipCard = new VipCard({
-    userId,
-    type: 'week',
-    validFrom,
-    validUntil,
-    expBonus: 100,
-    keoBonus: 100,
-    quayBonus: 100,
-    keoLimit: 3,
-    quayLimit: 3
-  });
-
-  await vipCard.save();
-  return vipCard;
-};
-
-// Listen for '/Tangvipcard' command
-bot.onText(/\/tangvipcard (.+)/, async (msg, match) => {
+bot.onText(/\/tangvipcard (@\w+|.+)/, async (msg, match) => {
   const chatId = msg.chat.id;
-  const input = match[1].trim();
+  const username = match[1].trim();
 
   try {
-    // Get chat member info using Telegram API
-    const chatMember = await bot.getChatMember(chatId, input);
-
-    if (chatMember.status === 'left' || chatMember.status === 'kicked') {
-      bot.sendMessage(chatId, 'User is not in the group.');
-      return;
+    const chatMember = await bot.getChatMember(chatId, msg.from.id);
+    if (chatMember.status !== 'creator' && chatMember.status !== 'administrator') {
+      return bot.sendMessage(chatId, 'Bạn không có quyền sử dụng lệnh này.');
     }
 
-    const userId = chatMember.user.id;
-    const newCard = await tangVipCard(userId);
+    let user;
+    if (username.startsWith('@')) {
+      user = await bot.getChatMember(chatId, username);
+    } else {
+      const chatMembers = await bot.getChatAdministrators(chatId);
+      user = chatMembers.find(member => 
+        (member.user.first_name + ' ' + (member.user.last_name || '')).trim() === username
+      );
+    }
 
-    bot.sendMessage(
-      chatId,
-      `Đã tặng thẻ vip bonus tuần cho: ${chatMember.user.username || chatMember.user.first_name}\nValid From: ${newCard.validFrom}\nValid Until: ${newCard.validUntil}`
+    if (!user) {
+      return bot.sendMessage(chatId, 'Không tìm thấy thành viên này trong nhóm.');
+    }
+
+    const now = new Date();
+    const randomDay = new Date(now);
+    randomDay.setDate(now.getDate() - Math.floor(Math.random() * 7));
+
+    const validFrom = new Date(randomDay);
+    validFrom.setHours(0, 0, 0, 0);
+    const validUntil = new Date(validFrom);
+    validUntil.setDate(validFrom.getDate() + 2);
+    validUntil.setHours(1, 0, 0, 0);
+
+    // Tạo mới hoặc cập nhật VIP card
+    const vipcard = await VipCard.findOneAndUpdate(
+      { userId: user.user.id },
+      {
+        userId: user.user.id,
+        type: 'week',
+        validFrom: validFrom,
+        validUntil: validUntil,
+        expBonus: 100,
+        keoBonus: 100,
+        quayBonus: 100,
+        keoLimit: 3,
+        quayLimit: 3
+      },
+      { upsert: true, new: true }
     );
+
+    const message = `Đã tặng VIP Card cho ${user.user.first_name} ${user.user.last_name || ''}:\n
+Loại: ${vipcard.type}
+Có hiệu lực từ: ${vipcard.validFrom.toLocaleString()}
+Có hiệu lực đến: ${vipcard.validUntil.toLocaleString()}
+Bonus EXP: ${vipcard.expBonus}%
+Bonus Kéo: ${vipcard.keoBonus}%
+Bonus Quay: ${vipcard.quayBonus}%
+Giới hạn Kéo: ${vipcard.keoLimit}/ngày
+Giới hạn Quay: ${vipcard.quayLimit}/ngày`;
+
+    bot.sendMessage(chatId, message);
   } catch (error) {
-    bot.sendMessage(chatId, 'An error occurred while creating the VIP card.');
-    console.error(error);
+    console.error('Error:', error);
+    bot.sendMessage(chatId, 'Đã xảy ra lỗi khi thực hiện lệnh.');
   }
 });
