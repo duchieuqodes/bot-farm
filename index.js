@@ -2085,18 +2085,13 @@ function getRankEmoji(level) {
 }
 
 // Hàm lấy emoji sao dựa theo phần trăm level
-function getStarEmoji(levelPercent, level) {
+function getStarEmoji(levelPercent) {
   if (levelPercent < 25) return '★☆☆☆☆';
   if (levelPercent < 50) return '★★☆☆☆';
   if (levelPercent < 75) return '★★★☆☆';
   if (levelPercent < 90) return '★★★★☆';
   if (levelPercent < 100) return '★★★★★';
   if (levelPercent >= 100) return '✪✪✪✪✪';
-  if (levelPercent < 25 && level >= 100) return '🌑🌒🌓🌔🌕';
-  if (levelPercent < 50 && level >= 100) return '🌑🌓🌔🌕🌕';
-  if (levelPercent < 75 && level >= 100) return '🌑🌔🌕🌖🌕';
-  if (levelPercent < 90 && level >= 100) return '🌑🌕🌖🌗🌘';
-  if (levelPercent < 100 && level >= 100) return '🌕🌕🌕🌕🌕';
   return '';
 }
 
@@ -2199,7 +2194,7 @@ async function leaveUnauthorizedGroups() {
       if (!kickbot.hasOwnProperty(chatId.toString())) {
         console.log(`Leaving unauthorized group: ${chatId}`);
         try {
-          await bot.sendMessage(chatId, "Cha mẹ đứa nào add tao vào nhóm đây xin phép anh Hieu Gà chưa @duchieu287");
+          await bot.sendMessage(chatId, "Cha mẹ đứa nào add tao vào nhóm đây xin phép anh Hieu Gà chưa @Hieu_ga");
           await bot.leaveChat(chatId);
         } catch (error) {
           console.error(`Failed to leave unauthorized group ${chatId}:`, error);
@@ -2261,7 +2256,7 @@ bot.on('message', async (msg) => {
     const level = member.level;
     const levelPercent = member.levelPercent;
     const rankEmoji = getRankEmoji(level);
-    const starEmoji = getStarEmoji(levelPercent, level);
+    const starEmoji = getStarEmoji(levelPercent);
 
     const captionText = msg.caption || 'hình ảnh';
     const responseMessage = `Quẩy thủ: <a href="tg://user?id=${userId}">${fullname}</a> ${rankEmoji} (Level: ${level}):
@@ -2370,7 +2365,7 @@ const updateLevelPercent = async (userId) => {
     const bangCongRecords = await BangCong2.find({
       userId: userId,
       date: { $gte: today, $lt: endOfToday },
-      groupId: { $in: Object.keys(groupNames2) }
+      groupId: { $in: Object.keys(kickbot) }
     });
     const totalQuay = bangCongRecords.reduce((acc, record) => acc + (record.quay || 0), 0);
     const totalKeo = bangCongRecords.reduce((acc, record) => acc + (record.keo || 0), 0);
@@ -2429,9 +2424,9 @@ const issueLevelUpVipCard = async (userId, level) => {
     type: 'level_up',
     validFrom,
     validUntil,
-    expBonus: 0, // Không tăng exp
-    keoBonus: 0,
-    quayBonus: 0, // Tính 600đ/quẩy
+    expBonus: 240, // Không tăng exp
+    keoBonus: 100,
+    quayBonus: 100, // Tính 600đ/quẩy
     keoLimit: 3,
     quayLimit: 3
   });
@@ -2475,8 +2470,8 @@ const issueWeeklyVipCard = async (userId) => {
     validFrom,
     validUntil,
     expBonus,
-    keoBonus: 0,
-    quayBonus: 0, // Tính 600đ/quẩy
+    keoBonus: 100,
+    quayBonus: 100, // Tính 600đ/quẩy
     keoLimit: 2,
     quayLimit: 2
   });
@@ -3098,14 +3093,14 @@ const WarningSchema = new mongoose.Schema({
 
 const Warning = mongoose.model('Warning', WarningSchema);
 
-const keywordRegex = /\b(ca\s?1|c\s?1|ca\s?2|c\s?2|q)\b/gi;
+const keywordRegex = /\b(ca\s?1d|c\s?1f|ca\s?2f|c\s?2c|q)\b/gi;
 const warningGroupId = -1002103270166;
 
 function normalizeKeyword(keyword) {
   const lowerKeyword = keyword.toLowerCase().replace(/\s+/g, '');
-  if (lowerKeyword === 'ca1' || lowerKeyword === 'c1') {
+  if (lowerKeyword === 'ca1ro' || lowerKeyword === 'c1ro') {
     return 'Ca 1';
-  } else if (lowerKeyword === 'ca2' || lowerKeyword === 'c2') {
+  } else if (lowerKeyword === 'ca2ro' || lowerKeyword === 'c2ro') {
     return 'Ca 2';
   }
   return keyword;
