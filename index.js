@@ -7,8 +7,6 @@ const moment = require('moment-timezone');
 const request = require('request');
 const cron = require('node-cron'); // Thư viện để thiết lập cron jobs
 const keep_alive = require('./keep_alive.js');
-const puppeteer = require('puppeteer');
-const fs = require('fs');
 const { resetDailyGiftStatus, sendMorningMessage, handleGiftClaim } = require('./gift');
 const { setupNewsSchedule, sendLatestNews } = require('./news.js');
 
@@ -335,72 +333,70 @@ async function processAccMessage2(msg) {
   });
 }
 
-// Lệnh hiển thị bảng công và gửi ảnh
-bot.onText(/\/di/, async (msg) => {
+
+bot.onText(/\/13h/, async (msg) => {
   const chatId = msg.chat.id;
 
   // Lấy ngày hôm trước
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-  const formattedDate = yesterday.toLocaleDateString('vi-VN');
+  const formattedDate = yesterday.toLocaleDateString();
 
-  // Truy vấn dữ liệu bảng công từ MongoDB chỉ với các trường cần thiết: ten, acc, tinh_tien
-  const bangCongList = await Trasua.find({ groupId: -1002336524767, date: formattedDate }, 'ten acc tinh_tien');
-
+  // Tìm các bản ghi bảng công có groupId -1002336524767 trong ngày hôm trước
+  const bangCongList = await Trasua.find({ groupId: -1002336524767, date: formattedDate });
   if (bangCongList.length === 0) {
     bot.sendMessage(chatId, 'Chưa có bảng công nào được ghi nhận trong ngày hôm qua.');
     return;
   }
 
-  // Tạo bảng HTML từ dữ liệu MongoDB chỉ với các trường ten, acc, tinh_tien
-  let htmlContent = `
-  <html>
-  <head>
-    <style>
-      table { width: 100%; border-collapse: collapse; }
-      th, td { border: 1px solid black; padding: 8px; text-align: center; }
-      th { background-color: yellow; }
-    </style>
-  </head>
-  <body>
-    <h2>Bảng công nhóm "LAN LAN" - ${formattedDate}</h2>
-    <table>
-      <tr>
-        <th>Tên</th><th>Số lượng acc</th><th>Tiền công</th>
-      </tr>`;
+  // Chuẩn bị dữ liệu cho bảng công
+  const labels = bangCongList.map(entry => entry.ten);
+  const accData = bangCongList.map(entry => entry.acc);
+  const moneyData = bangCongList.map(entry => entry.tinh_tien);
 
-  bangCongList.forEach(row => {
-    htmlContent += `
-      <tr>
-        <td>${row.ten}</td><td>${row.acc}</td><td>${row.tinh_tien.toLocaleString()} vnd</td>
-      </tr>`;
+  const chartConfig = {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Acc',
+          data: accData,
+          backgroundColor: 'rgba(75, 192, 192, 0.6)',
+        },
+        {
+          label: 'Tiền công (VNĐ)',
+          data: moneyData,
+          backgroundColor: 'rgba(153, 102, 255, 0.6)',
+        },
+      ],
+    },
+    options: {
+      title: {
+        display: true,
+        text: `Bảng Công Nhóm Lan Lan 19h - ${formattedDate}`,
+      },
+      scales: {
+        yAxes: [
+          {
+            ticks: {
+              beginAtZero: true,
+            },
+          },
+        ],
+      },
+    },
+  };
+
+  // URL của QuickChart với config JSON
+  const chartUrl = `https://quickchart.io/chart?c=${encodeURIComponent(JSON.stringify(chartConfig))}`;
+
+  // Gửi ảnh bảng công
+  bot.sendPhoto(chatId, chartUrl, {
+    caption: `Bảng Công Nhóm "LAN LAN 19H" Hôm Qua - ${formattedDate}`,
   });
-
-  // Tính tổng số tiền
-  const totalMoney = bangCongList.reduce((acc, row) => acc + row.tinh_tien, 0);
-
-  htmlContent += `
-      <tr>
-        <td colspan="2">Tổng số tiền</td><td>${totalMoney.toLocaleString()} vnd</td>
-      </tr>
-    </table>
-  </body>
-  </html>
-  `;
-
-  // Lưu HTML vào file tạm thời
-  fs.writeFileSync('bangCong.html', htmlContent);
-
-  // Chuyển đổi HTML sang ảnh bằng puppeteer
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
-  await page.setContent(htmlContent);
-  await page.screenshot({ path: 'bangCong.png' });
-  await browser.close();
-
-  // Gửi ảnh qua Telegram
-  bot.sendPhoto(chatId, 'bangCong.png', { caption: 'Bảng công tổng' });
 });
+
 
 
 
