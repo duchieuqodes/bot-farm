@@ -351,7 +351,7 @@ bot.onText(/\/13h/, async (msg) => {
   }
 
   // Chuẩn bị dữ liệu cho bảng công
-  let totalAmount = 70000; // Tiền quản lý
+  let totalAmount = 50000; // Tiền quản lý
   let content = bangCongList.map(entry => `${entry.ten}\t${entry.acc}\t${entry.tinh_tien.toLocaleString()} vnđ`).join('\n');
   
   // Tính tổng tiền công
@@ -377,7 +377,7 @@ bot.onText(/\/13h/, async (msg) => {
           ${content.split('\n').map(line => `<TR><TD ALIGN="LEFT" STYLE="font-weight: bold;">${line.split('\t').join('</TD><TD ALIGN="CENTER">')}</TD></TR>`).join('')}
           <TR STYLE="font-weight: bold;">
             <TD COLSPAN="2" ALIGN="LEFT">Quản lý</TD>
-            <TD ALIGN="CENTER">70,000 vnđ</TD>
+            <TD ALIGN="CENTER">50,000 vnđ</TD>
           </TR>
           <TR STYLE="font-weight: bold;">
             <TD COLSPAN="2" ALIGN="LEFT">Tổng số tiền</TD>
