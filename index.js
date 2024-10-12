@@ -334,6 +334,7 @@ async function processAccMessage2(msg) {
 }
 
 
+
 bot.onText(/\/13h/, async (msg) => {
   const chatId = msg.chat.id;
 
@@ -350,52 +351,51 @@ bot.onText(/\/13h/, async (msg) => {
   }
 
   // Chuẩn bị dữ liệu cho bảng công
-  const labels = bangCongList.map(entry => entry.ten);
-  const accData = bangCongList.map(entry => entry.acc);
-  const moneyData = bangCongList.map(entry => entry.tinh_tien);
+  let totalAmount = 70000; // Tiền quản lý
+  let content = bangCongList.map(entry => `${entry.ten}\t${entry.acc}\t${entry.tinh_tien.toLocaleString()} vnđ`).join('\n');
+  
+  // Tính tổng tiền công
+  bangCongList.forEach(entry => {
+    totalAmount += entry.tinh_tien;
+  });
 
-  const chartConfig = {
-    type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          label: 'Acc',
-          data: accData,
-          backgroundColor: 'rgba(75, 192, 192, 0.6)',
-        },
-        {
-          label: 'Tiền công (VNĐ)',
-          data: moneyData,
-          backgroundColor: 'rgba(153, 102, 255, 0.6)',
-        },
-      ],
-    },
-    options: {
-      title: {
-        display: true,
-        text: `Bảng Công Nhóm Lan Lan 19h - ${formattedDate}`,
-      },
-      scales: {
-        yAxes: [
-          {
-            ticks: {
-              beginAtZero: true,
-            },
-          },
-        ],
-      },
-    },
-  };
-
-  // URL của QuickChart với config JSON
-  const chartUrl = `https://quickchart.io/chart?c=${encodeURIComponent(JSON.stringify(chartConfig))}`;
-
-  // Gửi ảnh bảng công
-  bot.sendPhoto(chatId, chartUrl, {
+  // Chuẩn bị URL của QuickChart với cấu trúc bảng
+  const groupName = 'LAN LAN 19H';
+  const dateStr = formattedDate;
+  const url = 'https://quickchart.io/graphviz?format=png&layout=dot&graph=';
+  const graph = `
+    digraph G {
+      node [shape=plaintext];
+      a [label=<
+        <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" STYLE="font-family: 'Arial', sans-serif; border: 1px solid black;">
+          <TR><TD COLSPAN="4" ALIGN="CENTER" BGCOLOR="#FFCC00" STYLE="font-size: 16px; font-weight: bold;">${groupName} - ${dateStr}</TD></TR>
+          <TR STYLE="font-weight: bold; background-color: #FFCC00;">
+            <TD ALIGN="CENTER">Tên</TD>
+            <TD ALIGN="CENTER">Acc</TD>
+            <TD ALIGN="CENTER">Tiền công</TD>
+          </TR>
+          ${content.split('\n').map(line => `<TR><TD ALIGN="LEFT" STYLE="font-weight: bold;">${line.split('\t').join('</TD><TD ALIGN="CENTER">')}</TD></TR>`).join('')}
+          <TR STYLE="font-weight: bold;">
+            <TD COLSPAN="2" ALIGN="LEFT">Quản lý</TD>
+            <TD ALIGN="CENTER">70,000 vnđ</TD>
+          </TR>
+          <TR STYLE="font-weight: bold;">
+            <TD COLSPAN="2" ALIGN="LEFT">Tổng số tiền</TD>
+            <TD ALIGN="CENTER">${totalAmount.toLocaleString()} vnđ</TD>
+          </TR>
+        </TABLE>
+      >];
+    }
+  `;
+  
+  const imageUrl = `${url}${encodeURIComponent(graph)}`;
+  
+  // Gửi ảnh bảng công qua bot
+  bot.sendPhoto(chatId, imageUrl, {
     caption: `Bảng Công Nhóm "LAN LAN 19H" Hôm Qua - ${formattedDate}`,
   });
 });
+
 
 
 
