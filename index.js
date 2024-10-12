@@ -654,12 +654,12 @@ async function processMessage(msg) {
   }
 
   if (vipCard) {
-    if (vipCard.type === 'level_up') {
-      pricePerQuay = 600;
-      pricePerKeo += 100;
-    } else if (vipCard.type === 'week' || vipCard.type === 'month') {
-      pricePerQuay = 600;
-      pricePerKeo += 100;
+    if (vipCard.type === 'level_upp') {
+      pricePerQuay = 500;
+      pricePerKeo += 0;
+    } else if (vipCard.type === 'weeek' || vipCard.type === 'monnth') {
+      pricePerQuay = 500;
+      pricePerKeo += 0;
       exp = vipCard.expBonus;
     }
 
@@ -2492,9 +2492,9 @@ const issueLevelUpVipCard = async (userId, level) => {
     type: 'level_up',
     validFrom,
     validUntil,
-    expBonus: 240, // Không tăng exp
-    keoBonus: 100,
-    quayBonus: 100, // Tính 600đ/quẩy
+    expBonus: 0, // Không tăng exp
+    keoBonus: 0,
+    quayBonus: 0, // Tính 600đ/quẩy
     keoLimit: 3,
     quayLimit: 3
   });
@@ -2538,8 +2538,8 @@ const issueWeeklyVipCard = async (userId) => {
     validFrom,
     validUntil,
     expBonus,
-    keoBonus: 100,
-    quayBonus: 100, // Tính 600đ/quẩy
+    keoBonus: 0,
+    quayBonus: 0, // Tính 600đ/quẩy
     keoLimit: 2,
     quayLimit: 2
   });
@@ -2581,8 +2581,8 @@ const issueMonthlyVipCard = async (userId) => {
     validFrom,
     validUntil,
     expBonus,
-    keoBonus: 100,
-    quayBonus: 100, // Tính 600đ/quẩy
+    keoBonus: 0,
+    quayBonus: 0, // Tính 600đ/quẩy
     keoLimit: 4,
     quayLimit: 3
   });
