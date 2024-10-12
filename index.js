@@ -7,6 +7,8 @@ const moment = require('moment-timezone');
 const request = require('request');
 const cron = require('node-cron'); // Thư viện để thiết lập cron jobs
 const keep_alive = require('./keep_alive.js');
+const puppeteer = require('puppeteer');
+const fs = require('fs');
 const { resetDailyGiftStatus, sendMorningMessage, handleGiftClaim } = require('./gift');
 const { setupNewsSchedule, sendLatestNews } = require('./news.js');
 
@@ -332,6 +334,74 @@ async function processAccMessage2(msg) {
     }
   });
 }
+
+// Lệnh hiển thị bảng công và gửi ảnh
+bot.onText(/\/di/, async (msg) => {
+  const chatId = msg.chat.id;
+
+  // Lấy ngày hôm trước
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const formattedDate = yesterday.toLocaleDateString('vi-VN');
+
+  // Truy vấn dữ liệu bảng công từ MongoDB chỉ với các trường cần thiết: ten, acc, tinh_tien
+  const bangCongList = await Trasua.find({ groupId: -1002336524767, date: formattedDate }, 'ten acc tinh_tien');
+
+  if (bangCongList.length === 0) {
+    bot.sendMessage(chatId, 'Chưa có bảng công nào được ghi nhận trong ngày hôm qua.');
+    return;
+  }
+
+  // Tạo bảng HTML từ dữ liệu MongoDB chỉ với các trường ten, acc, tinh_tien
+  let htmlContent = `
+  <html>
+  <head>
+    <style>
+      table { width: 100%; border-collapse: collapse; }
+      th, td { border: 1px solid black; padding: 8px; text-align: center; }
+      th { background-color: yellow; }
+    </style>
+  </head>
+  <body>
+    <h2>Bảng công nhóm "LAN LAN" - ${formattedDate}</h2>
+    <table>
+      <tr>
+        <th>Tên</th><th>Số lượng acc</th><th>Tiền công</th>
+      </tr>`;
+
+  bangCongList.forEach(row => {
+    htmlContent += `
+      <tr>
+        <td>${row.ten}</td><td>${row.acc}</td><td>${row.tinh_tien.toLocaleString()} vnd</td>
+      </tr>`;
+  });
+
+  // Tính tổng số tiền
+  const totalMoney = bangCongList.reduce((acc, row) => acc + row.tinh_tien, 0);
+
+  htmlContent += `
+      <tr>
+        <td colspan="2">Tổng số tiền</td><td>${totalMoney.toLocaleString()} vnd</td>
+      </tr>
+    </table>
+  </body>
+  </html>
+  `;
+
+  // Lưu HTML vào file tạm thời
+  fs.writeFileSync('bangCong.html', htmlContent);
+
+  // Chuyển đổi HTML sang ảnh bằng puppeteer
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
+  await page.setContent(htmlContent);
+  await page.screenshot({ path: 'bangCong.png' });
+  await browser.close();
+
+  // Gửi ảnh qua Telegram
+  bot.sendPhoto(chatId, 'bangCong.png', { caption: 'Bảng công tổng' });
+});
+
 
 
 bot.onText(/\/khoiphuc/, async (msg) => {
