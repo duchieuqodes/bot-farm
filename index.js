@@ -876,20 +876,12 @@ const managementFees = {
 };
 
 async function processAndDistributeTimesheets(chatId, isToday) {
-  const vietnamTimeZone = 'Asia/Ho_Chi_Minh';
-
   const targetDate = isToday ? new Date() : new Date(Date.now() - 86400000); // Today or Yesterday
-  
-  // Đặt thời gian bắt đầu là 0h00 ngày mục tiêu
-  const startOfDay = new Date(targetDate.toLocaleString('en-US', { timeZone: vietnamTimeZone }));
-  startOfDay.setHours(9, 0, 0, 0);
-
-  // Đặt thời gian kết thúc là 23:59:59.999 cùng ngày
-  const endOfDay = new Date(startOfDay);
-  endOfDay.setHours(8, 59, 59, 999);
-
-  const dateStr = `${targetDate.getDate()}/${targetDate.getMonth() + 1}/${targetDate.getFullYear()}`;
-
+  const startOfDay = new Date(targetDate);
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date(targetDate);
+  endOfDay.setHours(23, 59, 59, 999);
+  const dateStr = ${targetDate.getDate()}/${targetDate.getMonth() + 1}/${targetDate.getFullYear()};
   try {
     let totalAmountByUser = {}; // Đối tượng để lưu tổng số tiền của mỗi người dùng
 
