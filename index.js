@@ -333,6 +333,114 @@ async function processAccMessage2(msg) {
   });
 }
 
+bot.onText(/\/ho/, async (msg) => {
+  const chatId = msg.chat.id;
+  await sendAggregatedData3(chatId);
+});
+
+async function sendAggregatedData3(chatId) {
+  try {
+    // Tính thời gian từ 9h sáng hôm trước đến 9h sáng hôm nay theo giờ Việt Nam (UTC+7)
+    const now = new Date();
+    now.setUTCHours(now.getUTCHours() + 7);  // Chuyển sang giờ Việt Nam
+
+    const startTime = new Date(now);
+    startTime.setDate(now.getDate() - 1);    // Hôm qua
+    startTime.setHours(9, 0, 0, 0);          // Bắt đầu lúc 9h sáng hôm trước (UTC+7)
+
+    const endTime = new Date(now);
+    endTime.setHours(9, 0, 0, 0);            // Kết thúc lúc 9h sáng hôm nay (UTC+7)
+
+    // Lấy bảng công từ khoảng thời gian này, loại trừ nhóm có chatId -1002108234982
+    const bangCongs = await BangCong2.find({
+      date: { $gte: startTime, $lte: endTime },
+      groupId: { $ne: -1002108234982 }, // Loại trừ nhóm này
+    });
+
+    if (bangCongs.length === 0) {
+      bot.sendMessage(chatId, `Không có bảng công nào từ 9h sáng hôm qua đến 9h sáng hôm nay (${startTime.toLocaleDateString()} - ${endTime.toLocaleDateString()}).`);
+      return;
+    }
+
+    // Tạo bảng công phân loại theo ID nhóm
+    const groupedByGroupId = {};
+    bangCongs.forEach((bangCong) => {
+      const groupId = bangCong.groupId ? bangCong.groupId.toString() : '';
+      if (!groupedByGroupId[groupId]) {
+        groupedByGroupId[groupId] = [];
+      }
+      groupedByGroupId[groupId].push(bangCong);
+    });
+
+    let response = '';
+
+    // Tạo bảng công cho mỗi nhóm và kiểm tra xem user ID 5867504772 có trong nhóm hay không
+    for (const groupId in groupedByGroupId) {
+      if (!groupId) {
+        continue;
+      }
+
+      // Kiểm tra xem user 5867504772 có trong nhóm không
+      let isUserInGroup = false;
+      try {
+        const chatMembers = await bot.getChatMember(groupId, 5867504772);
+        if (chatMembers && (chatMembers.status === 'member' || chatMembers.status === 'administrator' || chatMembers.status === 'creator')) {
+          isUserInGroup = true;
+        }
+      } catch (error) {
+        console.error(`Không thể lấy thông tin thành viên của nhóm ${groupId}:`, error);
+      }
+
+      if (!isUserInGroup) {
+        continue; // Bỏ qua nhóm nếu user không có trong nhóm
+      }
+
+      const groupData = groupedByGroupId[groupId];
+
+      // Lấy thông tin nhóm từ Telegram API
+      let groupName;
+      try {
+        const chatInfo = await bot.getChat(groupId);
+        groupName = chatInfo.title || `Nhóm ${groupId}`;
+      } catch (error) {
+        console.error(`Không thể lấy thông tin nhóm ${groupId}:`, error);
+        groupName = `Nhóm ${groupId}`;
+      }
+
+      response += `Bảng công nhóm ${groupName} (${startTime.toLocaleDateString()} - ${endTime.toLocaleDateString()}):\n\n`;
+
+      let totalGroupMoney = 0;
+
+      groupData.forEach((bangCong) => {
+        if (bangCong.tinh_tien !== undefined) {
+          const formattedTien = bangCong.tinh_tien.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+          response += `${bangCong.ten}\t\t${bangCong.quay}q +\t${bangCong.keo}c\t${formattedTien}vnđ\n`;
+          totalGroupMoney += bangCong.tinh_tien;
+        }
+      });
+
+      const formattedTotal = totalGroupMoney.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      response += `Tổng tiền: ${formattedTotal}vnđ\n\n`;
+    }
+
+    // Kiểm tra độ dài response và gửi tin nhắn
+    if (response.length > 4000) {
+      const middle = Math.floor(response.length / 2);
+      const splitIndex = response.lastIndexOf('\n', middle);
+
+      const firstPart = response.substring(0, splitIndex).trim();
+      const secondPart = response.substring(splitIndex).trim();
+
+      bot.sendMessage(chatId, firstPart);
+      bot.sendMessage(chatId, secondPart);
+    } else {
+      bot.sendMessage(chatId, response.trim());
+    }
+  } catch (error) {
+    console.error('Lỗi khi truy vấn dữ liệu từ MongoDB:', error);
+    bot.sendMessage(chatId, 'Đã xảy ra lỗi khi truy vấn dữ liệu từ cơ sở dữ liệu.');
+  }
+}
 
 
 bot.onText(/\/13h/, async (msg) => {
