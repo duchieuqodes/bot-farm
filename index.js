@@ -1556,8 +1556,8 @@ async function sendAggregatedData(chatId) {
     // Tính ngày hôm qua
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    const startOfYesterday = new Date(yesterday.setHours(2, 0, 0, 0));
-    const endOfYesterday = new Date(yesterday.setHours(1, 59, 59, 999));
+    const startOfYesterday = new Date(yesterday.setHours(8, 0, 0, 0));
+    const endOfYesterday = new Date(yesterday.setHours(7, 59, 59, 999));
 
     // Lấy bảng công của ngày hôm qua, loại trừ nhóm có chatId -1002108234982
     const bangCongs = await BangCong2.find({
