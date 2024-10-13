@@ -346,7 +346,7 @@ async function sendAggregatedData3(chatId) {
     // Tính startTime là 9h sáng ngày hôm qua (UTC+7)
     const startTime = new Date(now);
     startTime.setDate(now.getDate() - 1);    // Giảm một ngày
-    startTime.setHours(9, 0, 0, 0);          // Đặt giờ là 9:00:00 (UTC+7)
+    startTime.setHours(10, 0, 0, 0);          // Đặt giờ là 9:00:00 (UTC+7)
 
     // Tính endTime là 9h sáng hôm nay (UTC+7)
     const endTime = new Date(now);
