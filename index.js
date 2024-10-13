@@ -333,27 +333,32 @@ async function processAccMessage2(msg) {
   });
 }
 
-bot.onText(/\/ho/, async (msg) => {
+bot.onText(/\/ao/, async (msg) => {
   const chatId = msg.chat.id;
   await sendAggregatedData3(chatId);
 });
 
 async function sendAggregatedData3(chatId) {
   try {
-    // Tính thời gian từ 9h sáng hôm trước đến 9h sáng hôm nay theo giờ Việt Nam (UTC+7)
+    // Tính thời gian từ 9h sáng hôm qua đến 9h sáng hôm nay theo giờ Việt Nam (UTC+7)
     const now = new Date();
-    now.setUTCHours(now.getUTCHours() + 7);  // Chuyển sang giờ Việt Nam
 
+    // Tính startTime là 9h sáng ngày hôm qua (UTC+7)
     const startTime = new Date(now);
-    startTime.setDate(now.getDate() - 1);    // Hôm qua
-    startTime.setHours(9, 0, 0, 0);          // Bắt đầu lúc 9h sáng hôm trước (UTC+7)
+    startTime.setDate(now.getDate() - 1);    // Giảm một ngày
+    startTime.setHours(9, 0, 0, 0);          // Đặt giờ là 9:00:00 (UTC+7)
 
+    // Tính endTime là 9h sáng hôm nay (UTC+7)
     const endTime = new Date(now);
-    endTime.setHours(9, 0, 0, 0);            // Kết thúc lúc 9h sáng hôm nay (UTC+7)
+    endTime.setHours(9, 0, 0, 0);            // Đặt giờ là 9:00:00 hôm nay (UTC+7)
+
+    // Chuyển thời gian sang UTC để tương thích với MongoDB (vì MongoDB thường lưu trữ thời gian theo UTC)
+    const startTimeUTC = new Date(startTime.getTime() - (7 * 60 * 60 * 1000)); // Trừ 7 giờ để có UTC
+    const endTimeUTC = new Date(endTime.getTime() - (7 * 60 * 60 * 1000));     // Trừ 7 giờ để có UTC
 
     // Lấy bảng công từ khoảng thời gian này, loại trừ nhóm có chatId -1002108234982
     const bangCongs = await BangCong2.find({
-      date: { $gte: startTime, $lte: endTime },
+      date: { $gte: startTimeUTC, $lte: endTimeUTC },
       groupId: { $ne: -1002108234982 }, // Loại trừ nhóm này
     });
 
@@ -441,6 +446,7 @@ async function sendAggregatedData3(chatId) {
     bot.sendMessage(chatId, 'Đã xảy ra lỗi khi truy vấn dữ liệu từ cơ sở dữ liệu.');
   }
 }
+
 
 
 bot.onText(/\/13h/, async (msg) => {
