@@ -882,11 +882,11 @@ async function processAndDistributeTimesheets(chatId, isToday) {
   
   // Đặt thời gian bắt đầu là 0h00 ngày mục tiêu
   const startOfDay = new Date(targetDate.toLocaleString('en-US', { timeZone: vietnamTimeZone }));
-  startOfDay.setHours(0, 0, 0, 0);
+  startOfDay.setHours(9, 0, 0, 0);
 
   // Đặt thời gian kết thúc là 23:59:59.999 cùng ngày
   const endOfDay = new Date(startOfDay);
-  endOfDay.setHours(23, 59, 59, 999);
+  endOfDay.setHours(8, 59, 59, 999);
 
   const dateStr = `${targetDate.getDate()}/${targetDate.getMonth() + 1}/${targetDate.getFullYear()}`;
 
@@ -1028,11 +1028,11 @@ async function processAndDistributeOtherTimesheets(chatId) {
 
   // Đặt thời gian bắt đầu là 0h00 ngày hôm qua
   const startOfYesterday = new Date(yesterday);
-  startOfYesterday.setHours(0, 0, 0, 0);
+  startOfYesterday.setHours(9, 0, 0, 0);
 
   // Đặt thời gian kết thúc là 23:59:59.999 ngày hôm qua
   const endOfYesterday = new Date(yesterday);
-  endOfYesterday.setHours(23, 59, 59, 999);
+  endOfYesterday.setHours(8, 59, 59, 999);
 
   const dateStr = `${yesterday.getDate()}/${yesterday.getMonth() + 1}/${yesterday.getFullYear()}`;
 
@@ -1577,11 +1577,11 @@ async function sendAggregatedData(chatId) {
 
     // Đặt thời gian bắt đầu là 0h00 ngày hôm qua
     const startOfYesterday = new Date(yesterday);
-    startOfYesterday.setHours(0, 0, 0, 0);
+    startOfYesterday.setHours(9, 0, 0, 0);
 
     // Đặt thời gian kết thúc là 23:59:59.999 ngày hôm qua
     const endOfYesterday = new Date(yesterday);
-    endOfYesterday.setHours(23, 59, 59, 999);
+    endOfYesterday.setHours(8, 59, 59, 999);
 
     // Lấy bảng công của ngày hôm qua, loại trừ nhóm có chatId -1002108234982
     const bangCongs = await BangCong2.find({
