@@ -447,7 +447,36 @@ async function sendAggregatedData4(chatId) {
     bot.sendMessage(chatId, 'Đã xảy ra lỗi khi truy vấn dữ liệu từ cơ sở dữ liệu.');
   }
 }
-       
+
+
+bot.onText(/\/chaotopic/, async (msg) => {
+  const chatId = msg.chat.id;
+
+  try {
+    // Lấy thông tin về các topic con của nhóm (nếu đây là một nhóm forum)
+    const forumTopics = await bot.getForumTopicList(chatId); // API này chỉ là giả lập, bạn cần lấy danh sách topic từ cách khác
+
+    if (!forumTopics || forumTopics.length === 0) {
+      bot.sendMessage(chatId, "Không có topic nào trong nhóm này.");
+      return;
+    }
+
+    // Chọn một topic con, ví dụ topic đầu tiên
+    const topic = forumTopics[0];
+    const messageThreadId = topic.message_thread_id;
+    const topicTitle = topic.title;
+
+    // Gửi tin nhắn "chào" vào topic con
+    await bot.sendMessage(chatId, "chào", { message_thread_id: messageThreadId });
+
+    // Gửi thông báo về tiêu đề của topic con
+    bot.sendMessage(chatId, `Đã gửi tin nhắn vào topic: ${topicTitle}`);
+  } catch (error) {
+    console.error("Lỗi khi lấy hoặc gửi tin nhắn vào topic con:", error);
+    bot.sendMessage(chatId, "Có lỗi xảy ra khi lấy hoặc gửi tin nhắn vào topic con.");
+  }
+});
+
       
 
 bot.onText(/\/13h/, async (msg) => {
@@ -1189,6 +1218,7 @@ async function processAndDistributeOtherTimesheets(chatId) {
        
 const kickbot = {
   "-1002039100507": "CỘNG ĐỒNG NẮM BẮT CƠ HỘI",
+  "-1002308892005": "tet", 
   "-1002004082575": "Hội Nhóm",
   "-1002123430691": "DẪN LỐI THÀNH CÔNG",
   "-1002143712364": "CÙNG NHAU CHIA SẺ",
