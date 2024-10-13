@@ -876,13 +876,15 @@ const managementFees = {
 };
 
 async function processAndDistributeTimesheets(chatId, isToday) {
-  const targetDate = isToday ? new Date() : new Date(Date.now() - 86400000); // Today or Yesterday
+ const targetDate = isToday ? new Date() : new Date(Date.now() - 86400000); // Today or Yesterday
   const startOfDay = new Date(targetDate);
   startOfDay.setHours(0, 0, 0, 0);
   const endOfDay = new Date(targetDate);
   endOfDay.setHours(23, 59, 59, 999);
-  const dateStr = ${targetDate.getDate()}/${targetDate.getMonth() + 1}/${targetDate.getFullYear()};
-  try {
+  const dateStr = `${targetDate.getDate()}/${targetDate.getMonth() + 1}/${targetDate.getFullYear()}`;
+
+
+try {
     let totalAmountByUser = {}; // Đối tượng để lưu tổng số tiền của mỗi người dùng
 
     for (const groupId of allowedGroupIds) {
@@ -1012,20 +1014,12 @@ bot.onText(/\/bangconghieu/, async (msg) => {
 });
 
 async function processAndDistributeOtherTimesheets(chatId) {
-  const vietnamTimeZone = 'Asia/Ho_Chi_Minh';
-
-  // Lấy ngày hôm qua theo giờ Việt Nam
-  const yesterday = new Date(new Date().toLocaleString('en-US', { timeZone: vietnamTimeZone }));
+  const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-
-  // Đặt thời gian bắt đầu là 0h00 ngày hôm qua
   const startOfYesterday = new Date(yesterday);
-  startOfYesterday.setHours(9, 0, 0, 0);
-
-  // Đặt thời gian kết thúc là 23:59:59.999 ngày hôm qua
+  startOfYesterday.setHours(0, 0, 0, 0);
   const endOfYesterday = new Date(yesterday);
-  endOfYesterday.setHours(8, 59, 59, 999);
-
+  endOfYesterday.setHours(23, 59, 59, 999);
   const dateStr = `${yesterday.getDate()}/${yesterday.getMonth() + 1}/${yesterday.getFullYear()}`;
 
   try {
@@ -1560,21 +1554,11 @@ bot.onText(/\/homqua/, async (msg) => {
 
 async function sendAggregatedData(chatId) {
   try {
-    // Tạo đối tượng để đặt múi giờ Việt Nam (UTC+7)
-    const vietnamTimeZone = 'Asia/Ho_Chi_Minh';
-
-    // Tính ngày hôm qua theo giờ Việt Nam
-    const yesterday = new Date(new Date().toLocaleString('en-US', { timeZone: vietnamTimeZone }));
+    // Tính ngày hôm qua
+    const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-
-    // Đặt thời gian bắt đầu là 0h00 ngày hôm qua
-    const startOfYesterday = new Date(yesterday);
-    startOfYesterday.setHours(9, 0, 0, 0);
-
-    // Đặt thời gian kết thúc là 23:59:59.999 ngày hôm qua
-    const endOfYesterday = new Date(yesterday);
-    endOfYesterday.setHours(8, 59, 59, 999);
-
+    const startOfYesterday = new Date(yesterday.setHours(0, 0, 0, 0));
+    const endOfYesterday = new Date(yesterday.setHours(23, 59, 59, 999));
     // Lấy bảng công của ngày hôm qua, loại trừ nhóm có chatId -1002108234982
     const bangCongs = await BangCong2.find({
       date: { $gte: startOfYesterday, $lte: endOfYesterday },
