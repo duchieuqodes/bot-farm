@@ -336,10 +336,10 @@ async function processAccMessage2(msg) {
 
 bot.onText(/\/ao/, async (msg) => {
   const chatId = msg.chat.id;
-  await sendAggregatedData(chatId);
+  await sendAggregatedData3(chatId);
 });
 
-async function sendAggregatedData(chatId) {
+async function sendAggregatedData3(chatId) {
   try {
     // Tính thời gian từ 9h sáng hôm trước đến 9h sáng hôm nay theo giờ Việt Nam
     const vietnamTime = moment().tz('Asia/Ho_Chi_Minh');
