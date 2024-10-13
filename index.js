@@ -347,11 +347,11 @@ async function sendAggregatedData4(chatId) {
     // Tính startTime là 9h sáng ngày hôm qua (UTC+7)
     const startTime = new Date(now);
     startTime.setDate(now.getDate() - 2);    // Giảm một ngày
-    startTime.setHours(9, 0, 0, 0);          // Đặt giờ là 9:00:00 (UTC+7)
+    startTime.setHours(2, 0, 0, 0);          // Đặt giờ là 9:00:00 (UTC+7)
 
     // Tính endTime là 9h sáng hôm nay (UTC+7)
     const endTime = new Date(now);
-    endTime.setHours(9, 0, 0, 0);            // Đặt giờ là 9:00:00 hôm nay (UTC+7)
+    endTime.setHours(2, 0, 0, 0);            // Đặt giờ là 9:00:00 hôm nay (UTC+7)
 
     // Chuyển thời gian sang UTC để tương thích với MongoDB (vì MongoDB thường lưu trữ thời gian theo UTC)
     const startTimeUTC = new Date(startTime.getTime() - (7 * 60 * 60 * 1000)); // Trừ 7 giờ để có UTC
