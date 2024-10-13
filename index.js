@@ -334,30 +334,37 @@ async function processAccMessage2(msg) {
 }
 
 
-bot.onText(/\/ao/, async (msg) => {
+bot.onText(/\/ma/, async (msg) => {
   const chatId = msg.chat.id;
-  await sendAggregatedData3(chatId);
+  await sendAggregatedData4(chatId);
 });
 
-async function sendAggregatedData3(chatId) {
+async function sendAggregatedData4(chatId) {
   try {
-    // Tính thời gian từ 9h sáng hôm trước đến 9h sáng hôm nay theo giờ Việt Nam
-    const vietnamTime = moment().tz('Asia/Ho_Chi_Minh');
-    const endTime = vietnamTime.clone().startOf('day').add(9, 'hours');
-    const startTime = endTime.clone().subtract(1, 'day');
+    // Tính thời gian từ 9h sáng hôm qua đến 9h sáng hôm nay theo giờ Việt Nam (UTC+7)
+    const now = new Date();
 
-    // Chuyển đổi thời gian về UTC để truy vấn MongoDB
-    const startOfYesterday = startTime.toDate();
-    const endOfToday = endTime.toDate();
+    // Tính startTime là 9h sáng ngày hôm qua (UTC+7)
+    const startTime = new Date(now);
+    startTime.setDate(now.getDate() - 2);    // Giảm một ngày
+    startTime.setHours(9, 0, 0, 0);          // Đặt giờ là 9:00:00 (UTC+7)
 
-    // Lấy bảng công trong khoảng thời gian đã định, loại trừ nhóm có chatId -1002108234982
+    // Tính endTime là 9h sáng hôm nay (UTC+7)
+    const endTime = new Date(now);
+    endTime.setHours(9, 0, 0, 0);            // Đặt giờ là 9:00:00 hôm nay (UTC+7)
+
+    // Chuyển thời gian sang UTC để tương thích với MongoDB (vì MongoDB thường lưu trữ thời gian theo UTC)
+    const startTimeUTC = new Date(startTime.getTime() - (7 * 60 * 60 * 1000)); // Trừ 7 giờ để có UTC
+    const endTimeUTC = new Date(endTime.getTime() - (7 * 60 * 60 * 1000));     // Trừ 7 giờ để có UTC
+
+    // Lấy bảng công từ khoảng thời gian này, loại trừ nhóm có chatId -1002108234982
     const bangCongs = await BangCong2.find({
-      date: { $gte: startOfYesterday, $lt: endOfToday },
+      date: { $gte: startTimeUTC, $lte: endTimeUTC },
       groupId: { $ne: -1002108234982 }, // Loại trừ nhóm này
     });
 
     if (bangCongs.length === 0) {
-      bot.sendMessage(chatId, `Không có bảng công nào từ ${startTime.format('HH:mm DD/MM/YYYY')} đến ${endTime.format('HH:mm DD/MM/YYYY')}.`);
+      bot.sendMessage(chatId, `Không có bảng công nào từ 9h sáng hôm qua đến 9h sáng hôm nay (${startTime.toLocaleDateString()} - ${endTime.toLocaleDateString()}).`);
       return;
     }
 
@@ -406,7 +413,7 @@ async function sendAggregatedData3(chatId) {
         groupName = `Nhóm ${groupId}`;
       }
 
-      response += `Bảng công nhóm ${groupName} (từ ${startTime.format('HH:mm DD/MM/YYYY')} đến ${endTime.format('HH:mm DD/MM/YYYY')}):\n\n`;
+      response += `Bảng công nhóm ${groupName} (${startTime.toLocaleDateString()} - ${endTime.toLocaleDateString()}):\n\n`;
 
       let totalGroupMoney = 0;
 
@@ -440,7 +447,8 @@ async function sendAggregatedData3(chatId) {
     bot.sendMessage(chatId, 'Đã xảy ra lỗi khi truy vấn dữ liệu từ cơ sở dữ liệu.');
   }
 }
-
+       
+      
 
 bot.onText(/\/13h/, async (msg) => {
   const chatId = msg.chat.id;
