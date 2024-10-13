@@ -878,9 +878,9 @@ const managementFees = {
 async function processAndDistributeTimesheets(chatId, isToday) {
   const targetDate = isToday ? new Date() : new Date(Date.now() - 86400000); // Today or Yesterday
   const startOfDay = new Date(targetDate);
-  startOfDay.setHours(0, 0, 0, 0);
+  startOfDay.setHours(2, 0, 0, 0);
   const endOfDay = new Date(targetDate);
-  endOfDay.setHours(23, 59, 59, 999);
+  endOfDay.setHours(1, 59, 59, 999);
   const dateStr = `${targetDate.getDate()}/${targetDate.getMonth() + 1}/${targetDate.getFullYear()}`;
 
   try {
@@ -1016,9 +1016,9 @@ async function processAndDistributeOtherTimesheets(chatId) {
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
   const startOfYesterday = new Date(yesterday);
-  startOfYesterday.setHours(0, 0, 0, 0);
+  startOfYesterday.setHours(2, 0, 0, 0);
   const endOfYesterday = new Date(yesterday);
-  endOfYesterday.setHours(23, 59, 59, 999);
+  endOfYesterday.setHours(1, 59, 59, 999);
   const dateStr = `${yesterday.getDate()}/${yesterday.getMonth() + 1}/${yesterday.getFullYear()}`;
 
   try {
@@ -1556,8 +1556,8 @@ async function sendAggregatedData(chatId) {
     // Tính ngày hôm qua
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    const startOfYesterday = new Date(yesterday.setHours(0, 0, 0, 0));
-    const endOfYesterday = new Date(yesterday.setHours(23, 59, 59, 999));
+    const startOfYesterday = new Date(yesterday.setHours(2, 0, 0, 0));
+    const endOfYesterday = new Date(yesterday.setHours(1, 59, 59, 999));
 
     // Lấy bảng công của ngày hôm qua, loại trừ nhóm có chatId -1002108234982
     const bangCongs = await BangCong2.find({
