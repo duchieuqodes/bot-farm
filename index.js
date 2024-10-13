@@ -449,6 +449,18 @@ async function sendAggregatedData4(chatId) {
 }
 
 
+bot.on('message', (msg) => {
+  const chatId = msg.chat.id;
+
+  if (msg.message_thread_id) {
+    const topicId = msg.message_thread_id;  // Lấy ID của topic con
+    bot.sendMessage(chatId, `ID của topic con là: ${topicId}`);
+  } else {
+    bot.sendMessage(chatId, "Tin nhắn này không thuộc một topic con nào.");
+  }
+});
+
+
 bot.onText(/\/chaotopic/, async (msg) => {
   const chatId = msg.chat.id;
 
