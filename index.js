@@ -564,22 +564,35 @@ bot.onText(/\/khoiphuc/, async (msg) => {
 });
 
 
-// Lệnh /thom để hiển thị bảng công tổng
-bot.onText(/\/ha/, async (msg) => {
+// Lệnh /hahomqua và /hahomnay để hiển thị bảng công hôm qua hoặc hôm nay
+bot.onText(/\/ha(homnay|homqua)/, async (msg, match) => {
   const chatId = msg.chat.id;
-  const currentDate = new Date().toLocaleDateString();
+  const command = match[1]; // Lấy giá trị homnay hoặc homqua từ lệnh
+
+  // Xác định ngày tương ứng với lệnh
+  let targetDate = new Date();
+  let dateLabel = '';
+
+  if (command === 'homqua') {
+    targetDate.setDate(targetDate.getDate() - 1);
+    dateLabel = 'HÔM QUA';
+  } else if (command === 'homnay') {
+    dateLabel = 'HÔM NAY';
+  }
+
+  const formattedDate = targetDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
 
   const groupIds = [-1002247863313, -1002303292016];
   const groupNames = {
-    "-1002247863313": "NHÓM HÀ 11H30 -14H-19H30-21H",
-    "-1002303292016": "NHÓM HÀ 11H30, 19H30"
+    "-1002247863313": "NHÓM HÀ 11H30 -14H-19H30-21H:",
+    "-1002303292016": "NHÓM HÀ 11H30, 19H30:"
   };
 
-  let responseMessage = `BẢNG CÔNG HÔM NAY - ${new Date().toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}\n\n`;
+  let responseMessage = `BẢNG CÔNG ${dateLabel} - ${formattedDate}\n\n`;
   let hasData = false;
 
   for (const groupId of groupIds) {
-    const bangCongList = await Trasua.find({ groupId: groupId, date: currentDate });
+    const bangCongList = await Trasua.find({ groupId: groupId, date: targetDate.toLocaleDateString() });
     
     if (bangCongList.length > 0) {
       hasData = true;
@@ -596,7 +609,7 @@ bot.onText(/\/ha/, async (msg) => {
   }
 
   if (!hasData) {
-    bot.sendMessage(chatId, 'Chưa có bảng công nào được ghi nhận trong ngày hôm nay.');
+    bot.sendMessage(chatId, `Chưa có bảng công nào được ghi nhận trong ${dateLabel.toLowerCase()}.`);
   } else {
     bot.sendMessage(chatId, responseMessage);
   }
