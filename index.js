@@ -849,23 +849,23 @@ async function processMessage(msg) {
   }
 
   if (vipCard) {
-    if (vipCard.type === 'level_upp') {
-      pricePerQuay = 500;
+    if (vipCard.type === 'r3932') {
+      pricePerQuay = 0;
       pricePerKeo += 0;
-    } else if (vipCard.type === 'weeek' || vipCard.type === 'monnth') {
-      pricePerQuay = 500;
+    } else if (vipCard.type === '4827' || vipCard.type === 'monnth') {
+      pricePerQuay = 0;
       pricePerKeo += 0;
       exp = vipCard.expBonus;
     }
 
     if (vipCard.keoLimit && keo > vipCard.keoLimit) {
       const remainingKeo = keo - vipCard.keoLimit;
-      pricePerKeoBonus = remainingKeo * 100;
+      pricePerKeoBonus = remainingKeo * 0;
     }
 
     if (vipCard.quayLimit && quay > vipCard.quayLimit) {
       const remainingQuay = quay - vipCard.quayLimit;
-      pricePerQuayBonus = remainingQuay * 100;
+      pricePerQuayBonus = remainingQuay * 0;
     }
   }
 
