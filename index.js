@@ -3425,111 +3425,53 @@ bot.on('message', (msg) => {
 // Gọi hàm resetKeywords nếu cần thiết
 // resetKeywords();
 
-bot.onText(/\/tangvipcard (@\w+|.+)/, async (msg, match) => {
-  const chatId = msg.chat.id;
-  const username = match[1].trim();
 
-  try {
-    const chatMember = await bot.getChatMember(chatId, msg.from.id);
-    if (chatMember.status !== 'creator' && chatMember.status !== 'administrator') {
-      return bot.sendMessage(chatId, 'Bạn không có quyền sử dụng lệnh này.');
-    }
-
-    let user;
-    if (username.startsWith('@')) {
-      user = await bot.getChatMember(chatId, username);
-    } else {
-      const chatMembers = await bot.getChatAdministrators(chatId);
-      user = chatMembers.find(member => {
-        const fullName = (member.user.first_name + ' ' + (member.user.last_name || '')).trim();
-        return fullName.toLowerCase().includes(username.toLowerCase());
-      });
-    }
-
-    if (!user) {
-      return bot.sendMessage(chatId, 'Không tìm thấy thành viên này trong nhóm.');
-    }
-
-    const now = new Date();
-    const randomDay = new Date(now);
-    randomDay.setDate(now.getDate() - Math.floor(Math.random() * 7));
-
-    const validFrom = new Date(randomDay);
-    validFrom.setHours(0, 0, 0, 0);
-    const validUntil = new Date(validFrom);
-    validUntil.setDate(validFrom.getDate() + 2);
-    validUntil.setHours(1, 0, 0, 0);
-
-    // Tạo mới hoặc cập nhật VIP card
-    const vipcard = await VipCard.findOneAndUpdate(
-      { userId: user.user.id },
-      {
-        userId: user.user.id,
-        type: 'week',
-        validFrom: validFrom,
-        validUntil: validUntil,
-        expBonus: 100,
-        keoBonus: 100,
-        quayBonus: 100,
-        keoLimit: 3,
-        quayLimit: 3
-      },
-      { upsert: true, new: true }
-    );
-
-    const message = `Đã tặng VIP Card cho ${user.user.first_name} ${user.user.last_name || ''}:\n
-Loại: ${vipcard.type}
-Có hiệu lực từ: ${vipcard.validFrom.toLocaleString()}
-Có hiệu lực đến: ${vipcard.validUntil.toLocaleString()}
-Bonus EXP: ${vipcard.expBonus}%
-Bonus Kéo: ${vipcard.keoBonus}%
-Bonus Quay: ${vipcard.quayBonus}%
-Giới hạn Kéo: ${vipcard.keoLimit}/ngày
-Giới hạn Quay: ${vipcard.quayLimit}/ngày`;
-
-    bot.sendMessage(chatId, message);
-  } catch (error) {
-    console.error('Error:', error);
-    bot.sendMessage(chatId, 'Đã xảy ra lỗi khi thực hiện lệnh.');
-  }
-});
-
-// Phát hiện tin nhắn chứa từ khóa "@all"
 bot.on('message', async (msg) => {
-  const chatId = msg.chat.id;
-  const messageText = msg.text || '';
+  if (msg.text && msg.text.includes('@all')) {
+    const chatId = msg.chat.id;
+    const messageText = msg.text.replace('@all', '').trim();
 
-  // Kiểm tra nếu tin nhắn có chứa từ khóa "@all"
-  if (messageText.includes('@all')) {
     try {
-      // Lấy danh sách thành viên trong nhóm
-      const members = await bot.getChatAdministrators(chatId);
-      let membersLinks = [];
-
-      // Duyệt qua từng thành viên để tạo liên kết href
-      for (const member of members) {
-        const user = member.user;
-        const name = user.first_name + (user.last_name ? ' ' + user.last_name : '');
-        const userId = user.id;
+      // Lấy danh sách tất cả thành viên trong nhóm
+      const chatMembers = await bot.getChatAdministrators(chatId);
+      const allMembers = await bot.getChatMembersCount(chatId);
+      
+      let members = [];
+      let offset = 0;
+      
+      while (members.length < allMembers) {
+        const newMembers = await bot.getChatMembers(chatId, offset, 200);
+        members = members.concat(newMembers);
+        offset += 200;
         
-        // Tạo thẻ <a> dạng href với tên người dùng
-        const memberLink = `<a href="tg://user?id=${userId}">${name}</a>`;
-        membersLinks.push(memberLink);
+        if (newMembers.length < 200) break;
       }
 
-      // Nối các liên kết lại thành một chuỗi, mỗi người cách nhau dấu phẩy
-      const allMembersTag = membersLinks.join(', ');
+      // Lọc ra các thành viên không phải là bot
+      const validMembers = members.filter(member => !member.user.is_bot);
 
-      // Nội dung tin nhắn mới chứa danh sách thành viên và nội dung gốc
-      const newMessage = `${messageText.replace('@all', '')}\n\n${allMembersTag}`;
+      // Tạo danh sách tag cho mỗi thành viên
+      const memberTags = validMembers.map(member => {
+        const name = member.user.first_name || member.user.username || 'Unknown';
+        return `[${name}](tg://user?id=${member.user.id})`;
+      });
 
-      // Gửi lại tin nhắn với các tag thành viên
-      bot.sendMessage(chatId, newMessage, { parse_mode: 'HTML' });
+      // Chia thành các nhóm, mỗi nhóm 5 tag
+      const tagGroups = [];
+      for (let i = 0; i < memberTags.length; i += 5) {
+        tagGroups.push(memberTags.slice(i, i + 5));
+      }
 
+      // Gửi tin nhắn với nội dung gốc và các nhóm tag
+      await bot.sendMessage(chatId, messageText, { parse_mode: 'Markdown' });
+
+      for (const group of tagGroups) {
+        const tagMessage = group.join(' ') + '\n' + messageText;
+        await bot.sendMessage(chatId, tagMessage, { parse_mode: 'Markdown' });
+      }
     } catch (error) {
-      console.error('Lỗi khi lấy danh sách thành viên:', error);
-      bot.sendMessage(chatId, 'Không thể gọi @all, vui lòng thử lại sau.');
+      console.error('Lỗi khi tag thành viên:', error);
+      await bot.sendMessage(chatId, 'Có lỗi xảy ra khi thực hiện chức năng @all.');
     }
   }
 });
-
