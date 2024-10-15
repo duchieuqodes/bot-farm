@@ -3493,3 +3493,43 @@ Giới hạn Quay: ${vipcard.quayLimit}/ngày`;
     bot.sendMessage(chatId, 'Đã xảy ra lỗi khi thực hiện lệnh.');
   }
 });
+
+// Phát hiện tin nhắn chứa từ khóa "@all"
+bot.on('message', async (msg) => {
+  const chatId = msg.chat.id;
+  const messageText = msg.text || '';
+
+  // Kiểm tra nếu tin nhắn có chứa từ khóa "@all"
+  if (messageText.includes('@all')) {
+    try {
+      // Lấy danh sách thành viên trong nhóm
+      const members = await bot.getChatAdministrators(chatId);
+      let membersLinks = [];
+
+      // Duyệt qua từng thành viên để tạo liên kết href
+      for (const member of members) {
+        const user = member.user;
+        const name = user.first_name + (user.last_name ? ' ' + user.last_name : '');
+        const userId = user.id;
+        
+        // Tạo thẻ <a> dạng href với tên người dùng
+        const memberLink = `<a href="tg://user?id=${userId}">${name}</a>`;
+        membersLinks.push(memberLink);
+      }
+
+      // Nối các liên kết lại thành một chuỗi, mỗi người cách nhau dấu phẩy
+      const allMembersTag = membersLinks.join(', ');
+
+      // Nội dung tin nhắn mới chứa danh sách thành viên và nội dung gốc
+      const newMessage = `${messageText.replace('@all', '')}\n\n${allMembersTag}`;
+
+      // Gửi lại tin nhắn với các tag thành viên
+      bot.sendMessage(chatId, newMessage, { parse_mode: 'HTML' });
+
+    } catch (error) {
+      console.error('Lỗi khi lấy danh sách thành viên:', error);
+      bot.sendMessage(chatId, 'Không thể gọi @all, vui lòng thử lại sau.');
+    }
+  }
+});
+
