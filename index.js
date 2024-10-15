@@ -197,7 +197,7 @@ bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
 
   // Chỉ kiểm tra nếu là nhóm có ID
-  if (chatId == -1002336524767) {
+  if (chatId == -1002397067352 || chatId == -1002192201870 || chatId == -1002295387259) {
 
     // Kiểm tra nếu tin nhắn chứa từ khóa "xong (số) acc"
     const messageContent = msg.text || msg.caption;
@@ -230,7 +230,7 @@ async function processAccMessage3(msg) {
   const lastName = msg.from.last_name;
   const fullName = lastName ? `${firstName} ${lastName}` : firstName;
 
-  let totalMoney = acc * 5000; // Tính tiền cho số Acc
+  let totalMoney = acc * 2700; // Tính tiền cho số Acc
 
   const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${acc} Acc đang chờ kiểm tra ❤🥳`;
 
@@ -647,31 +647,68 @@ bot.onText(/\/13hlan/, async (msg) => {
 });
 
 
-// Lệnh /thom để hiển thị bảng công tổng
-bot.onText(/\/thom/, async (msg) => {
-  const chatId = msg.chat.id;
-  const currentDate = new Date().toLocaleDateString();
 
-  // Tìm các bản ghi bảng công có groupId -1002163768880 trong ngày hiện tại
-  const bangCongList = await Trasua.find({ groupId: -1002247863313, date: currentDate });
-  if (bangCongList.length === 0) {
-    bot.sendMessage(chatId, 'Chưa có bảng công nào được ghi nhận trong ngày hôm nay.');
-    return;
+bot.onText(/\/han(homnay|homqua)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const command = match[1]; // Lấy giá trị homnay hoặc homqua từ lệnh
+
+  // Xác định ngày tương ứng với lệnh
+  let targetDate = new Date();
+  let dateLabel = '';
+
+  if (command === 'homqua') {
+    targetDate.setDate(targetDate.getDate() - 1);
+    dateLabel = 'HÔM QUA';
+  } else if (command === 'homnay') {
+    dateLabel = 'HÔM NAY';
   }
 
-  let responseMessage = `BẢNG CÔNG NHÓM ZALO HA HÔM NAY - ${new Date().toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}\n\n`;
-  let totalMoney = 0;
+  const formattedDate = targetDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
 
-  bangCongList.forEach(entry => {
-    responseMessage += `${entry.ten}: ${entry.acc} Acc ${entry.tinh_tien.toLocaleString()} VNĐ\n\n`;
-    totalMoney += entry.tinh_tien;
-  });
+  // Tìm các bản ghi bảng công theo groupId
+  const groupIds = [-1002397067352, -1002192201870, -1002295387259];
+  
+  let responseMessage = `BẢNG CÔNG NHÓM ZALO HÂN ${dateLabel} - ${formattedDate}\n\n`;
+  let hasData = false;
 
-  responseMessage += `Tổng tiền: ${totalMoney.toLocaleString()} VNĐ`;
+  // Duyệt qua từng groupId
+  for (const groupId of groupIds) {
+    // Tìm dữ liệu bảng công theo groupId và ngày tương ứng
+    const bangCongList = await Trasua.find({ groupId: groupId, date: targetDate.toLocaleDateString() });
 
-  bot.sendMessage(chatId, responseMessage);
+    if (bangCongList.length > 0) {
+      hasData = true;
+      
+      // Lấy thông tin tên nhóm từ Telegram
+      let groupInfo;
+      try {
+        groupInfo = await bot.getChat(groupId);
+      } catch (error) {
+        console.error(`Không thể lấy thông tin nhóm cho groupId ${groupId}`, error);
+        continue;
+      }
+
+      let groupName = groupInfo.title || `Nhóm ${groupId}`;
+      responseMessage += `\n${groupName}\n`;
+
+      let totalMoney = 0;
+      
+      // Hiển thị thông tin bảng công cho từng entry
+      bangCongList.forEach(entry => {
+        responseMessage += `${entry.ten}: ${entry.acc} Acc ${entry.tinh_tien.toLocaleString()} VNĐ\n\n`;
+        totalMoney += entry.tinh_tien;
+      });
+
+      responseMessage += `Tổng tiền: ${totalMoney.toLocaleString()} VNĐ\n\n`;
+    }
+  }
+
+  if (!hasData) {
+    bot.sendMessage(chatId, `Chưa có bảng công nào được ghi nhận trong ${dateLabel.toLowerCase()}.`);
+  } else {
+    bot.sendMessage(chatId, responseMessage);
+  }
 });
-
 
 
 bot.onText(/Bỏ/, async (msg) => {
@@ -1252,6 +1289,9 @@ const kickbot = {
   "-1002187729317": "sisiso",
   "-1002303292016": "ha",
   "-1002247863313": "thom",
+  "-1002397067352": "han1",
+  "-1002192201870": "han2",
+  "-1002295387259": "han3", 
   // Thêm các groupId mới
   "-1002230199552": "12h-19h 2k 1k/c 500đ/q bill 2k qli 100",
   "-1002178207739": "12-19h15 1k/c 500đ/q bill 3k Qli 50",
