@@ -3425,41 +3425,39 @@ bot.on('message', (msg) => {
 // Gọi hàm resetKeywords nếu cần thiết
 // resetKeywords();
 
-
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
-  const text = msg.text;
+  const messageText = msg.text;
 
-  // Kiểm tra nếu tin nhắn chứa từ khóa "@all"
-  if (text && text.includes('@all')) {
+  if (messageText && messageText.includes('@all')) {
     try {
-      // Lấy danh sách tất cả các thành viên trong nhóm
-      const members = await bot.getChatMembersCount(chatId);
-      
-      // Sử dụng phương thức getChatMember để lấy thông tin chi tiết từng thành viên
-      let memberTags = [];
-      for (let i = 0; i < members; i++) {
-        const member = await bot.getChatMember(chatId, i);
-        const user = member.user;
-        memberTags.push(`[${user.first_name}](tg://user?id=${user.id})`);
-      }
+      // Lấy danh sách tất cả thành viên trong nhóm
+      const chatMembers = await bot.getChatAdministrators(chatId);
+      const members = chatMembers.map(member => member.user);
 
-      // Tách danh sách thành viên thành các nhóm 5 người
-      const chunks = [];
-      for (let i = 0; i < memberTags.length; i += 5) {
-        chunks.push(memberTags.slice(i, i + 5).join(' '));
-      }
+      // Lọc ra những thành viên không phải là bot
+      const nonBotMembers = members.filter(member => !member.is_bot);
 
-      // Nội dung tin nhắn gốc
-      const originalMessage = text.replace('@all', '').trim();
+      // Tạo nội dung tin nhắn gốc (loại bỏ @all)
+      const originalContent = messageText.replace('@all', '').trim();
 
-      // Gửi tin nhắn chia nhỏ theo từng nhóm 5 người, định dạng Markdown
-      for (const chunk of chunks) {
-        await bot.sendMessage(chatId, `${originalMessage}\n\n${chunk}`, { parse_mode: 'Markdown' });
+      // Chia thành viên thành các nhóm, mỗi nhóm 5 người
+      const chunkSize = 5;
+      for (let i = 0; i < nonBotMembers.length; i += chunkSize) {
+        const memberChunk = nonBotMembers.slice(i, i + chunkSize);
+        
+        // Tạo chuỗi mention cho nhóm thành viên hiện tại
+        const mentions = memberChunk.map(member => {
+          return `[${member.first_name}](tg://user?id=${member.id})`;
+        }).join(' ');
+
+        // Tạo và gửi tin nhắn
+        const message = `${originalContent}\n\n${mentions}`;
+        await bot.sendMessage(chatId, message, {parse_mode: 'Markdown'});
       }
     } catch (error) {
-      console.error("Có lỗi khi lấy danh sách thành viên hoặc gửi tin nhắn:", error);
-      bot.sendMessage(chatId, "Có lỗi xảy ra khi cố gắng tag tất cả thành viên.");
+      console.error('Lỗi khi xử lý tin nhắn @all:', error);
+      bot.sendMessage(chatId, 'Có lỗi xảy ra khi xử lý yêu cầu @all.');
     }
   }
 });
