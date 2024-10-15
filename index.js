@@ -3427,51 +3427,39 @@ bot.on('message', (msg) => {
 
 
 bot.on('message', async (msg) => {
-  if (msg.text && msg.text.includes('@all')) {
-    const chatId = msg.chat.id;
-    const messageText = msg.text.replace('@all', '').trim();
+  const chatId = msg.chat.id;
+  const text = msg.text;
 
+  // Kiểm tra nếu tin nhắn chứa từ khóa "@all"
+  if (text && text.includes('@all')) {
     try {
-      // Lấy danh sách tất cả thành viên trong nhóm
-      const chatMembers = await bot.getChatAdministrators(chatId);
-      const allMembers = await bot.getChatMembersCount(chatId);
+      // Lấy danh sách tất cả các thành viên trong nhóm
+      const members = await bot.getChatMembersCount(chatId);
       
-      let members = [];
-      let offset = 0;
-      
-      while (members.length < allMembers) {
-        const newMembers = await bot.getChatMembers(chatId, offset, 200);
-        members = members.concat(newMembers);
-        offset += 200;
-        
-        if (newMembers.length < 200) break;
+      // Sử dụng phương thức getChatMember để lấy thông tin chi tiết từng thành viên
+      let memberTags = [];
+      for (let i = 0; i < members; i++) {
+        const member = await bot.getChatMember(chatId, i);
+        const user = member.user;
+        memberTags.push(`[${user.first_name}](tg://user?id=${user.id})`);
       }
 
-      // Lọc ra các thành viên không phải là bot
-      const validMembers = members.filter(member => !member.user.is_bot);
-
-      // Tạo danh sách tag cho mỗi thành viên
-      const memberTags = validMembers.map(member => {
-        const name = member.user.first_name || member.user.username || 'Unknown';
-        return `[${name}](tg://user?id=${member.user.id})`;
-      });
-
-      // Chia thành các nhóm, mỗi nhóm 5 tag
-      const tagGroups = [];
+      // Tách danh sách thành viên thành các nhóm 5 người
+      const chunks = [];
       for (let i = 0; i < memberTags.length; i += 5) {
-        tagGroups.push(memberTags.slice(i, i + 5));
+        chunks.push(memberTags.slice(i, i + 5).join(' '));
       }
 
-      // Gửi tin nhắn với nội dung gốc và các nhóm tag
-      await bot.sendMessage(chatId, messageText, { parse_mode: 'Markdown' });
+      // Nội dung tin nhắn gốc
+      const originalMessage = text.replace('@all', '').trim();
 
-      for (const group of tagGroups) {
-        const tagMessage = group.join(' ') + '\n' + messageText;
-        await bot.sendMessage(chatId, tagMessage, { parse_mode: 'Markdown' });
+      // Gửi tin nhắn chia nhỏ theo từng nhóm 5 người, định dạng Markdown
+      for (const chunk of chunks) {
+        await bot.sendMessage(chatId, `${originalMessage}\n\n${chunk}`, { parse_mode: 'Markdown' });
       }
     } catch (error) {
-      console.error('Lỗi khi tag thành viên:', error);
-      await bot.sendMessage(chatId, 'Có lỗi xảy ra khi thực hiện chức năng @all.');
+      console.error("Có lỗi khi lấy danh sách thành viên hoặc gửi tin nhắn:", error);
+      bot.sendMessage(chatId, "Có lỗi xảy ra khi cố gắng tag tất cả thành viên.");
     }
   }
 });
