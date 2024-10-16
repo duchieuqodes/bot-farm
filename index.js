@@ -722,7 +722,10 @@ bot.onText(/Bỏ/, async (msg) => {
   const username = msg.from.username;
 
   const replyText = msg.reply_to_message.text;
-  const matched = replyText.match(/Bài nộp của (.+) đã được ghi nhận với (\d+) Acc(?:, (\d+) nhóm)?\. Tổng tiền: ([\d,]+) VNĐ/);
+
+  // Regex để bắt hai loại tin nhắn khác nhau
+  const matched = replyText.match(/Bài nộp của (.+) đã được ghi nhận với (\d+) Acc, (\d+) nhóm. Tổng tiền: ([\d,]+) VNĐ/) ||
+                  replyText.match(/Bài nộp của (.+) đã được ghi nhận với (\d+) Acc đang chờ kiểm tra/);
 
   if (!matched) {
     bot.sendMessage(chatId, 'Tin nhắn trả lời không đúng định dạng xác nhận của bot.');
@@ -731,8 +734,8 @@ bot.onText(/Bỏ/, async (msg) => {
 
   const ten = matched[1].trim();
   const acc = parseInt(matched[2]);
-  const nhom = matched[3] ? parseInt(matched[3]) : 0; // Nếu không có nhóm thì mặc định là 0
-  const tinh_tien = parseInt(matched[4].replace(/,/g, ''));
+  const nhom = matched[3] ? parseInt(matched[3]) : 0; // Nếu không có nhóm, mặc định là 0
+  const tinh_tien = matched[4] ? parseInt(matched[4].replace(/,/g, '')) : 0; // Nếu không có tổng tiền, mặc định là 0
 
   // Lấy ngày từ tin nhắn của bot và định dạng là tháng/ngày/năm
   const messageDate = new Date(msg.reply_to_message.date * 1000);
@@ -766,6 +769,7 @@ bot.onText(/Bỏ/, async (msg) => {
     bot.sendMessage(chatId, 'Đã xảy ra lỗi khi cập nhật dữ liệu.');
   }
 });
+
 
 
 const regex = /\d+\s*(quẩy|q|cộng|c|\+|bill|ảnh|hình)/gi;
