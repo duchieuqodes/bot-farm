@@ -45,17 +45,6 @@ const trasuaSchema = new mongoose.Schema({
 
 const Trasua = mongoose.model('Trasua', trasuaSchema);
 
-const listMemberTagSchema = new mongoose.Schema({
-  chatId: { type: String, required: true },  // ID của nhóm
-  userId: { type: String, required: true },  // ID của thành viên
-  firstName: { type: String, required: true }, // Tên của thành viên
-  isBot: { type: Boolean, default: false }     // Có phải bot không
-});
-
-// Đảm bảo rằng mỗi thành viên trong nhóm là duy nhất
-listMemberTagSchema.index({ chatId: 1, userId: 1 }, { unique: true });
-
-
 //Định nghĩa schema cho thành viên
 const MemberSchema = new mongoose.Schema({
   userId: { type: Number, unique: true },
@@ -3443,52 +3432,91 @@ bot.on('message', (msg) => {
 // Gọi hàm resetKeywords nếu cần thiết
 // resetKeywords();
 
+// Định nghĩa schema cho Memtag
+const memtagSchema = new mongoose.Schema({
+  userId: { type: Number, required: true },
+  chatId: { type: Number, required: true },
+  firstName: String,
+  lastName: String,
+  username: String,
+  isActive: { type: Boolean, default: true },
+  lastSeen: { type: Date, default: Date.now }
+});
+
+// Tạo index cho userId và chatId để tăng tốc độ truy vấn
+memtagSchema.index({ userId: 1, chatId: 1 }, { unique: true });
+
+// Tạo model từ schema
+const Memtag = mongoose.model('Memtag', memtagSchema);
+
+// Hàm để cập nhật hoặc tạo mới thành viên
+async function upsertMemtag(userId, chatId, firstName, lastName, username) {
+  try {
+    await Memtag.findOneAndUpdate(
+      { userId, chatId },
+      { userId, chatId, firstName, lastName, username, isActive: true, lastSeen: new Date() },
+      { upsert: true, new: true }
+    );
+  } catch (error) {
+    console.error('Lỗi khi cập nhật thành viên:', error);
+  }
+}
+
+// Xử lý sự kiện khi có thành viên mới tham gia
+bot.on('new_chat_members', async (msg) => {
+  const chatId = msg.chat.id;
+  msg.new_chat_members.forEach(async (newMember) => {
+    await upsertMemtag(newMember.id, chatId, newMember.first_name, newMember.last_name, newMember.username);
+  });
+});
+
+// Xử lý sự kiện khi thành viên rời khỏi nhóm
+bot.on('left_chat_member', async (msg) => {
+  const chatId = msg.chat.id;
+  const leftMember = msg.left_chat_member;
+  try {
+    await Memtag.findOneAndUpdate(
+      { userId: leftMember.id, chatId },
+      { isActive: false }
+    );
+  } catch (error) {
+    console.error('Lỗi khi cập nhật trạng thái thành viên rời đi:', error);
+  }
+});
+
+// Xử lý mọi tin nhắn để cập nhật lastSeen và xử lý lệnh @all
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
+  await upsertMemtag(userId, chatId, msg.from.first_name, msg.from.last_name, msg.from.username);
 
-  // Lưu thông tin thành viên vào cơ sở dữ liệu, bỏ qua bot
-  if (!msg.from.is_bot) {
+  // Xử lý lệnh @all
+  if (msg.text && msg.text.includes('@all')) {
     try {
-      await listMemberTag.updateOne(
-        { chatId, userId },  // Điều kiện tìm kiếm
-        { firstName: msg.from.first_name, isBot: msg.from.is_bot },  // Dữ liệu cập nhật
-        { upsert: true }  // Tạo mới nếu không tìm thấy
-      );
-    } catch (error) {
-      console.error('Lỗi khi lưu thành viên vào cơ sở dữ liệu:', error);
-    }
-  }
-
-  const messageText = msg.text;
-
-  if (messageText && messageText.includes('@all')) {
-    try {
-      // Lấy danh sách tất cả các thành viên trong nhóm từ MongoDB
-      const members = await listMemberTag.find({ chatId });
-
-      // Nếu chưa có thành viên nào được ghi nhận
-      if (members.length === 0) {
-        bot.sendMessage(chatId, 'Không có thành viên nào để tag.');
-        return;
-      }
-
+      // Lấy danh sách tất cả thành viên active từ database
+      const activeMemtags = await Memtag.find({ chatId, isActive: true });
+      
       // Tạo nội dung tin nhắn gốc (loại bỏ @all)
-      const originalContent = messageText.replace('@all', '').trim();
+      const originalContent = msg.text.replace('@all', '').trim();
 
-      // Chia thành viên thành các nhóm, mỗi nhóm 5 người
-      const chunkSize = 5;
-      for (let i = 0; i < members.length; i += chunkSize) {
-        const memberChunk = members.slice(i, i + chunkSize);
-        
-        // Tạo chuỗi mention cho nhóm thành viên hiện tại, phân cách bằng dấu phẩy
-        const mentions = memberChunk.map(member => {
-          return `[${member.firstName}](tg://user?id=${member.userId})`;
-        }).join(', '); // Phân cách bằng dấu phẩy
+      // Tạo chuỗi mention cho tất cả thành viên, phân cách bằng dấu phẩy
+      const mentions = activeMemtags.map(memtag => {
+        return `[${memtag.firstName || 'Member'}](tg://user?id=${memtag.userId})`;
+      }).join(', ');
 
-        // Tạo và gửi tin nhắn
-        const message = `${originalContent}\n\n${mentions}`;
-        await bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+      // Tạo và gửi tin nhắn
+      const message = `${originalContent}\n\n${mentions}`;
+      
+      // Kiểm tra độ dài của tin nhắn
+      if (message.length <= 4096) {
+        // Nếu tin nhắn không quá dài, gửi như bình thường
+        await bot.sendMessage(chatId, message, {parse_mode: 'Markdown'});
+      } else {
+        // Nếu tin nhắn quá dài, chia thành nhiều phần
+        const chunks = message.match(/.{1,4096}/g);
+        for (const chunk of chunks) {
+          await bot.sendMessage(chatId, chunk, {parse_mode: 'Markdown'});
+        }
       }
     } catch (error) {
       console.error('Lỗi khi xử lý tin nhắn @all:', error);
