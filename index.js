@@ -722,7 +722,7 @@ bot.onText(/Bỏ/, async (msg) => {
   const username = msg.from.username;
 
   const replyText = msg.reply_to_message.text;
-  const matched = replyText.match(/Bài nộp của (.+) đã được ghi nhận với (\d+) Acc, (\d+) nhóm. Tổng tiền: ([\d,]+) VNĐ/);
+  const matched = replyText.match(/Bài nộp của (.+) đã được ghi nhận với (\d+) Acc(?:, (\d+) nhóm)?\. Tổng tiền: ([\d,]+) VNĐ/);
 
   if (!matched) {
     bot.sendMessage(chatId, 'Tin nhắn trả lời không đúng định dạng xác nhận của bot.');
@@ -731,7 +731,7 @@ bot.onText(/Bỏ/, async (msg) => {
 
   const ten = matched[1].trim();
   const acc = parseInt(matched[2]);
-  const nhom = parseInt(matched[3]);
+  const nhom = matched[3] ? parseInt(matched[3]) : 0; // Nếu không có nhóm thì mặc định là 0
   const tinh_tien = parseInt(matched[4].replace(/,/g, ''));
 
   // Lấy ngày từ tin nhắn của bot và định dạng là tháng/ngày/năm
@@ -768,14 +768,13 @@ bot.onText(/Bỏ/, async (msg) => {
 });
 
 
-
 const regex = /\d+\s*(quẩy|q|cộng|c|\+|bill|ảnh|hình)/gi;
 
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
 
   // Chỉ kiểm tra nếu không phải là nhóm có ID
-  if (chatId !== -1002103270166 && chatId !== -1002336524767 && chatId !== -1002247863313 && chatId !== -1002303292016) {
+  if (chatId !== -1002103270166 && chatId !== -1002336524767 && chatId !== -1002247863313 && chatId !== -1002303292016 && chatId !== -1002397067352 && chatId !== -1002295387259 && chatId == -1002192201870) {
     // Kiểm tra nếu tin nhắn chứa chuỗi cấm
     const messageContent = msg.text || msg.caption;
     if (messageContent) {
