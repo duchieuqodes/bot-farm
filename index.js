@@ -45,6 +45,16 @@ const trasuaSchema = new mongoose.Schema({
 
 const Trasua = mongoose.model('Trasua', trasuaSchema);
 
+const listMemberTagSchema = new mongoose.Schema({
+  chatId: { type: String, required: true },  // ID của nhóm
+  userId: { type: String, required: true },  // ID của thành viên
+  firstName: { type: String, required: true }, // Tên của thành viên
+  isBot: { type: Boolean, default: false }     // Có phải bot không
+});
+
+// Đảm bảo rằng mỗi thành viên trong nhóm là duy nhất
+listMemberTagSchema.index({ chatId: 1, userId: 1 }, { unique: true });
+
 
 //Định nghĩa schema cho thành viên
 const MemberSchema = new mongoose.Schema({
@@ -3435,33 +3445,50 @@ bot.on('message', (msg) => {
 
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
+  const userId = msg.from.id;
+
+  // Lưu thông tin thành viên vào cơ sở dữ liệu, bỏ qua bot
+  if (!msg.from.is_bot) {
+    try {
+      await listMemberTag.updateOne(
+        { chatId, userId },  // Điều kiện tìm kiếm
+        { firstName: msg.from.first_name, isBot: msg.from.is_bot },  // Dữ liệu cập nhật
+        { upsert: true }  // Tạo mới nếu không tìm thấy
+      );
+    } catch (error) {
+      console.error('Lỗi khi lưu thành viên vào cơ sở dữ liệu:', error);
+    }
+  }
+
   const messageText = msg.text;
 
   if (messageText && messageText.includes('@all')) {
     try {
-      // Lấy danh sách tất cả thành viên trong nhóm
-      const chatMembers = await bot.getChatAdministrators(chatId);
-      const members = chatMembers.map(member => member.user);
+      // Lấy danh sách tất cả các thành viên trong nhóm từ MongoDB
+      const members = await listMemberTag.find({ chatId });
 
-      // Lọc ra những thành viên không phải là bot
-      const nonBotMembers = members.filter(member => !member.is_bot);
+      // Nếu chưa có thành viên nào được ghi nhận
+      if (members.length === 0) {
+        bot.sendMessage(chatId, 'Không có thành viên nào để tag.');
+        return;
+      }
 
       // Tạo nội dung tin nhắn gốc (loại bỏ @all)
       const originalContent = messageText.replace('@all', '').trim();
 
       // Chia thành viên thành các nhóm, mỗi nhóm 5 người
       const chunkSize = 5;
-      for (let i = 0; i < nonBotMembers.length; i += chunkSize) {
-        const memberChunk = nonBotMembers.slice(i, i + chunkSize);
+      for (let i = 0; i < members.length; i += chunkSize) {
+        const memberChunk = members.slice(i, i + chunkSize);
         
-        // Tạo chuỗi mention cho nhóm thành viên hiện tại
+        // Tạo chuỗi mention cho nhóm thành viên hiện tại, phân cách bằng dấu phẩy
         const mentions = memberChunk.map(member => {
-          return `[${member.first_name}](tg://user?id=${member.id})`;
-        }).join(' ');
+          return `[${member.firstName}](tg://user?id=${member.userId})`;
+        }).join(', '); // Phân cách bằng dấu phẩy
 
         // Tạo và gửi tin nhắn
         const message = `${originalContent}\n\n${mentions}`;
-        await bot.sendMessage(chatId, message, {parse_mode: 'Markdown'});
+        await bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
       }
     } catch (error) {
       console.error('Lỗi khi xử lý tin nhắn @all:', error);
