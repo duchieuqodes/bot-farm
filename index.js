@@ -788,7 +788,7 @@ bot.on('message', async (msg) => {
     if (messageContent) {
       if (regex.test(messageContent)) {
         await processSubmission(msg, msg);
-      } else if (msg.reply_to_message) {
+      } else if (msg.reply_to_message && addRegex.test(messageContent)) {
         const repliedMessage = msg.reply_to_message;
         const repliedMessageContent = repliedMessage.text || repliedMessage.caption;
 
@@ -925,7 +925,7 @@ async function processSubmission(msg, targetMsg) {
   });
 }
 
-    
+      
 
 const allowedGroupIds = [
   -1002230199552, -1002312409314, -1002439441449, -1002178207739, -1002235474314, -1002186698265, -1002205826480,
