@@ -776,7 +776,7 @@ bot.onText(/Bỏ/, async (msg) => {
 
 
     
-const addRegex = /thêm/i; // Tìm từ "Thêm" trong tin nhắn
+const addRegex = /thêm/i;
 const regex = /\d+\s*(quẩy|q|cộng|c|\+|bill|ảnh|hình)/gi;
 
 bot.on('message', async (msg) => {
@@ -784,29 +784,27 @@ bot.on('message', async (msg) => {
 
   // Chỉ kiểm tra nếu không phải là nhóm có ID
   if (chatId !== -1002103270166 && chatId !== -1002336524767 && chatId !== -1002247863313 && chatId !== -1002303292016) {
-    // Kiểm tra nếu tin nhắn chứa chuỗi cấm
     const messageContent = msg.text || msg.caption;
     if (messageContent) {
       if (regex.test(messageContent)) {
-        processDirectMessage(msg); // Xử lý tin nhắn trực tiếp
-      } else if (msg.reply_to_message && addRegex.test(messageContent)) {
-        // Kiểm tra xem tin nhắn có phải là "Thêm" và reply tới tin nhắn khác
+        await processSubmission(msg, msg);
+      } else if (msg.reply_to_message) {
         const repliedMessage = msg.reply_to_message;
         const repliedMessageContent = repliedMessage.text || repliedMessage.caption;
 
         if (regex.test(repliedMessageContent)) {
-          processReplyMessage3(msg, repliedMessage); // Xử lý khi reply với từ "Thêm"
+          await processSubmission(msg, repliedMessage);
         }
       }
     }
   }
 });
 
-async function processDirectMessage(msg) {
-  const messageContent = msg.text || msg.caption;
+async function processSubmission(msg, targetMsg) {
+  const messageContent = targetMsg.text || targetMsg.caption;
   const matches = messageContent.match(regex);
-  const userId = msg.from.id;
-  const groupId = msg.chat.id;
+  const userId = targetMsg.from.id;
+  const groupId = targetMsg.chat.id;
 
   let quay = 0;
   let keo = 0;
@@ -815,8 +813,8 @@ async function processDirectMessage(msg) {
 
   if (matches) {
     matches.forEach((match) => {
-      const number = parseInt(match.match(/\d+/)[0]); // Tìm số
-      const suffix = match.replace(/\d+\s*/, '').toLowerCase(); // Xóa số và khoảng trắng để lấy từ khóa
+      const number = parseInt(match.match(/\d+/)[0]);
+      const suffix = match.replace(/\d+\s*/, '').toLowerCase();
 
       if (suffix === 'q' || suffix === 'quẩy') {
         quay += number;
@@ -830,55 +828,11 @@ async function processDirectMessage(msg) {
     });
   }
 
-  // Lấy ngày từ tin nhắn
-  const messageDate = new Date(msg.date * 1000).toLocaleDateString();
-  const firstName = msg.from.first_name;
-  const lastName = msg.from.last_name;
+  const targetDate = new Date(targetMsg.date * 1000).toLocaleDateString();
+  const firstName = targetMsg.from.first_name;
+  const lastName = targetMsg.from.last_name;
   const fullName = lastName ? `${firstName} ${lastName}` : firstName;
 
-  // Tính toán và lưu bảng công giống như hàm processReplyMessage3
-  await calculateAndSaveBangCong(userId, groupId, messageDate, fullName, quay, keo, bill, anh);
-}
-
-async function processReplyMessage3(msg, repliedMessage) {
-  const messageContent = repliedMessage.text || repliedMessage.caption;
-  const matches = messageContent.match(regex);
-  const userId = repliedMessage.from.id;
-  const groupId = repliedMessage.chat.id;
-
-  let quay = 0;
-  let keo = 0;
-  let bill = 0;
-  let anh = 0;
-
-  if (matches) {
-    matches.forEach((match) => {
-      const number = parseInt(match.match(/\d+/)[0]); // Tìm số
-      const suffix = match.replace(/\d+\s*/, '').toLowerCase(); // Xóa số và khoảng trắng để lấy từ khóa
-
-      if (suffix === 'q' || suffix === 'quẩy') {
-        quay += number;
-      } else if (suffix === 'c' || suffix === 'cộng' || suffix === '+') {
-        keo += number;
-      } else if (suffix === 'bill') {
-        bill += number;
-      } else if (suffix === 'ảnh' || suffix === 'hình') {
-        anh += number;
-      }
-    });
-  }
-
-  // Lấy ngày từ tin nhắn được reply
-  const repliedDate = new Date(repliedMessage.date * 1000).toLocaleDateString();
-  const firstName = repliedMessage.from.first_name;
-  const lastName = repliedMessage.from.last_name;
-  const fullName = lastName ? `${firstName} ${lastName}` : firstName;
-
-  // Tính toán và lưu bảng công giống như hàm processDirectMessage
-  await calculateAndSaveBangCong(userId, groupId, repliedDate, fullName, quay, keo, bill, anh);
-}
-
-async function calculateAndSaveBangCong(userId, groupId, date, fullName, quay, keo, bill, anh) {
   const vipCard = await VipCard.findOne({
     userId,
     validFrom: { $lte: new Date() },
@@ -931,16 +885,16 @@ async function calculateAndSaveBangCong(userId, groupId, date, fullName, quay, k
 
   const totalMoney = (quay * pricePerQuay) + (keo * pricePerKeo) + (bill * pricePerBill) + (anh * pricePerAnh) + pricePerKeoBonus + pricePerQuayBonus;
 
-  const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${quay} quẩy, ${keo} cộng, ${bill} bill, ${anh} ảnh vào ngày ${date} đang chờ kiểm tra ❤🥳`;
+  const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${quay} quẩy, ${keo} cộng, ${bill} bill, ${anh} ảnh vào ngày ${targetDate} đang chờ kiểm tra ❤🥳`;
 
   bot.sendMessage(groupId, responseMessage, { reply_to_message_id: msg.message_id }).then(async () => {
-    let bangCong = await BangCong2.findOne({ userId, groupId, date });
+    let bangCong = await BangCong2.findOne({ userId, groupId, date: targetDate });
 
     if (!bangCong) {
       bangCong = await BangCong2.create({
         userId,
         groupId,
-        date,
+        date: targetDate,
         ten: fullName,
         quay,
         keo,
@@ -969,7 +923,7 @@ async function calculateAndSaveBangCong(userId, groupId, date, fullName, quay, k
     await updateLevelPercent(userId);
     await updateMissionProgress(userId);
   });
-          }       
+}
 
     
 
