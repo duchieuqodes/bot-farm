@@ -774,6 +774,159 @@ bot.onText(/Bỏ/, async (msg) => {
   }
 });
 
+const addRegex = /thêm/i; // Tìm từ "Thêm" trong tin nhắn
+
+bot.on('message', async (msg) => {
+  const chatId = msg.chat.id;
+
+  // Chỉ kiểm tra nếu không phải là nhóm có ID
+  if (chatId !== -1002103270166 && chatId !== -1002336524767 && chatId !== -1002247863313 && chatId !== -1002303292016) {
+    // Kiểm tra nếu tin nhắn chứa chuỗi cấm
+    const messageContent = msg.text || msg.caption;
+    if (messageContent) {
+      if (regex.test(messageContent)) {
+        processMessage(msg); // Xử lý tin nhắn trực tiếp
+      } else if (msg.reply_to_message && addRegex.test(messageContent)) {
+        // Kiểm tra xem tin nhắn có phải là "Thêm" và reply tới tin nhắn khác
+        const repliedMessage = msg.reply_to_message;
+        const repliedMessageContent = repliedMessage.text || repliedMessage.caption;
+
+        if (regex.test(repliedMessageContent)) {
+          processReplyMessage3(msg, repliedMessage); // Xử lý khi reply với từ "Thêm"
+        }
+      }
+    }
+  }
+});
+
+async function processReplyMessage3(msg, repliedMessage) {
+  const messageContent = repliedMessage.text || repliedMessage.caption;
+  const matches = messageContent.match(regex);
+  const userId = repliedMessage.from.id;
+  const groupId = repliedMessage.chat.id;
+
+  let quay = 0;
+  let keo = 0;
+  let bill = 0;
+  let anh = 0;
+
+  if (matches) {
+    matches.forEach((match) => {
+      const number = parseInt(match.match(/\d+/)[0]); // Tìm số
+      const suffix = match.replace(/\d+\s*/, '').toLowerCase(); // Xóa số và khoảng trắng để lấy từ khóa
+
+      if (suffix === 'q' || suffix === 'quẩy') {
+        quay += number;
+      } else if (suffix === 'c' || suffix === 'cộng' || suffix === '+') {
+        keo += number;
+      } else if (suffix === 'bill') {
+        bill += number;
+      } else if (suffix === 'ảnh' || suffix === 'hình') {
+        anh += number;
+      }
+    });
+  }
+
+  // Lấy ngày từ tin nhắn được reply
+  const repliedDate = new Date(repliedMessage.date * 1000).toLocaleDateString();
+  const firstName = repliedMessage.from.first_name;
+  const lastName = repliedMessage.from.last_name;
+  const fullName = lastName ? `${firstName} ${lastName}` : firstName;
+
+  // Các logic tính toán như bình thường
+  const vipCard = await VipCard.findOne({
+    userId,
+    validFrom: { $lte: new Date() },
+    validUntil: { $gte: new Date() }
+  });
+
+  let pricePerQuay = 500;
+  let pricePerKeo = 1000;
+  let pricePerBill = 3000;
+  let pricePerAnh = 3000;
+  let pricePerKeoBonus = 0;
+  let pricePerQuayBonus = 0;
+  let exp = 0;
+
+  // Tính giá keo dựa trên groupId
+  switch (groupId) {
+    case -1002186698265:
+    case -1002300392959:
+    case -1002350493572:
+      pricePerKeo = 1500;
+      break;
+    case -1002113921526:
+    case -1002230199552:
+      pricePerKeo = 2000;
+      break;
+    default:
+      pricePerKeo = 1000;
+  }
+
+  if (vipCard) {
+    if (vipCard.type === 'r3932') {
+      pricePerQuay = 0;
+      pricePerKeo += 0;
+    } else if (vipCard.type === '4827' || vipCard.type === 'monnth') {
+      pricePerQuay = 0;
+      pricePerKeo += 0;
+      exp = vipCard.expBonus;
+    }
+
+    if (vipCard.keoLimit && keo > vipCard.keoLimit) {
+      const remainingKeo = keo - vipCard.keoLimit;
+      pricePerKeoBonus = remainingKeo * 0;
+    }
+
+    if (vipCard.quayLimit && quay > vipCard.quayLimit) {
+      const remainingQuay = quay - vipCard.quayLimit;
+      pricePerQuayBonus = remainingQuay * 0;
+    }
+  }
+
+  const totalMoney = (quay * pricePerQuay) + (keo * pricePerKeo) + (bill * pricePerBill) + (anh * pricePerAnh) + pricePerKeoBonus + pricePerQuayBonus;
+
+  const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${quay} quẩy, ${keo} cộng, ${bill} bill, ${anh} ảnh vào ngày ${repliedDate} đang chờ kiểm tra ❤🥳`;
+
+  bot.sendMessage(groupId, responseMessage, { reply_to_message_id: msg.message_id }).then(async () => {
+    let bangCong = await BangCong2.findOne({ userId, groupId, date: repliedDate });
+
+    if (!bangCong) {
+      bangCong = await BangCong2.create({
+        userId,
+        groupId,
+        date: repliedDate,
+        ten: fullName,
+        quay,
+        keo,
+        bill,
+        anh,
+        tinh_tien: totalMoney,
+      });
+    } else {
+      bangCong.quay += quay;
+      bangCong.keo += keo;
+      bangCong.bill += bill;
+      bangCong.anh += anh;
+      bangCong.tinh_tien += totalMoney;
+
+      const member = await Member.findOne({ userId });
+      member.exp += exp;
+
+      if (exp > 0) {
+        member.levelPercent += Math.floor(exp / 10);
+      }
+
+      await bangCong.save();
+      await member.save();
+    }
+
+    await updateLevelPercent(userId);
+    await updateMissionProgress(userId);
+  });
+}
+
+
 
 
 const regex = /\d+\s*(quẩy|q|cộng|c|\+|bill|ảnh|hình)/gi;
