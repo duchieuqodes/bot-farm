@@ -778,12 +778,16 @@ bot.onText(/Bỏ/, async (msg) => {
     
 const addRegex = /thêm/i;
 const regex = /\d+\s*(quẩy|q|cộng|c|\+|bill|ảnh|hình)/gi;
-
+const EXCLUDED_CHAT_IDS = [
+  -1002103270166, -1002397067352,
+  -1002336524767, -1002295387259,
+  -1002247863313, -1002192201870,
+  -1002303292016 ];
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
 
   // Chỉ kiểm tra nếu không phải là nhóm có ID
-  if (chatId !== -1002103270166 && chatId !== -1002336524767 && chatId !== -1002247863313 && chatId !== -1002303292016) {
+  if (!EXCLUDED_CHAT_IDS.includes(chatId)) {
     const messageContent = msg.text || msg.caption;
     if (messageContent) {
       if (regex.test(messageContent)) {
