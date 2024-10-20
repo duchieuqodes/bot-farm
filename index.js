@@ -201,14 +201,17 @@ function sendScenario(chatId, player) {
   // Thêm tất cả các hàng vào reply_markup
   replyMarkup.reply_markup.inline_keyboard = options;
 
-  bot.sendMessage(chatId, scenario.question, replyMarkup);
+  // Gửi tin nhắn và lưu messageId để xóa sau đó
+  bot.sendMessage(chatId, scenario.question, replyMarkup).then((sentMessage) => {
+    player.lastMessageId = sentMessage.message_id; // Lưu lại ID tin nhắn để xóa sau
+  });
 }
 
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   players[chatId] = { currentQuestion: 0, annoyance: 0 };
 
-  bot.sendMessage(chatId, "Chào mừng em đến với trò chơi hẹn hò với Hiêu Gà! Hãy bắt đầu nào. Cẩn thận bị bạn trai xiên vì quá khó chịu");
+  bot.sendMessage(chatId, "Chào mừng đến với trò chơi hẹn hò với Hieu Gà. Hãy bắt đầu nào, đừng để bạn trai xiên bạn vì quá khó chịu.");
   sendScenario(chatId, players[chatId]);
 });
 
@@ -221,17 +224,24 @@ bot.on('callback_query', (callbackQuery) => {
   if (isCorrect) {
     const decrease = Math.floor(Math.random() * 6) + 5; // Giảm 5-10%
     player.annoyance = Math.max(player.annoyance - decrease, 0);
-    bot.sendMessage(chatId, `Bạn đã chọn đúng! Mức độ khó chịu giảm ${decrease}%. Hiện tại là ${player.annoyance}%.`);
+    bot.sendMessage(chatId, `Bạn đã chọn đúng! Mức độ khó chịu của Hieu giảm ${decrease}%. Hiện tại là ${player.annoyance}%.`);
   } else {
     const increase = Math.floor(Math.random() * 11) + 10; // Tăng 10-20%
     player.annoyance += increase;
-    bot.sendMessage(chatId, `Bạn đã chọn sai! Mức độ khó chịu tăng ${increase}%. Hiện tại là ${player.annoyance}%.`);
+    bot.sendMessage(chatId, `Bạn đã chọn sai! Mức độ khó chịu của Hieu tăng ${increase}%. Hiện tại là ${player.annoyance}%.`);
   }
 
   // Kiểm tra nếu mức độ khó chịu đạt 100%
   if (player.annoyance >= 100) {
-    bot.sendMessage(chatId, "Bạn trai đã quá khó chịu! Trò chơi kết thúc, bạn đã bị xiên và chia tay, bạn trai tự tử nhưng ko thành");
+    bot.sendMessage(chatId, "Bạn trai đã quá khó chịu! Trò chơi kết thúc, bạn đã bị xiên và chia tay, bạn trai cũng tự tử nhưng ko thành.");
     return;
+  }
+
+  // Xóa tin nhắn tình huống trước đó
+  if (player.lastMessageId) {
+    bot.deleteMessage(chatId, player.lastMessageId).catch(error => {
+      console.error('Error deleting message:', error);
+    });
   }
 
   // Tăng số lượng câu hỏi đã trả lời
@@ -239,7 +249,7 @@ bot.on('callback_query', (callbackQuery) => {
 
   // Kiểm tra nếu đã trả lời hết câu hỏi
   if (player.currentQuestion >= scenarios.length) {
-    bot.sendMessage(chatId, "Chúc mừng! Bạn đã vượt qua buổi hẹn hò mà không làm bạn trai xiên vì quá khó chịu .");
+    bot.sendMessage(chatId, "Chúc mừng! Bạn đã vượt qua buổi hẹn hò mà không làm bạn trai xiên vì quá khó chịu và nhận được 10k.");
   } else {
     // Gửi câu hỏi tiếp theo
     sendScenario(chatId, player);
