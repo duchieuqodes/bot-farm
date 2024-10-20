@@ -1,7 +1,8 @@
 const TelegramBot = require('node-telegram-bot-api');
+const keep_alive = require('./keep_alive.js');
 
 // Thay YOUR_TELEGRAM_BOT_TOKEN bằng token bot của bạn
-const token = '7753869579:AAHzngwsjPkK_q5W4g3vGVMSb4HwEbtxChY';
+const token = '7150645082:AAH-N2VM6qx3iFEhK59YHx2e1oy3Bi1EzXc';
 const bot = new TelegramBot(token, {polling: true});
 
 // Tạo dữ liệu các tình huống và lựa chọn
