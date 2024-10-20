@@ -185,60 +185,52 @@ const scenarios = [
 // Khởi tạo mức độ khó chịu và số lượng tình huống đã trả lời
 const players = {};
 
-function getRandomPercentage(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
 function sendScenario(chatId, player) {
   const scenario = scenarios[player.currentQuestion];
-
-  const options = {
+  const replyMarkup = {
     reply_markup: {
-      inline_keyboard: [
-        [
-          { text: scenario.options[0].text, callback_data: '0' },
-          { text: scenario.options[1].text, callback_data: '1' },
-          { text: scenario.options[2].text, callback_data: '2' }
-        ]
-      ]
+      inline_keyboard: []
     }
   };
 
-  bot.sendMessage(chatId, scenario.question, options);
+  // Chia các lựa chọn thành hàng
+  const options = scenario.options.map(option => {
+    return [{ text: option.text, callback_data: option.correct ? 'correct' : 'incorrect' }];
+  });
+
+  // Thêm tất cả các hàng vào reply_markup
+  replyMarkup.reply_markup.inline_keyboard = options;
+
+  bot.sendMessage(chatId, scenario.question, replyMarkup);
 }
 
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
-  players[chatId] = {
-    currentQuestion: 0,
-    annoyance: 0
-  };
+  players[chatId] = { currentQuestion: 0, annoyance: 0 };
 
-  bot.sendMessage(chatId, "Chào em đến với buổi hẹn hò với Hiếu Gà! Mức độ khó chịu của bạn trai hiện tại là 0%. Hãy cẩn thận bạn trai xiên vì quá khó chịu!");
+  bot.sendMessage(chatId, "Chào mừng em đến với trò chơi hẹn hò với Hiêu Gà! Hãy bắt đầu nào. Cẩn thận bị bạn trai xiên vì quá khó chịu");
   sendScenario(chatId, players[chatId]);
 });
 
 bot.on('callback_query', (callbackQuery) => {
   const chatId = callbackQuery.message.chat.id;
   const player = players[chatId];
-  const scenario = scenarios[player.currentQuestion];
-  const selectedOptionIndex = parseInt(callbackQuery.data);
-  const selectedOption = scenario.options[selectedOptionIndex];
+  const isCorrect = callbackQuery.data === 'correct';
 
-  // Tính toán mức độ khó chịu
-  if (selectedOption.correct) {
-    const decrease = getRandomPercentage(5, 10);
+  // Tăng hoặc giảm mức độ khó chịu
+  if (isCorrect) {
+    const decrease = Math.floor(Math.random() * 6) + 5; // Giảm 5-10%
     player.annoyance = Math.max(player.annoyance - decrease, 0);
     bot.sendMessage(chatId, `Bạn đã chọn đúng! Mức độ khó chịu giảm ${decrease}%. Hiện tại là ${player.annoyance}%.`);
   } else {
-    const increase = getRandomPercentage(10, 20);
-        player.annoyance += increase;
+    const increase = Math.floor(Math.random() * 11) + 10; // Tăng 10-20%
+    player.annoyance += increase;
     bot.sendMessage(chatId, `Bạn đã chọn sai! Mức độ khó chịu tăng ${increase}%. Hiện tại là ${player.annoyance}%.`);
   }
 
   // Kiểm tra nếu mức độ khó chịu đạt 100%
   if (player.annoyance >= 100) {
-    bot.sendMessage(chatId, "Bạn trai đã quá khó chịu vì bạn! Bạn trai đã xiên bạn và sau đó tự tử nhưng không thành. Bạn đã thua!");
+    bot.sendMessage(chatId, "Bạn trai đã quá khó chịu! Trò chơi kết thúc, bạn đã bị xiên và chia tay, bạn trai tự tử nhưng ko thành");
     return;
   }
 
@@ -247,7 +239,7 @@ bot.on('callback_query', (callbackQuery) => {
 
   // Kiểm tra nếu đã trả lời hết câu hỏi
   if (player.currentQuestion >= scenarios.length) {
-    bot.sendMessage(chatId, "Chúc mừng! Bạn đã vượt qua buổi hẹn hò mà không làm bạn trai xiên bạn vì khó chịu. Hãy chụp màn hình gửi Hieu Gà để nhận quà 20/10");
+    bot.sendMessage(chatId, "Chúc mừng! Bạn đã vượt qua buổi hẹn hò mà không làm bạn trai xiên vì quá khó chịu .");
   } else {
     // Gửi câu hỏi tiếp theo
     sendScenario(chatId, player);
