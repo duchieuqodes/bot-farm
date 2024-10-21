@@ -334,6 +334,89 @@ async function processAccMessage2(msg) {
 }
 
 
+//nhóm 5 ngày
+const accRegex = /(\d+).*?acc/i; // Regex chỉ tìm số acc mà không cần từ "xong"
+const billRegex = /(\d+).*?bill/i; // Regex tìm số bill
+
+// Đăng ký sự kiện cho bot
+bot.on('message', async (msg) => {
+  const chatId = msg.chat.id;
+
+  // Chỉ kiểm tra nếu là nhóm có ID
+  if (chatId == -1002128975957) {
+
+    // Kiểm tra nếu tin nhắn chứa từ khóa "(số) acc" hoặc "(số) bill"
+    const messageContent = msg.text || msg.caption;
+    if (messageContent) {
+      if (accRegex.test(messageContent) || billRegex.test(messageContent)) {
+        await processAccMessage3(msg); // Gọi hàm xử lý tin nhắn
+      } else {
+        // Báo lỗi cú pháp
+        bot.sendMessage(chatId, 'Bạn nộp sai cú pháp nhóm lương 5 ngày này, hãy ghi đúng như sau: Số Acc làm, số Bill lên. Ví dụ: 1 acc 1 bill hoặc 1 acc', { reply_to_message_id: msg.message_id });
+      }
+    }
+  }
+});
+
+async function processAccMessage3(msg) {
+  const messageContent = msg.text || msg.caption;
+  const accMatches = messageContent.match(accRegex);
+  const billMatches = messageContent.match(billRegex);
+  const userId = msg.from.id;
+  const groupId = msg.chat.id;
+
+  let acc = 0;
+  let bill = 0;
+
+  if (accMatches) {
+    acc = parseInt(accMatches[1]); // Lấy số acc từ nhóm bắt được
+  }
+  
+  if (billMatches) {
+    bill = parseInt(billMatches[1]); // Lấy số bill từ nhóm bắt được
+  }
+
+  // Nếu số acc lớn hơn 20, gửi thông báo nghịch linh tinh và không xử lý tiếp
+  if (acc > 10) {
+    bot.sendMessage(groupId, 'Nào, Nghịch linh tinh là xấu tính 😕', { reply_to_message_id: msg.message_id });
+    return;
+  }
+
+  const currentDate = new Date().toLocaleDateString();
+  const firstName = msg.from.first_name;
+  const lastName = msg.from.last_name;
+  const fullName = lastName ? `${firstName} ${lastName}` : firstName;
+
+  let totalMoney = acc * 2500; // Tính tiền cho số Acc
+  let billMoney = bill * 2000; // Tính tiền cho số Bill
+  totalMoney += billMoney; // Cộng tiền từ bill vào tổng tiền
+
+  const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${acc} Acc và ${bill} Bill đang chờ kiểm tra ❤🥳`;
+
+  bot.sendMessage(groupId, responseMessage, { reply_to_message_id: msg.message_id }).then(async () => {
+    let trasua = await Trasua.findOne({ userId, groupId, date: currentDate });
+
+    if (!trasua) {
+      trasua = await Trasua.create({
+        userId,
+        groupId,
+        date: currentDate,
+        ten: fullName,
+        acc,
+        bill,
+        tinh_tien: totalMoney,
+      });
+    } else {
+      trasua.acc += acc;
+      trasua.bill += bill;
+      trasua.tinh_tien += totalMoney;
+      await trasua.save();
+    }
+  });
+}
+
+
+
 bot.onText(/\/ma/, async (msg) => {
   const chatId = msg.chat.id;
   await sendAggregatedData4(chatId);
@@ -780,7 +863,7 @@ const addRegex = /thêm/i;
 const regex = /\d+\s*(quẩy|q|cộng|c|\+|bill|ảnh|hình)/gi;
 const EXCLUDED_CHAT_IDS = [
   -1002103270166, -1002397067352,
-  -1002336524767, -1002295387259,
+  -1002336524767, -1002295387259, -1002128975957,
   -1002247863313, -1002192201870,
   -1002303292016, -1002128975957 ];
 bot.on('message', async (msg) => {
