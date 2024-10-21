@@ -335,7 +335,7 @@ async function processAccMessage2(msg) {
 
 
 //nhóm 5 ngày
-const accRegex = /(\d+).*?acc/i; // Regex chỉ tìm số acc mà không cần từ "xong"
+const accRegex4 = /(\d+).*?acc/i; // Regex chỉ tìm số acc mà không cần từ "xong"
 const billRegex = /(\d+).*?bill/i; // Regex tìm số bill
 
 // Đăng ký sự kiện cho bot
@@ -348,8 +348,8 @@ bot.on('message', async (msg) => {
     // Kiểm tra nếu tin nhắn chứa từ khóa "(số) acc" hoặc "(số) bill"
     const messageContent = msg.text || msg.caption;
     if (messageContent) {
-      if (accRegex.test(messageContent) || billRegex.test(messageContent)) {
-        await processAccMessage3(msg); // Gọi hàm xử lý tin nhắn
+      if (accRegex4.test(messageContent) || billRegex.test(messageContent)) {
+        await processAccMessage4(msg); // Gọi hàm xử lý tin nhắn
       } else {
         // Báo lỗi cú pháp
         bot.sendMessage(chatId, 'Bạn nộp sai cú pháp nhóm lương 5 ngày này, hãy ghi đúng như sau: Số Acc làm, số Bill lên. Ví dụ: 1 acc 1 bill hoặc 1 acc', { reply_to_message_id: msg.message_id });
@@ -358,9 +358,9 @@ bot.on('message', async (msg) => {
   }
 });
 
-async function processAccMessage3(msg) {
+async function processAccMessage4(msg) {
   const messageContent = msg.text || msg.caption;
-  const accMatches = messageContent.match(accRegex);
+  const accMatches = messageContent.match(accRegex4);
   const billMatches = messageContent.match(billRegex);
   const userId = msg.from.id;
   const groupId = msg.chat.id;
