@@ -28,6 +28,7 @@ const BangCongSchema = new mongoose.Schema({
   bill: Number,
   anh: Number,
   tinh_tien: Number,
+  da_tru: { type: Boolean, default: false },
   giftWon: { type: Boolean, default: false },
   prizeAmount: { type: Number, default: 0 },
   nhan_anh_bill: { type: Number, default: 0 } // Ensure default is 0
@@ -1615,12 +1616,21 @@ bot.onText(/Trừ/, async (msg) => {
       return;
     }
 
+    // Kiểm tra xem bài nộp này đã được trừ trước đó chưa
+    if (bangCong.da_tru) {
+      bot.sendMessage(chatId, 'Trừ không thành công, bài nộp này đã trừ trước đó rồi.');
+      return;
+    }
+
     // Cập nhật số liệu dựa trên thông tin đã lấy
     bangCong.quay -= quay;
     bangCong.keo -= keo;
     bangCong.bill -= bill;
     bangCong.anh -= anh;
     bangCong.tinh_tien = (bangCong.quay * 500) + (bangCong.keo * 1000); // Giả định tính tiền công là tổng số quay và keo nhân hệ số
+
+    // Đánh dấu bài nộp này đã được trừ
+    bangCong.da_tru = true;
 
     // Lưu lại bản ghi đã chỉnh sửa
     await bangCong.save();
@@ -1631,6 +1641,7 @@ bot.onText(/Trừ/, async (msg) => {
     bot.sendMessage(chatId, 'Đã xảy ra lỗi khi cập nhật dữ liệu.');
   }
 });
+
 
 
 
