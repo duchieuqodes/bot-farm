@@ -700,6 +700,63 @@ bot.onText(/\/ha(homnay|homqua)/, async (msg, match) => {
 });
 
 
+// Lệnh /thom để hiển thị bảng công tổng
+bot.onText(/\/beau/, async (msg) => {
+  const chatId = msg.chat.id;
+  const groupId = -1002128975957; // Sử dụng groupId theo yêu cầu
+
+  // Lấy tất cả các bản ghi bảng công theo groupId
+  const bangCongList = await Trasua.find({ groupId });
+  if (bangCongList.length === 0) {
+    bot.sendMessage(chatId, 'Chưa có bảng công nào được ghi nhận.');
+    return;
+  }
+
+  // Tạo đối tượng để phân chia bảng công theo ngày và tổng hợp tiền cho mỗi thành viên
+  const bangCongByMember = {};
+
+  bangCongList.forEach(entry => {
+    const date = new Date(entry.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+
+    // Nếu thành viên chưa tồn tại trong bảng, khởi tạo
+    if (!bangCongByMember[entry.ten]) {
+      bangCongByMember[entry.ten] = {
+        acc: entry.acc,
+        tinh_tien: 0,
+        records: [],
+      };
+    }
+
+    // Thêm vào danh sách các bản ghi và cộng tiền
+    bangCongByMember[entry.ten].records.push({ date, tinh_tien: entry.tinh_tien });
+    bangCongByMember[entry.ten].tinh_tien += entry.tinh_tien;
+  });
+
+  // Tạo thông báo kết quả
+  let responseMessage = `BẢNG CÔNG NHÓM "LAN LAN 19H" TỔNG HỢP\n\n`;
+  let totalMoney = 0;
+
+  // Duyệt qua từng thành viên để hiển thị thông tin
+  Object.keys(bangCongByMember).forEach(ten => {
+    const member = bangCongByMember[ten];
+    responseMessage += `${ten}: ${member.acc} Acc\n`;
+
+    // Hiển thị bảng công phân theo ngày
+    member.records.forEach(record => {
+      responseMessage += `  Ngày ${record.date}: ${record.tinh_tien.toLocaleString()} VNĐ\n`;
+    });
+
+    responseMessage += `  Tổng tiền: ${member.tinh_tien.toLocaleString()} VNĐ\n\n`;
+    totalMoney += member.tinh_tien;
+  });
+
+  responseMessage += `TỔNG TIỀN CẢ NHÓM: ${totalMoney.toLocaleString()} VNĐ`;
+
+  bot.sendMessage(chatId, responseMessage);
+});
+
+
+
 
  // Lệnh /thom để hiển thị bảng công tổng
 bot.onText(/\/13hlan/, async (msg) => {
