@@ -1315,7 +1315,7 @@ const managementFees = {
   '-1002243393101': 50000,
   '-1002349272974': 80000, 
   '-1002259135527': 75000,
-  '-1002160116020': 80000 
+  '-1002160116020': 50000 
 };
 
 async function processAndDistributeTimesheets(chatId, isToday) {
