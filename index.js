@@ -1075,8 +1075,8 @@ async function processSubmission(msg, targetMsg) {
   switch (groupId) {
     case -1002186698265:
     case -1002300392959:
-    case -1002350493572:
-    case -1002349272974:
+    case -1002350493572: 
+    case -1002259135527:   
       pricePerKeo = 1500;
       break;
     case -1002113921526:
@@ -1085,7 +1085,7 @@ async function processSubmission(msg, targetMsg) {
       break;
     case -1002160116020:
       pricePerKeo = 1500;
-      pricePerQuay = 350;
+      pricePerQuay = 650;
       break;
     default:
       pricePerKeo = 1000;
