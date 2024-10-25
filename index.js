@@ -191,24 +191,23 @@ cron.schedule('0 0 * * *', async () => {
 });
 
 
-const accRegex = /xong.*?(\d+).*?acc/i;
 
 // Đăng ký sự kiện cho bot
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
 
   // Chỉ kiểm tra nếu là nhóm có ID
-  if (chatId == -1002397067352 || chatId == -1002192201870 || chatId == -1002295387259) {
+  if (chatId == -1002312409314) {
 
     // Kiểm tra nếu tin nhắn chứa từ khóa "xong (số) acc"
     const messageContent = msg.text || msg.caption;
-    if (messageContent && accRegex.test(messageContent)) {
-      await processAccMessage3(msg); // Gọi hàm xử lý tin nhắn
+    if (messageContent && /xong\s*\d+\s*acc\s*\d+\s*nhóm/gi.test(messageContent)) {
+      await processAccMessage5(msg); // Gọi hàm xử lý tin nhắn
     }
   }
 });
 
-async function processAccMessage3(msg) {
+async function processAccMessage5(msg) {
   const messageContent = msg.text || msg.caption;
   const accMatches = messageContent.match(accRegex);
   const userId = msg.from.id;
@@ -231,7 +230,7 @@ async function processAccMessage3(msg) {
   const lastName = msg.from.last_name;
   const fullName = lastName ? `${firstName} ${lastName}` : firstName;
 
-  let totalMoney = acc * 2700; // Tính tiền cho số Acc
+  let totalMoney = acc * 2500; // Tính tiền cho số Acc
 
   const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${acc} Acc đang chờ kiểm tra ❤🥳`;
 
@@ -847,7 +846,7 @@ bot.onText(/\/13hlan/, async (msg) => {
   const formattedDate = yesterday.toLocaleDateString();
 
   // Tìm các bản ghi bảng công có groupId -1002163768880 trong ngày hôm trước
-  const bangCongList = await Trasua.find({ groupId: -1002336524767, date: formattedDate });
+  const bangCongList = await Trasua.find({ groupId: -1002312409314, date: formattedDate });
   if (bangCongList.length === 0) {
     bot.sendMessage(chatId, 'Chưa có bảng công nào được ghi nhận trong ngày hôm qua.');
     return;
@@ -999,7 +998,7 @@ bot.onText(/Bỏ/, async (msg) => {
 const addRegex = /thêm/i;
 const regex = /\d+\s*(quẩy|q|cộng|c|\+|bill|ảnh|hình)/gi;
 const EXCLUDED_CHAT_IDS = [
-  -1002103270166, -1002397067352,
+  -1002103270166, -1002397067352, -1002312409314,
   -1002336524767, -1002295387259, -1002128975957,
   -1002247863313, -1002192201870,
   -1002303292016, -1002128975957 ];
