@@ -1113,7 +1113,7 @@ async function processSubmission(msg, targetMsg) {
 
   const totalMoney = (quay * pricePerQuay) + (keo * pricePerKeo) + (bill * pricePerBill) + (anh * pricePerAnh) + pricePerKeoBonus + pricePerQuayBonus;
 
-  const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${quay} quẩy, ${keo} cộng, ${bill} bill, ${anh} ảnh vào ngày ${targetDate} đang chờ kiểm tra ❤🥳. Tổng tiền: ${totalMoney.toLocaleString()} VNĐ`;
+  const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${quay} quẩy, ${keo} cộng, ${bill} bill, ${anh} ảnh vào ngày ${targetDate} đang chờ kiểm tra ❤🥳. Tổng tiền: +${totalMoney.toLocaleString()} VNĐ`;
 
   bot.sendMessage(groupId, responseMessage, { reply_to_message_id: msg.message_id }).then(async () => {
     let bangCong = await BangCong2.findOne({ userId, groupId, date: targetDate });
