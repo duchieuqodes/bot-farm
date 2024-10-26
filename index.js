@@ -1113,7 +1113,7 @@ async function processSubmission(msg, targetMsg) {
 
   const totalMoney = (quay * pricePerQuay) + (keo * pricePerKeo) + (bill * pricePerBill) + (anh * pricePerAnh) + pricePerKeoBonus + pricePerQuayBonus;
 
-  const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${quay} quẩy, ${keo} cộng, ${bill} bill, ${anh} ảnh vào ngày ${targetDate} đang chờ kiểm tra ❤🥳`;
+  const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${quay} quẩy, ${keo} cộng, ${bill} bill, ${anh} ảnh vào ngày ${targetDate} đang chờ kiểm tra ❤🥳. Tổng tiền: ${totalMoney.toLocaleString()} VNĐ`;
 
   bot.sendMessage(groupId, responseMessage, { reply_to_message_id: msg.message_id }).then(async () => {
     let bangCong = await BangCong2.findOne({ userId, groupId, date: targetDate });
@@ -1728,8 +1728,8 @@ bot.onText(/Trừ/, async (msg) => {
   const username = msg.from.username; // Lấy username của người dùng
 
   const replyText = msg.reply_to_message.text;
-  const matched = replyText.match(/Bài nộp của (.+) đã được ghi nhận với (\d+) quẩy, (\d+) cộng, (\d+) bill, (\d+) ảnh/);
-  
+  const matched = replyText.match(/Bài nộp của (.+) đã được ghi nhận với (\d+) quẩy, (\d+) cộng, (\d+) bill, (\d+) ảnh vào ngày [\d\/]+ đang chờ kiểm tra ❤🥳\. Tổng tiền: \+?([\d,]+) VNĐ/);
+
   if (!matched) {
     bot.sendMessage(chatId, 'Tin nhắn trả lời không đúng định dạng xác nhận của bot.');
     return;
@@ -1741,6 +1741,7 @@ bot.onText(/Trừ/, async (msg) => {
   const keo = parseInt(matched[3]);
   const bill = parseInt(matched[4]);
   const anh = parseInt(matched[5]);
+  const totalMoney = parseInt(matched[6].replace(/,/g, ''));
 
   // Lấy ngày từ tin nhắn của bot (msg.reply_to_message.date)
   const messageDate = new Date(msg.reply_to_message.date * 1000);
@@ -1773,7 +1774,7 @@ bot.onText(/Trừ/, async (msg) => {
     bangCong.keo -= keo;
     bangCong.bill -= bill;
     bangCong.anh -= anh;
-    bangCong.tinh_tien = (bangCong.quay * 500) + (bangCong.keo * 1000); // Giả định tính tiền công là tổng số quay và keo nhân hệ số
+    bangCong.tinh_tien -= totalMoney; 
 
     // Đánh dấu bài nộp này đã được trừ
     bangCong.da_tru = true;
