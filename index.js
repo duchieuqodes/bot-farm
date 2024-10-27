@@ -97,7 +97,7 @@ function askQuestion(chatId) {
         bot.sendMessage(chatId, `Hết giờ! Câu trả lời là: ${question.answer}`);
         currentQuestionIndex++;
         askQuestion(chatId);
-    }, 120000); // 2 phút cho mỗi câu hỏi
+    }, 60000); // 2 phút cho mỗi câu hỏi
 }
 
 bot.on('message', (msg) => {
