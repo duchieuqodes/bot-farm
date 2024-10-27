@@ -1001,11 +1001,13 @@ const EXCLUDED_CHAT_IDS = [
   -1002103270166, -1002397067352, -1002312409314,
   -1002336524767, -1002295387259, -1002128975957,
   -1002247863313, -1002192201870,
-  -1002303292016, -1002128975957 ];
+  -1002303292016, -1002128975957
+];
+
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
 
-  // Chỉ kiểm tra nếu không phải là nhóm có ID
+  // Chỉ kiểm tra nếu không phải là nhóm có ID nằm trong danh sách loại trừ
   if (!EXCLUDED_CHAT_IDS.includes(chatId)) {
     const messageContent = msg.text || msg.caption;
     if (messageContent) {
@@ -1052,6 +1054,7 @@ async function processSubmission(msg, targetMsg) {
   }
 
   const targetDate = new Date(targetMsg.date * 1000).toLocaleDateString();
+  const submissionTime = new Date(targetMsg.date * 1000).toLocaleTimeString();
   const firstName = targetMsg.from.first_name;
   const lastName = targetMsg.from.last_name;
   const fullName = lastName ? `${firstName} ${lastName}` : firstName;
@@ -1074,8 +1077,8 @@ async function processSubmission(msg, targetMsg) {
   switch (groupId) {
     case -1002186698265:
     case -1002300392959:
-    case -1002350493572: 
-    case -1002259135527:   
+    case -1002350493572:
+    case -1002259135527:
       pricePerKeo = 1500;
       break;
     case -1002113921526:
@@ -1113,22 +1116,24 @@ async function processSubmission(msg, targetMsg) {
 
   const totalMoney = (quay * pricePerQuay) + (keo * pricePerKeo) + (bill * pricePerBill) + (anh * pricePerAnh) + pricePerKeoBonus + pricePerQuayBonus;
 
-  const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${quay} quẩy, ${keo} cộng, ${bill} bill, ${anh} ảnh vào ngày ${targetDate} đang chờ kiểm tra ❤🥳. Tổng tiền: +${totalMoney.toLocaleString()} VNĐ`;
+  const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${quay} quẩy, ${keo} cộng, ${bill} bill, ${anh} ảnh vào ngày ${targetDate} lúc ${submissionTime} đang chờ kiểm tra ❤🥳. Tổng tiền: +${totalMoney.toLocaleString()} VNĐ`;
 
   bot.sendMessage(groupId, responseMessage, { reply_to_message_id: msg.message_id }).then(async () => {
-    let bangCong = await BangCong2.findOne({ userId, groupId, date: targetDate });
+    let bangCong = await BangCong2.findOne({ userId, groupId, date: targetDate, submissionTime });
 
     if (!bangCong) {
       bangCong = await BangCong2.create({
         userId,
         groupId,
         date: targetDate,
+        submissionTime,
         ten: fullName,
         quay,
         keo,
         bill,
         anh,
         tinh_tien: totalMoney,
+        da_tru: false // Đánh dấu bài nộp ban đầu là chưa bị trừ
       });
     } else {
       bangCong.quay += quay;
@@ -1152,6 +1157,7 @@ async function processSubmission(msg, targetMsg) {
     await updateMissionProgress(userId);
   });
 }
+
 
       
 
@@ -1712,6 +1718,7 @@ bot.onText(/\/edit (.+)/, async (msg, match) => {
 });
 
 
+
 const normalizeName = (name) => {
   return name.replace(/[^\w\s]/gi, '').toLowerCase().trim();
 };
@@ -1728,7 +1735,7 @@ bot.onText(/Trừ/, async (msg) => {
   const username = msg.from.username; // Lấy username của người dùng
 
   const replyText = msg.reply_to_message.text;
-  const matched = replyText.match(/Bài nộp của (.+) đã được ghi nhận với (\d+) quẩy, (\d+) cộng, (\d+) bill, (\d+) ảnh vào ngày [\d\/]+ đang chờ kiểm tra ❤🥳\. Tổng tiền: \+?([\d,]+) VNĐ/);
+  const matched = replyText.match(/Bài nộp của (.+) đã được ghi nhận với (\d+) quẩy, (\d+) cộng, (\d+) bill, (\d+) ảnh vào ngày [\d\/]+ lúc (\d+:\d+)\s?.*?❤🥳\. Tổng tiền: \+?([\d,]+) VNĐ/);
 
   if (!matched) {
     bot.sendMessage(chatId, 'Tin nhắn trả lời không đúng định dạng xác nhận của bot.');
@@ -1741,21 +1748,22 @@ bot.onText(/Trừ/, async (msg) => {
   const keo = parseInt(matched[3]);
   const bill = parseInt(matched[4]);
   const anh = parseInt(matched[5]);
-  const totalMoney = parseInt(matched[6].replace(/,/g, ''));
+  const submissionTime = matched[6].trim(); // Lấy thời gian nộp từ tin nhắn
+  const totalMoney = parseInt(matched[7].replace(/,/g, ''));
 
   // Lấy ngày từ tin nhắn của bot (msg.reply_to_message.date)
   const messageDate = new Date(msg.reply_to_message.date * 1000);
   const normalizedMessageDate = new Date(messageDate.setHours(0, 0, 0, 0)); // Ngày không giờ phút giây
 
   try {
-    // Tìm kiếm bản ghi thành viên dựa trên tên và ngày gửi tin nhắn của bot
+    // Tìm kiếm bản ghi thành viên dựa trên tên, ngày và thời gian gửi tin nhắn của bot
     const regex = new RegExp(normalizeName(ten).split('').join('.*'), 'i');
-    
-    // Đảm bảo rằng truy vấn sẽ sử dụng ngày cụ thể, không phải khoảng thời gian
+
     const bangCong = await BangCong2.findOne({
       groupId: chatId,
       ten: { $regex: regex },
-      date: normalizedMessageDate // So sánh trực tiếp với ngày đã chuẩn hóa
+      date: normalizedMessageDate,
+      submissionTime: submissionTime // So sánh trực tiếp với thời gian nộp
     });
 
     if (!bangCong) {
