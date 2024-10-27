@@ -1734,7 +1734,7 @@ bot.onText(/Trừ/, async (msg) => {
   const username = msg.from.username;
   
   const replyText = msg.reply_to_message.text;
-  const matched = replyText.match(/Bài nộp của (.+) đã được ghi nhận với (\d+) quẩy, (\d+) cộng, (\d+) bill, (\d+) ảnh vào ngày ([\d\/]+) lúc ([\d:]+) đang chờ kiểm tra ❤🥳\. Tổng tiền: \+?([\d,]+) VNĐ/);
+  const matched = replyText.match(/Bài nộp của (.+) đã được ghi nhận với (\d+) quẩy, (\d+) cộng, (\d+) bill, (\d+) ảnh vào ngày (\d{1,2}\/\d{1,2}\/\d{4}) lúc (\d{1,2}:\d{2}) đang chờ kiểm tra ❤🥳\. Tổng tiền: \+?([\d,]+) VNĐ/);
 
   if (!matched) {
     bot.sendMessage(chatId, 'Tin nhắn trả lời không đúng định dạng xác nhận của bot.');
@@ -1791,6 +1791,7 @@ bot.onText(/Trừ/, async (msg) => {
     bot.sendMessage(chatId, 'Đã xảy ra lỗi khi cập nhật dữ liệu.');
   }
 });
+
 
 
 
