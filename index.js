@@ -1053,25 +1053,11 @@ async function processSubmission(msg, targetMsg) {
     });
   }
 
-  // Lấy tên người nộp
+  const targetDate = new Date(targetMsg.date * 1000).toLocaleDateString();
+  const submissionTime = new Date(targetMsg.date * 1000).toLocaleTimeString();
   const firstName = targetMsg.from.first_name;
   const lastName = targetMsg.from.last_name;
   const fullName = lastName ? `${firstName} ${lastName}` : firstName;
-
-  // Lấy thông tin ngày và giờ từ nội dung tin nhắn
-  const dateRegex = /ngày\s*(\d{2}\/\d{2})\s*lúc\s*(\d{1,2}:\d{2})/;
-  const dateMatch = messageContent.match(dateRegex);
-
-  if (!dateMatch) {
-    bot.sendMessage(groupId, 'Không thể xác định ngày giờ từ nội dung bài nộp.');
-    return;
-  }
-
-  const targetDateStr = dateMatch[1]; // ngày dưới dạng "01/01"
-  const submissionTimeStr = dateMatch[2]; // thời gian dưới dạng "09:00"
-
-  const targetDate = new Date(`2024-${targetDateStr.split('/').reverse().join('-')}T00:00:00`); // Ngày tháng
-  const submissionTime = new Date(`2024-${targetDateStr.split('/').reverse().join('-')}T${submissionTimeStr}:00`); // Ngày giờ
 
   const vipCard = await VipCard.findOne({
     userId,
@@ -1130,22 +1116,17 @@ async function processSubmission(msg, targetMsg) {
 
   const totalMoney = (quay * pricePerQuay) + (keo * pricePerKeo) + (bill * pricePerBill) + (anh * pricePerAnh) + pricePerKeoBonus + pricePerQuayBonus;
 
-  const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${quay} quẩy, ${keo} cộng, ${bill} bill, ${anh} ảnh vào ngày ${targetDateStr} lúc ${submissionTimeStr} đang chờ kiểm tra ❤🥳. Tổng tiền: +${totalMoney.toLocaleString()} VNĐ`;
+  const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${quay} quẩy, ${keo} cộng, ${bill} bill, ${anh} ảnh vào ngày ${targetDate} lúc ${submissionTime} đang chờ kiểm tra ❤🥳. Tổng tiền: +${totalMoney.toLocaleString()} VNĐ`;
 
   bot.sendMessage(groupId, responseMessage, { reply_to_message_id: msg.message_id }).then(async () => {
-    let bangCong = await BangCong2.findOne({
-      userId,
-      groupId,
-      date: targetDateStr,
-      submissionTime: submissionTimeStr
-    });
+    let bangCong = await BangCong2.findOne({ userId, groupId, date: targetDate, submissionTime });
 
     if (!bangCong) {
       bangCong = await BangCong2.create({
         userId,
         groupId,
-        date: targetDateStr,
-        submissionTime: submissionTimeStr,
+        date: targetDate,
+        submissionTime,
         ten: fullName,
         quay,
         keo,
@@ -1155,8 +1136,6 @@ async function processSubmission(msg, targetMsg) {
         da_tru: false // Đánh dấu bài nộp ban đầu là chưa bị trừ
       });
     } else {
-      bangCong.date = targetDateStr;
-      bangCong.submissionTime = submissionTimeStr;
       bangCong.quay += quay;
       bangCong.keo += keo;
       bangCong.bill += bill;
@@ -1178,6 +1157,7 @@ async function processSubmission(msg, targetMsg) {
     await updateMissionProgress(userId);
   });
 }
+
 
 
 
