@@ -6,40 +6,65 @@ const token = '7150645082:AAH-N2VM6qx3iFEhK59YHx2e1oy3Bi1EzXc';
 const bot = new TelegramBot(token, { polling: true });
 
 let questions = [
-    { question: "Ai là người vừa đăng status 'tôi sẽ cưới trong năm nay' mà ai cũng ngỡ là đùa?", answer: "Trấn Thành" },
-    { question: "Bộ phim nào có doanh thu khủng nhưng bị chê không thương tiếc trong tháng 10?", answer: "Chị chị em em 2" },
-    { question: "Đất nước có dân số đông nhất thế giới hiện nay?", answer: "Trung Quốc" },
-    { question: "Một tuần có mấy ngày?", answer: "7" },
-    { question: "Số Pi bắt đầu với hai chữ số thập phân nào?", answer: "3.14" },
-    { question: "Kim tự tháp nổi tiếng nằm ở đất nước nào?", answer: "Ai Cập" },
-    { question: "Nguyên tố nào có ký hiệu hóa học là O?", answer: "Oxy" },
-    { question: "Mặt trăng là vệ tinh của hành tinh nào?", answer: "Trái Đất" },
-    { question: "Thành phố nào được mệnh danh là 'Hòn ngọc Viễn Đông'?", answer: "Sài Gòn" },
-    { question: "Thủ đô của Nhật Bản là gì?", answer: "Tokio" },
-    { question: "Hieu có đẹp zai không? (có hoặc không)", answer: "có" },
-    { question: "Loại phim gì nổi tiếng nhất ở Nhật Bản", answer: "Jav" },
-    
+    // Câu hỏi nịnh Hiếu (5 câu)
+      
+    // Các câu hỏi đố mẹo và kiến thức đa dạng
+    { question: "Cái gì càng cháy thêm nước càng ngắn lại?", answer: "nến" },
+    { question: "Con gì không đi mà vẫn đến?", answer: "Con sông" },
+    { question: "Đồng hồ 1h10, kim giờ và kim phút tạo góc bao nhiêu độ?", answer: "35" },
+    { question: "Thủ đô của nước Pháp là thành phố nào?", answer: "Paris" },
+    { question: "Hà Nội nằm ở miền nào của Việt Nam?", answer: "Bắc" },
+    { question: "Cái gì có 4 chân nhưng không thể đi?", answer: "Bàn" },
+    { question: "Cục gì khi rắn thì nặng hơn thể lỏng?", answer: "Nước đá" },
+    { question: "Cây gì không có mùi thơm mà lại gây đau?", answer: "xương rồng" },
+    { question: "Hoàng Anh, Lan, Linh hay tất cả, ai ngáo chó nhất?", answer: "tất cả" },
+    { question: "Bảy ngày trong tuần có bao nhiêu ngày là ngày cuối tuần?", answer: "2" },
+    { question: "Mặt trăng quay quanh hành tinh nào?", answer: "Trái Đất" },
+    { question: "Thành phố nào vn được mệnh danh là 'thành phố ngàn hoa'?", answer: "Đà Lạt" },
+    { question: "Trong bảng tuần hoàn, nguyên tố nào có ký hiệu là 'Au'?", answer: "Vàng" },
+    { question: "Cái gì trên lợp mái mà dưới thì mặt nền?", answer: "Nhà" },
+    { question: "Cây cầu nào nổi tiếng ở TP. Hồ Chí Minh có tên bắt đầu bằng chữ S?", answer: "Sài Gòn" },
+    { question: "Bốn chân không đứng, có cánh không bay, cả đời chỉ nằm đó. Là gì?", answer: "Giường" },
+    { question: "Con gì ai cũng bảo ngu?", answer: "Con bò" },
+    { question: "Cầu thủ bóng đá nổi tiếng nhất Việt Nam với dáng vẻ đứng lừng lững là ai?", answer: "Văn Thanh" },
+    { question: "Đáp án của phép tính 3594 x 48833 là bao nhiêu?", answer: "175505802" },
 
-    { question: "Yêu tinh nào nguy hiểm nhất trong nhóm Hieu Gà? (Lan, Hoàng Anh, Linh hoặc cả ba)", answer: "cả ba" },
-    { question: "Nếu được hẹn hò với Hieu Gà bạn có đồng ý không? (có hoặc không)", answer: "có" },
-    { question: "Ai là yêu tinh nữ xinh nhất trong nhóm Hieu Gà? (Lan, Hoàng Anh, Linh hoặc cả ba)", answer: "cả ba" },
-    { question: "Đố vui: Quả gì không ăn được?", answer: "Quả bóng" },
-    { question: "Cái gì càng lấy đi càng nhiều?", answer: "Lỗ" },
-    { question: "Kể ra 1 trong 3 yêu tinh nữ nổi tiếng giỏi nói xấu nhất nhóm Hieu gà tên là gì (Lan, Hoàng Anh, Linh)", answer: "Lan" },
-    { question: "Con gì không thở mà vẫn sống?", answer: "Con rối" },
-    { question: "Cái gì mà càng lau càng bẩn?", answer: "Giẻ lau" },
-    { question: "Điền vào chỗ trống: Con gì đuôi dài, miệng thì kêu meo meo?", answer: "Mèo" },
-    { question: "Trong bảng tuần hoàn, nguyên tố nào có ký hiệu là 'Fe'?", answer: "Sắt" },
-    { question: "Con gì có 4 chân nhưng không thể đi?", answer: "Bàn" },
-    { question: "Cái gì của Hieu Gà mà ai cũng mong chờ?", answer: "Lương" },
-    { question: "Món ăn nào nổi tiếng ở Hà Nội có bún và thịt nướng?", answer: "Bún chả" },
-    { question: "Cầu thủ Việt Nam nào được gọi là 'Messi Việt Nam'?", answer: "Quang Hải" },
-    { question: "Loại nhạc nào phổ biến trong đám cưới ở miền Tây? (Bolero hoặc Rap)", answer: "Bolero" },
-    { question: "Đất nước nào là quê hương của pizza?", answer: "Ý" },
-    { question: "Công thức hóa học của nước là gì?", answer: "H2O" },
-    { question: "Cái gì càng nhỏ càng cao?", answer: "Con số" },
-    { question: "Con gà có bao nhiêu chân?", answer: "2" },
-    { question: "Loài hoa nào thường nở vào mùa xuân?", answer: "Hoa đào" }
+    { question: "Hieu có phải là người bạn tuyệt vời nhất không? (có hoặc không)", answer: "có" },
+    { question: "Trong nhóm bạn, ai là người vui tính nhất?", answer: "Hiếu" },
+   
+
+    { question: "Người bạn thân nhất của Batman là ai?", answer: "Robin" },
+    { question: "Thủ đô của Thái Lan là gì?", answer: "Bangkok" },
+    { question: "Con gì có cánh nhưng không thể bay?", answer: "Con gà" },
+    { question: "Nước nào nổi tiếng với điệu múa flamenco?", answer: "Tây Ban Nha" },
+    { question: "Bao nhiêu tuổi thì có thể đi tù?", answer: "18" },
+    { question: "Con vật nào là biểu tượng của Tết Trung Thu ở Việt Nam?", answer: "Con lân" },
+    { question: "Món ăn truyền thống của người Nhật Bản là gì?", answer: "Sushi" },
+    { question: "Đất nước nào có đường bờ biển dài nhất thế giới?", answer: "Canada" },
+    { question: "Thành phố nào nổi tiếng với bánh mì kẹp thịt và pizza?", answer: "New York" },
+    { question: "Đố vui: Cái gì càng dùng càng lớn?", answer: "cu" },
+    { question: "Cái gì mà bạn càng lau càng bẩn?", answer: "Giẻ lau" },
+
+    { question: "Nếu được chọn một người để làm 'người bạn đời hoàn hảo', bạn sẽ chọn ai? (Hiếu hoặc người khác)", answer: "Hiếu" },
+    { question: "Hieu nổi bật nhất ở điểm nào? (tất cả các câu sau: đẹp trai, thông minh, tài năng, tất cả)", answer: "tất cả" },
+   
+    { question: "Đố bạn: Con gì đuôi dài, mắt lồi mà lại biết bơi?", answer: "Cá" },
+    { question: "Hỏi: Hòn đảo nào có hình dáng giống con rùa ở Nha Trang?", answer: "Hòn Mun" },
+    { question: "Con vật nào biểu tượng cho lòng trung thành?", answer: "Chó" },
+    { question: "Loại nhạc nào được yêu thích trong các đám cưới ở Việt Nam? (Bolero hoặc Rap)", answer: "Bolero" },
+    { question: "Loài hoa nào biểu tượng cho phật giáo?", answer: "Hoa sen" },
+    { question: "Cầu thủ nổi tiếng nhất thế giới là ai?", answer: "Messi" },
+    { question: "Ai là người khiến cả nhóm tự hào nhất?", answer: "Hiếu" },
+
+    { question: "Châu lục nào có diện tích lớn nhất?", answer: "Châu Á" },
+    { question: "Phim nào nổi tiếng với nhân vật Tokuda?", answer: "sex" },
+    { question: "Tên của công thức hóa học của muối ăn là gì?", answer: "NaCl" },
+    { question: "Màu đỏ và màu vàng khi pha với nhau sẽ ra màu gì?", answer: "Cam" },
+    { question: "Nước nào nổi tiếng với núi Phú Sĩ?", answer: "Nhật Bản" },
+    { question: "Người nổi tiếng nhất trong gia đình Hoàng gia Anh là ai?", answer: "Elizabeth" },
+    { question: "Loại quả nào thường có màu cam và được làm nước ép?", answer: "Cam" },
+    { question: "Hôm 15/10 ctv Le Quang Vinh được bao nhiêu tiền công?", answer: "14500" },
+    { question: "Đố bạn: Hôm nay là chủ nhật, vậy 1000 ngày sau là thứ mấy?", answer: "Thứ hai" }
 ];
 
 
