@@ -115,9 +115,9 @@ bot.on('message', (msg) => {
         clearTimeout(timer);
 
         if (!players[userId]) players[userId] = { name: userName, score: 0 };
-        players[userId].score += 1000;
+        players[userId].score += 300;
 
-        bot.sendMessage(chatId, `🎉 Chúc mừng ${userName} đã trả lời đúng và nhận được 1000vnđ!`);
+        bot.sendMessage(chatId, `🎉 Chúc mừng ${userName} đã trả lời đúng và nhận được 300vnđ!`);
         currentQuestionIndex++;
         askQuestion(chatId);
     }
