@@ -210,7 +210,7 @@ bot.on('message', async (msg) => {
 
 async function processAccMessage8(msg) {
   const messageContent = msg.text || msg.caption;
-  const accMatches = messageContent.match(accRegex);
+  const accMatches = messageContent.match(accRegex8);
   const userId = msg.from.id;
   const groupId = msg.chat.id;
 
