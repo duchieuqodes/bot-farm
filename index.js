@@ -233,7 +233,7 @@ async function processAccMessage8(msg) {
 
   let totalMoney = acc * 7000; // Tính tiền cho số Acc
 
-  const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${acc} Acc đang chờ kiểm tra ❤🥳`;
+  const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${acc} Acc đang chờ kiểm tra ❤🥳, tổng tiền: +${totalMoney} VND`;
 
   bot.sendMessage(groupId, responseMessage, { reply_to_message_id: msg.message_id }).then(async () => {
     let trasua = await Trasua.findOne({ userId, groupId, date: currentDate });
@@ -254,7 +254,6 @@ async function processAccMessage8(msg) {
     }
   });
 }
-
 
 
     
@@ -996,6 +995,73 @@ bot.onText(/Bỏ/, async (msg) => {
     bot.sendMessage(chatId, 'Đã xảy ra lỗi khi cập nhật dữ liệu.');
   }
 });
+
+
+
+bot.onText(/delete/, async (msg) => {
+  if (!msg.reply_to_message || !msg.reply_to_message.text) {
+    bot.sendMessage(msg.chat.id, 'Hãy trả lời vào đúng tin nhắn xác nhận của bot để cập nhật.');
+    return;
+  }
+
+  const chatId = msg.chat.id;
+  const userId = msg.from.id;
+  const username = msg.from.username;
+
+  const replyText = msg.reply_to_message.text;
+
+  // Regex để bắt hai loại tin nhắn khác nhau
+  const matched = replyText.match(/Bài nộp của (.+) đã được ghi nhận với (\d+) Acc, (\d+) nhóm. Tổng tiền: ([\d,]+) VNĐ/) ||
+                  replyText.match(/Bài nộp của (.+) đã được ghi nhận với (\d+) Acc đang chờ kiểm tra/);
+
+  if (!matched) {
+    bot.sendMessage(chatId, 'Tin nhắn trả lời không đúng định dạng xác nhận của bot.');
+    return;
+  }
+
+  const ten = matched[1].trim();
+  const acc = parseInt(matched[2]);
+  const nhom = matched[3] ? parseInt(matched[3]) : 0; // Nếu không có nhóm, mặc định là 0
+  let tinh_tien = matched[4] ? parseInt(matched[4].replace(/,/g, '')) : 0; // Nếu không có tổng tiền, mặc định là 0
+
+  // Nếu không có tổng tiền và nhóm, trừ 2700 VNĐ cho mỗi acc
+  if (!matched[3] && !matched[4]) {
+    tinh_tien = acc * 7000;
+  }
+
+  // Lấy ngày từ tin nhắn của bot và định dạng là tháng/ngày/năm
+  const messageDate = new Date(msg.reply_to_message.date * 1000);
+  const formattedDate = `${messageDate.getMonth() + 1}/${messageDate.getDate()}/${messageDate.getFullYear()}`;
+
+  try {
+    const regex = new RegExp(normalizeName(ten).split('').join('.*'), 'i');
+
+    const trasua = await Trasua.findOne({
+      groupId: chatId,
+      ten: { $regex: regex },
+      date: formattedDate
+    });
+
+    if (!trasua) {
+      bot.sendMessage(chatId, `Không tìm thấy bản ghi để cập nhật cho ${ten}.`);
+      return;
+    }
+
+    // Cập nhật bản ghi
+    trasua.acc -= acc;
+    trasua.nhom -= nhom;
+    trasua.tinh_tien -= tinh_tien;
+
+    // Lưu bản ghi đã cập nhật
+    await trasua.save();
+
+    bot.sendMessage(chatId, `Trừ thành công bài nộp này cho ${ten}. Acc: -${acc}, Nhóm: -${nhom}, Tiền: -${tinh_tien.toLocaleString()} VNĐ`);
+  } catch (error) {
+    console.error('Lỗi khi cập nhật dữ liệu:', error);
+    bot.sendMessage(chatId, 'Đã xảy ra lỗi khi cập nhật dữ liệu.');
+  }
+});
+
 
 
     
