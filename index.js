@@ -2071,7 +2071,7 @@ bot.onText(/\/xoa/, async (msg) => {
 });
 
 
-bot.onText(/\/delete(\d+)/, async (msg, match) => {
+bot.onText(/\/Delete(\d+)/, async (msg, match) => {
   const chatId = msg.chat.id;
 
   try {
