@@ -1063,6 +1063,20 @@ bot.onText(/delete/, async (msg) => {
 });
 
 
+bot.onText(/\/123456/, async (msg) => {
+  const chatId = msg.chat.id;
+
+  try {
+    // Xóa tất cả bản ghi có groupId tương ứng
+    await Trasua.deleteMany({ groupId: chatId });
+
+    bot.sendMessage(chatId, 'Đã xóa toàn bộ dữ liệu bảng công từ nhóm này.');
+  } catch (error) {
+    console.error('Lỗi khi xóa dữ liệu:', error);
+    bot.sendMessage(chatId, 'Đã xảy ra lỗi khi xóa dữ liệu.');
+  }
+});
+
 
     
 const addRegex = /thêm/i;
