@@ -145,22 +145,35 @@ app.post(`/bot${token}`, (req, res) => {
 });
 
 
-// Hàm để tự động load các lệnh từ thư mục 'commands'
-function loadCommands() {
-  const commandsPath = path.join(__dirname, 'commands');
-  fs.readdirSync(commandsPath).forEach((file) => {
-    const filePath = path.join(commandsPath, file);
-    if (file.endsWith('.js')) {
-      const command = require(filePath);
-      command(bot);
+// Hàm để tự động load các file từ thư mục
+function loadFiles() {
+    // Load từ thư mục commands
+    const commandsPath = path.join(__dirname, 'commands');
+    if (fs.existsSync(commandsPath)) {
+        fs.readdirSync(commandsPath).forEach((file) => {
+            if (file.endsWith('.js')) {
+                const filePath = path.join(commandsPath, file);
+                const command = require(filePath);
+                command(bot);
+            }
+        });
     }
-  });
+
+// Load từ thư mục handlers
+    const handlersPath = path.join(__dirname, 'handlers');
+    if (fs.existsSync(handlersPath)) {
+        fs.readdirSync(handlersPath).forEach((file) => {
+            if (file.endsWith('.js')) {
+                const filePath = path.join(handlersPath, file);
+                const handler = require(filePath);
+                handler(bot);
+            }
+        });
+    }
 }
 
-// Gọi hàm để tải tất cả các lệnh
-loadCommands();
-
-
+// Gọi hàm để tải tất cả các file
+loadFiles();
 
 
 
@@ -216,70 +229,6 @@ cron.schedule('0 0 * * *', async () => {
   }
 });
 
-
-const accRegex8 = /xong.*?(\d+).*?acc/i;
-
-// Đăng ký sự kiện cho bot
-bot.on('message', async (msg) => {
-  const chatId = msg.chat.id;
-
-  // Chỉ kiểm tra nếu là nhóm có ID
-  if (chatId == -1002247863313) {
-
-    // Kiểm tra nếu tin nhắn chứa từ khóa "xong (số) acc"
-    const messageContent = msg.text || msg.caption;
-    if (messageContent && accRegex8.test(messageContent)) {
-      await processAccMessage8(msg); // Gọi hàm xử lý tin nhắn
-    }
-  }
-});
-
-async function processAccMessage8(msg) {
-  const messageContent = msg.text || msg.caption;
-  const accMatches = messageContent.match(accRegex8);
-  const userId = msg.from.id;
-  const groupId = msg.chat.id;
-
-  let acc = 0;
-
-  if (accMatches) {
-    acc = parseInt(accMatches[1]); // Lấy số acc từ nhóm bắt được
-  }
-
-  // Nếu số acc lớn hơn 20, gửi thông báo nghịch linh tinh và không xử lý tiếp
-  if (acc > 30) {
-    bot.sendMessage(groupId, 'Nào, Nghịch linh tinh là xấu tính 😕', { reply_to_message_id: msg.message_id });
-    return;
-  }
-
-  const currentDate = new Date().toLocaleDateString();
-  const firstName = msg.from.first_name;
-  const lastName = msg.from.last_name;
-  const fullName = lastName ? `${firstName} ${lastName}` : firstName;
-
-  let totalMoney = acc * 7000; // Tính tiền cho số Acc
-
-  const responseMessage = `Bài nộp của ${fullName} đã được ghi nhận với ${acc} Acc đang chờ kiểm tra ❤🥳, tổng tiền: +${totalMoney} VND`;
-
-  bot.sendMessage(groupId, responseMessage, { reply_to_message_id: msg.message_id }).then(async () => {
-    let trasua = await Trasua.findOne({ userId, groupId, date: currentDate });
-
-    if (!trasua) {
-      trasua = await Trasua.create({
-        userId,
-        groupId,
-        date: currentDate,
-        ten: fullName,
-        acc,
-        tinh_tien: totalMoney,
-      });
-    } else {
-      trasua.acc += acc;
-      trasua.tinh_tien += totalMoney;
-      await trasua.save();
-    }
-  });
-}
 
 
     
