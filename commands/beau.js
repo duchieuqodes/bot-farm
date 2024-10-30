@@ -1,5 +1,9 @@
+const mongoose = require('mongoose');
+
+// Import model Trasua
+const Trasua = mongoose.model('Trasua');
+
 module.exports = (bot) => {
-  // Lệnh /beau để hiển thị bảng công tổng
   bot.onText(/\/5ngay/, async (msg) => {
     const chatId = msg.chat.id;
     const groupId = -1002128975957; // Sử dụng groupId theo yêu cầu
