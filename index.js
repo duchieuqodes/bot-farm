@@ -221,7 +221,7 @@ async function processAccMessage8(msg) {
   }
 
   // Nếu số acc lớn hơn 20, gửi thông báo nghịch linh tinh và không xử lý tiếp
-  if (acc > 20) {
+  if (acc > 30) {
     bot.sendMessage(groupId, 'Nào, Nghịch linh tinh là xấu tính 😕', { reply_to_message_id: msg.message_id });
     return;
   }
@@ -288,7 +288,7 @@ async function processAccMessage2(msg) {
 
   // Nếu số acc lớn hơn 100, gửi thông báo nghịch linh tinh và không xử lý tiếp
   if (acc > 100) {
-    bot.sendMessage(groupId, 'Nào, Nghịch linh tinh là xấu tính 😕', { reply_to_message_id: msg.message_id });
+    bot.sendMessage(groupId, 'Nộp gian lận là xấu tính 😕', { reply_to_message_id: msg.message_id });
     return;
   }
 
@@ -380,8 +380,8 @@ async function processAccMessage4(msg) {
   }
 
   // Nếu số acc lớn hơn 20, gửi thông báo nghịch linh tinh và không xử lý tiếp
-  if (acc > 10) {
-    bot.sendMessage(groupId, 'Nào, Nghịch linh tinh là xấu tính 😕', { reply_to_message_id: msg.message_id });
+  if (acc > 30) {
+    bot.sendMessage(groupId, 'Nộp gian lận là xấu tính 😕', { reply_to_message_id: msg.message_id });
     return;
   }
 
