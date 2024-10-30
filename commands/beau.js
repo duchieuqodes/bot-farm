@@ -1,6 +1,6 @@
 module.exports = (bot) => {
   // Lệnh /beau để hiển thị bảng công tổng
-  bot.onText(/\/beau/, async (msg) => {
+  bot.onText(/\/5ngay/, async (msg) => {
     const chatId = msg.chat.id;
     const groupId = -1002128975957; // Sử dụng groupId theo yêu cầu
 
