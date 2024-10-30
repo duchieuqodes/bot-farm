@@ -1094,6 +1094,12 @@ bot.on('message', async (msg) => {
   // Chỉ kiểm tra nếu không phải là nhóm có ID nằm trong danh sách loại trừ
   if (!EXCLUDED_CHAT_IDS.includes(chatId)) {
     const messageContent = msg.text || msg.caption;
+
+    // Nếu tin nhắn chứa '@' thì không kiểm tra bài nộp
+    if (messageContent && messageContent.includes('@')) {
+      return;
+    }
+    
     if (messageContent) {
       if (regex.test(messageContent)) {
         await processSubmission(msg, msg);
