@@ -170,7 +170,7 @@ async function fetchGroupTitleUpdated(groupId) {
 }
 module.exports = (bot) => {
 // Lệnh nhận bảng công
-bot.onText(/\/bangconglan/, async (msg) => {
+bot.onText(/\/111/, async (msg) => {
   const chatId = msg.chat.id;
   await processAndDistributeTimesheetsUpdated(chatId, false);
 });
