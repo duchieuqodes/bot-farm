@@ -207,7 +207,7 @@ async function fetchGroupTitle(bot, groupId) {
 }
 
 
-
+model.exports = (bot) => {
   bot.onText(/\/bangconglan/, async (msg) => {
     const chatId = msg.chat.id;
     await processAndDistributeTimesheets(bot, chatId, false);
