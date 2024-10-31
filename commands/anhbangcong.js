@@ -8,10 +8,6 @@ const BangCong2 = mongoose.model('BangCong2');
 
 // Đối tượng lưu phí quản lý cho mỗi groupId
 // Lên lịch tự động gửi bảng công vào 9 giờ sáng Việt Nam mỗi ngày
-cron.schedule('30 1 * * *', async () => { 
-  const chatId = '-1002103270166';
-  await processAndDistributeOtherTimesheetsUpdated(chatId);
-});
 
 // Đối tượng chứa phí quản lý cho từng groupId
 const updatedManagementFees = {
@@ -128,10 +124,20 @@ async function createTimesheetImage(content, groupName, totalAmount, dateStr) {
       >];
     }
   `;
+  
   const imageUrl = `${url}${encodeURIComponent(graph)}`;
-  console.log('Graph Data for Timesheet:', graph); // In dữ liệu của graph để kiểm tra lỗi định dạng
+  console.log('URL Length:', imageUrl.length); // Kiểm tra độ dài của URL
+  console.log('Graph Data:', graph); // Kiểm tra nội dung của graph
+  
+  if (imageUrl.length > 2000) {
+    console.error("URL quá dài, không thể gửi qua Telegram");
+    throw new Error("URL quá dài để gửi qua Telegram");
+  }
+
   return imageUrl;
 }
+
+
 
 // Hàm tạo hình ảnh tổng kết
 async function createSummaryImage(content, dateStr) {
