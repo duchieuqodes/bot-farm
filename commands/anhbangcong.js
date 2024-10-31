@@ -5,7 +5,7 @@ const moment = require('moment-timezone');
 // Import model Trasua
 const BangCong2 = mongoose.model('BangCong2', BangCongSchema);
 
-module.exports = (bot) => {
+
   const managementFees = {
   '-1002230199552': 100000,
   '-1002178207739': 50000,
@@ -157,7 +157,7 @@ module.exports = (bot) => {
       return `Nhóm ${groupId}`;
     }
   }
-
+module.exports = (bot) => {
   // Register command handlers
   bot.onText(/\/111/, async (msg) => {
     const chatId = msg.chat.id;
