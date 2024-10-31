@@ -6,11 +6,17 @@ const mongoose = require('mongoose');
 // Import model BangCong2
 const BangCong2 = mongoose.model('BangCong2');
 
-// Đối tượng lưu phí quản lý cho mỗi groupId
-// Lên lịch tự động gửi bảng công vào 9 giờ sáng Việt Nam mỗi ngày
 
-// Đối tượng chứa phí quản lý cho từng groupId
-const updatedManagementFees = {
+// Chức năng tự động gửi hình ảnh vào 9h sáng mỗi ngày (theo giờ Việt Nam)
+cron.schedule('30 1 * * *', async () => { // 2 giờ UTC là 9 giờ sáng theo giờ Việt Nam
+  const chatId = '-1002103270166';
+  await processAndDistributeOtherTimesheets(chatId);
+});
+
+
+
+// Object to hold management fees for each groupId
+const managementFees = {
   '-1002230199552': 100000,
   '-1002178207739': 50000,
   '-1002205826480': 50000, 
@@ -36,17 +42,17 @@ const allowedGroupIds = [
   -1002311358141, -1002481836552, -1002245725621, -1002350493572, -1002300392959, -1002113921526, -1002243393101, -1002311651580
 ];
 
-// Hàm xử lý và phân phối bảng công cho từng nhóm
-async function processAndDistributeTimesheetsUpdated(chatId, isToday) {
-  const targetDate = isToday ? new Date() : new Date(Date.now() - 86400000); 
+async function processAndDistributeTimesheets(chatId, isToday) {
+ const targetDate = isToday ? new Date() : new Date(Date.now() - 86400000); // Today or Yesterday
   const startOfDay = new Date(targetDate);
   startOfDay.setHours(0, 0, 0, 0);
   const endOfDay = new Date(targetDate);
   endOfDay.setHours(23, 59, 59, 999);
   const dateStr = `${targetDate.getDate()}/${targetDate.getMonth() + 1}/${targetDate.getFullYear()}`;
 
-  try {
-    let totalAmountByUser = {};
+
+try {
+    let totalAmountByUser = {}; // Đối tượng để lưu tổng số tiền của mỗi người dùng
 
     for (const groupId of allowedGroupIds) {
       const bangCongs = await BangCong2.find({
@@ -65,16 +71,15 @@ async function processAndDistributeTimesheetsUpdated(chatId, isToday) {
         return `${bangCong.ten}\t${bangCong.quay}\t${bangCong.keo}\t${bangCong.bill || 0}\t${bangCong.anh || 0}\t${bangCong.tinh_tien}vnđ`;
       }).join('\n');
 
-      // Thêm phí quản lý cho từng nhóm
-      const managementFee = updatedManagementFees[groupId] || 0;
+      // Add management fee for the groupId
+      const managementFee = managementFees[groupId] || 0;
       totalAmount += managementFee;
 
+      // Append management fee to the content
       content += `\nQuản lý\t-\t-\t-\t-\t${managementFee}vnđ`;
 
-      const groupName = await fetchGroupTitleUpdated(groupId);
-      const imageUrl = await createTimesheetImage(content, groupName, totalAmount, dateStr);
-      console.log('Generated Image URL:', imageUrl); // Kiểm tra URL được tạo ra
-
+      const groupName = await fetchGroupTitle(groupId);
+      const imageUrl = await generateTimesheetImage(content, groupName, totalAmount, dateStr);
       await bot.sendPhoto(chatId, imageUrl);
     }
 
@@ -82,9 +87,7 @@ async function processAndDistributeTimesheetsUpdated(chatId, isToday) {
     for (const [userName, totalAmount] of Object.entries(totalAmountByUser)) {
       totalAmountContent += `<TR><TD ALIGN="LEFT" STYLE="font-weight: bold;">${userName}</TD><TD ALIGN="CENTER">${totalAmount}vnđ</TD></TR>`;
     }
-    const totalAmountImageUrl = await createSummaryImage(totalAmountContent, dateStr);
-    console.log('Total Amount Image URL:', totalAmountImageUrl); // Kiểm tra URL của tổng số tiền
-
+    const totalAmountImageUrl = await generateSummaryImage(totalAmountContent, dateStr);
     await bot.sendPhoto(chatId, totalAmountImageUrl);
 
     if (!isToday) {
@@ -102,8 +105,8 @@ async function processAndDistributeTimesheetsUpdated(chatId, isToday) {
   }
 }
 
-// Hàm tạo hình ảnh bảng công
-async function createTimesheetImage(content, groupName, totalAmount, dateStr) {
+
+async function generateTimesheetImage(content, groupName, totalAmount, dateStr) {
   const url = 'https://quickchart.io/graphviz?format=png&layout=dot&graph=';
   const graph = `
     digraph G {
@@ -129,23 +132,11 @@ async function createTimesheetImage(content, groupName, totalAmount, dateStr) {
       >];
     }
   `;
-  
   const imageUrl = `${url}${encodeURIComponent(graph)}`;
-  console.log('URL Length:', imageUrl.length); // Kiểm tra độ dài của URL
-  console.log('Graph Data:', graph); // Kiểm tra nội dung của graph
-  
-  if (imageUrl.length > 2000) {
-    console.error("URL quá dài, không thể gửi qua Telegram");
-    throw new Error("URL quá dài để gửi qua Telegram");
-  }
-
   return imageUrl;
 }
 
-
-
-// Hàm tạo hình ảnh tổng kết
-async function createSummaryImage(content, dateStr) {
+async function generateSummaryImage(content, dateStr) {
   const url = 'https://quickchart.io/graphviz?format=png&layout=dot&graph=';
   const graph = `
     digraph G {
@@ -159,12 +150,10 @@ async function createSummaryImage(content, dateStr) {
     }
   `;
   const imageUrl = `${url}${encodeURIComponent(graph)}`;
-  console.log('Graph Data for Summary:', graph); // In dữ liệu của graph để kiểm tra lỗi định dạng
   return imageUrl;
 }
 
-// Hàm lấy tên nhóm từ groupId
-async function fetchGroupTitleUpdated(groupId) {
+async function fetchGroupTitle(groupId) {
   try {
     const chat = await bot.getChat(groupId);
     return chat.title;
@@ -173,16 +162,80 @@ async function fetchGroupTitleUpdated(groupId) {
     return `Nhóm ${groupId}`;
   }
 }
+
 module.exports = (bot) => {
-// Lệnh nhận bảng công
-bot.onText(/\/111/, async (msg) => {
+bot.onText(/\/bangconglan/, async (msg) => {
   const chatId = msg.chat.id;
-  await processAndDistributeTimesheetsUpdated(chatId, false);
+  await processAndDistributeTimesheets(chatId, false);
 });
 
-// Lệnh nhận bảng công hôm nay
 bot.onText(/\/homnaylan/, async (msg) => {
   const chatId = msg.chat.id;
-  await processAndDistributeTimesheetsUpdated(chatId, true);
+  await processAndDistributeTimesheets(chatId, true);
+});
+
+
+bot.onText(/\/bangconghieu/, async (msg) => {
+  const chatId = msg.chat.id;
+  await processAndDistributeOtherTimesheets(chatId);
 });
 };
+
+async function processAndDistributeOtherTimesheets(chatId) {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const startOfYesterday = new Date(yesterday);
+  startOfYesterday.setHours(0, 0, 0, 0);
+  const endOfYesterday = new Date(yesterday);
+  endOfYesterday.setHours(23, 59, 59, 999);
+  const dateStr = `${yesterday.getDate()}/${yesterday.getMonth() + 1}/${yesterday.getFullYear()}`;
+
+  try {
+    let totalAmountByUser = {}; // Đối tượng để lưu tổng số tiền của mỗi người dùng
+
+    // Fetch all unique groupIds from the database
+    const allGroupIds = await BangCong2.distinct('groupId', {
+      date: { $gte: startOfYesterday, $lte: endOfYesterday }
+    });
+
+    // Filter out the allowedGroupIds
+    const otherGroupIds = allGroupIds.filter(id => !allowedGroupIds.includes(id));
+
+    for (const groupId of otherGroupIds) {
+      const bangCongs = await BangCong2.find({
+        date: { $gte: startOfYesterday, $lte: endOfYesterday },
+        groupId: groupId
+      });
+
+      if (bangCongs.length === 0) {
+        continue;
+      }
+
+      let totalAmount = 0;
+      let content = bangCongs.map(bangCong => {
+        totalAmount += bangCong.tinh_tien;
+        totalAmountByUser[bangCong.ten] = (totalAmountByUser[bangCong.ten] || 0) + bangCong.tinh_tien;
+        return `${bangCong.ten}\t${bangCong.quay}\t${bangCong.keo}\t${bangCong.bill || 0}\t${bangCong.anh || 0}\t${bangCong.tinh_tien}vnđ`;
+      }).join('\n');
+
+      const groupName = await fetchGroupTitle(groupId);
+      const imageUrl = await generateTimesheetImage(content, groupName, totalAmount, dateStr);
+      await bot.sendPhoto(chatId, imageUrl);
+    }
+
+    let totalAmountContent = '';
+    for (const [userName, totalAmount] of Object.entries(totalAmountByUser)) {
+      totalAmountContent += `<TR><TD ALIGN="LEFT" STYLE="font-weight: bold;">${userName}</TD><TD ALIGN="CENTER">${totalAmount}vnđ</TD></TR>`;
+    }
+    const totalAmountImageUrl = await generateSummaryImage(totalAmountContent, dateStr);
+    await bot.sendPhoto(chatId, totalAmountImageUrl);
+
+    const message = await bot.sendMessage(chatId, `Bảng công các nhóm khác (${dateStr}) đã được tạo và gửi thành công!`);
+    await bot.pinChatMessage(chatId, message.message_id);
+  } catch (error) {
+    console.error('Lỗi khi truy vấn dữ liệu từ MongoDB:', error);
+    bot.sendMessage(chatId, 'Failed to create images for other groups.');
+  }
+}
+
+
