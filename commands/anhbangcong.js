@@ -6,7 +6,13 @@ const mongoose = require('mongoose');
 // Import model BangCong2
 const BangCong2 = mongoose.model('BangCong2');
 
-const managementFees = {
+cron.schedule('30 1 * * *', async () => { // 2 giờ UTC là 9 giờ sáng theo giờ Việt Nam
+  const targetChatId = '-1002103270166';
+  await handleAndDistributeOtherTimesheets(targetChatId);
+});
+
+// Đối tượng lưu phí quản lý cho mỗi groupId
+const managementFeesByGroup = {
   '-1002230199552': 100000,
   '-1002178207739': 50000,
   '-1002205826480': 50000, 
@@ -27,128 +33,115 @@ const managementFees = {
   '-1002160116020': 50000 
 };
 
-async function processAndDistributeTimesheets2(bot, chatId, isToday) {
-  const targetDate = isToday ? new Date() : new Date(Date.now() - 86400000);
-  const startOfDay = new Date(targetDate);
-  startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date(targetDate);
-  endOfDay.setHours(23, 59, 59, 999);
-  const dateStr = `${targetDate.getDate()}/${targetDate.getMonth() + 1}/${targetDate.getFullYear()}`;
+async function handleAndDistributeTimesheets(targetChatId, isCurrentDay) {
+ const chosenDate = isCurrentDay ? new Date() : new Date(Date.now() - 86400000); // Hôm nay hoặc Hôm qua
+  const startOfChosenDay = new Date(chosenDate);
+  startOfChosenDay.setHours(0, 0, 0, 0);
+  const endOfChosenDay = new Date(chosenDate);
+  endOfChosenDay.setHours(23, 59, 59, 999);
+  const dateString = `${chosenDate.getDate()}/${chosenDate.getMonth() + 1}/${chosenDate.getFullYear()}`;
 
   try {
-    let totalAmountByUser = {};
+    let totalEarningsByUser = {}; // Đối tượng để lưu tổng số tiền của mỗi người dùng
 
-    for (const groupId of Object.keys(managementFees)) {
-      const bangCongs = await BangCong2.find({
-        date: { $gte: startOfDay, $lte: endOfDay },
+    for (const groupId of allowedGroupIds) {
+      const timesheets = await TimesheetCollection.find({
+        date: { $gte: startOfChosenDay, $lte: endOfChosenDay },
         groupId: groupId
       });
 
-      if (bangCongs.length === 0) continue;
+      if (timesheets.length === 0) {
+        continue;
+      }
 
-      let totalAmount = 0;
-      let content = bangCongs.map(bangCong => {
-        totalAmount += bangCong.tinh_tien;
-        totalAmountByUser[bangCong.ten] = (totalAmountByUser[bangCong.ten] || 0) + bangCong.tinh_tien;
-        return `${bangCong.ten}\t${bangCong.quay}\t${bangCong.keo}\t${bangCong.bill || 0}\t${bangCong.anh || 0}\t${bangCong.tinh_tien} vnd`;
+      let groupTotalEarnings = 0;
+      let timesheetContent = timesheets.map(timesheet => {
+        groupTotalEarnings += timesheet.earnings;
+        totalEarningsByUser[timesheet.name] = (totalEarningsByUser[timesheet.name] || 0) + timesheet.earnings;
+        return `${timesheet.name}\t${timesheet.booth}\t${timesheet.extra}\t${timesheet.bill || 0}\t${timesheet.photo || 0}\t${timesheet.earnings}vnđ`;
       }).join('\n');
 
-      const managementFee = managementFees[groupId] || 0;
-      totalAmount += managementFee;
-      content += `\nQuản lý\t-\t-\t-\t-\t${managementFee} vnd`;
+      // Thêm phí quản lý cho groupId
+      const groupManagementFee = managementFeesByGroup[groupId] || 0;
+      groupTotalEarnings += groupManagementFee;
 
-      const groupName = await fetchGroupTitle(bot, groupId);
-      const imageUrl = await generateTimesheetImage2(content, groupName, totalAmount, dateStr);
-      await bot.sendPhoto(chatId, imageUrl);
+      // Thêm phí quản lý vào nội dung bảng công
+      timesheetContent += `\nQuản lý\t-\t-\t-\t-\t${groupManagementFee}vnđ`;
+
+      const groupTitle = await retrieveGroupTitle(groupId);
+      const imageUrl = await createTimesheetImage(timesheetContent, groupTitle, groupTotalEarnings, dateString);
+      await bot.sendPhoto(targetChatId, imageUrl);
     }
 
-    let totalAmountContent = '';
-    for (const [userName, totalAmount] of Object.entries(totalAmountByUser)) {
-      totalAmountContent += `<TR><TD ALIGN="LEFT">${userName}</TD><TD ALIGN="RIGHT">${totalAmount} vnd</TD></TR>`;
+    let userTotalEarningsContent = '';
+    for (const [userName, totalEarnings] of Object.entries(totalEarningsByUser)) {
+      userTotalEarningsContent += `<TR><TD ALIGN="LEFT" STYLE="font-weight: bold;">${userName}</TD><TD ALIGN="CENTER">${totalEarnings}vnđ</TD></TR>`;
     }
-    const totalAmountImageUrl = await generateSummaryImage2(totalAmountContent, dateStr);
-    await bot.sendPhoto(chatId, totalAmountImageUrl);
+    const totalEarningsImageUrl = await createSummaryImage(userTotalEarningsContent, dateString);
+    await bot.sendPhoto(targetChatId, totalEarningsImageUrl);
 
-    if (!isToday) {
-      const messages = [
-        `Attention, attention! Bảng công (${dateStr}) nóng hổi vừa ra lò, ai chưa check điểm danh là lỡ mất cơ hội "ăn điểm" với sếp đó nha!`,
-        `Bảng công (${dateStr}) - Phiên bản "limited edition", hãy nhanh tay "sưu tầm" trước khi hết hàng! ‍♀️‍♂️`,
+    if (!isCurrentDay) {
+      const alertMessages = [
+        `Attention, attention! Bảng công (${dateString}) nóng hổi vừa ra lò, ai chưa check điểm danh là lỡ mất cơ hội "ăn điểm" với sếp đó nha!`,
+        `Bảng công (${dateString}) - Phiên bản "limited edition", hãy nhanh tay "sưu tầm" trước khi hết hàng! ‍♀️‍♂️`,
       ];
-      const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-      const message = await bot.sendMessage(chatId, randomMessage);
-      await bot.pinChatMessage(chatId, message.message_id);
+      const chosenMessage = alertMessages[Math.floor(Math.random() * alertMessages.length)];
+      const alertMessage = await bot.sendMessage(targetChatId, chosenMessage);
+      await bot.pinChatMessage(targetChatId, alertMessage.message_id);
     }
   } catch (error) {
     console.error('Lỗi khi truy vấn dữ liệu từ MongoDB:', error);
-    bot.sendMessage(chatId, 'Failed to create image.');
+    bot.sendMessage(targetChatId, 'Failed to create image.');
   }
 }
 
-async function generateTimesheetImage2(content, groupName, totalAmount, dateStr) {
+async function createTimesheetImage(content, groupTitle, totalEarnings, dateString) {
   const url = 'https://quickchart.io/graphviz?format=png&layout=dot&graph=';
   const graph = `
     digraph G {
       node [shape=plaintext];
       a [label=<
-        <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="8" STYLE="font-family: Arial, sans-serif;">
-          <TR>
-            <TD COLSPAN="6" ALIGN="CENTER" STYLE="font-size: 14px; padding: 10px;">
-              ${groupName} ${dateStr}
-            </TD>
-          </TR>
-          <TR STYLE="background-color: #2C3E50; color: white;">
-            <TD ALIGN="LEFT">Tên</TD>
+        <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" STYLE="font-family: 'Arial', sans-serif; border: 1px solid black;">
+          <TR><TD COLSPAN="6" ALIGN="CENTER" BGCOLOR="#3A4B57" STYLE="font-size: 18px; font-weight: bold; color: white;">${groupTitle} - ${dateString}</TD></TR>
+          <TR STYLE="font-weight: bold; background-color: #2D3E4F; color: white;">
+            <TD ALIGN="CENTER">Tên</TD>
             <TD ALIGN="CENTER">Quẩy</TD>
             <TD ALIGN="CENTER">Cộng</TD>
             <TD ALIGN="CENTER">Bill</TD>
             <TD ALIGN="CENTER">Ảnh</TD>
-            <TD ALIGN="RIGHT">Tiền công</TD>
+            <TD ALIGN="CENTER">Tiền công</TD>
           </TR>
-          ${content.split('\n').map(line => {
-            const cells = line.split('\t');
-            return `
-              <TR>
-                <TD ALIGN="LEFT" STYLE="padding: 6px;">${cells[0]}</TD>
-                <TD ALIGN="CENTER" STYLE="padding: 6px;">${cells[1]}</TD>
-                <TD ALIGN="CENTER" STYLE="padding: 6px;">${cells[2]}</TD>
-                <TD ALIGN="CENTER" STYLE="padding: 6px;">${cells[3]}</TD>
-                <TD ALIGN="CENTER" STYLE="padding: 6px;">${cells[4]}</TD>
-                <TD ALIGN="RIGHT" STYLE="padding: 6px;">${cells[5]}</TD>
-              </TR>
-            `;
-          }).join('')}
-          <TR STYLE="background-color: #F8F9FA;">
-            <TD COLSPAN="5" ALIGN="RIGHT" STYLE="padding: 8px;">Tổng số tiền:</TD>
-            <TD ALIGN="RIGHT" STYLE="padding: 8px;">${totalAmount} vnd</TD>
+          ${content.split('\n').map(line => `<TR><TD ALIGN="LEFT">${line.split('\t').join('</TD><TD ALIGN="CENTER">')}</TD></TR>`).join('')}
+          <TR STYLE="font-weight: bold; background-color: #EFEFEF;">
+            <TD COLSPAN="5" ALIGN="RIGHT">Tổng số tiền</TD>
+            <TD ALIGN="CENTER">${totalEarnings} vnđ</TD>
           </TR>
         </TABLE>
       >];
     }
   `;
-  return `${url}${encodeURIComponent(graph)}`;
+  const imageUrl = `${url}${encodeURIComponent(graph)}`;
+  return imageUrl;
 }
 
-async function generateSummaryImage2(content, dateStr) {
+async function createSummaryImage(content, dateString) {
   const url = 'https://quickchart.io/graphviz?format=png&layout=dot&graph=';
   const graph = `
     digraph G {
       node [shape=plaintext];
       a [label=<
-        <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="8" STYLE="font-family: Arial, sans-serif;">
-          <TR>
-            <TD COLSPAN="2" ALIGN="CENTER" STYLE="background-color: #2C3E50; color: white; padding: 10px;">
-              Tổng số tiền của từng thành viên từ tất cả các nhóm ${dateStr}
-            </TD>
-          </TR>
+        <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" STYLE="font-family: 'Arial', sans-serif; border: 1px solid black;">
+          <TR><TD COLSPAN="2" ALIGN="CENTER" BGCOLOR="#3A4B57" STYLE="font-size: 18px; font-weight: bold; color: white;">Tổng số tiền của từng thành viên từ tất cả các nhóm - ${dateString}</TD></TR>
           ${content}
         </TABLE>
       >];
     }
   `;
-  return `${url}${encodeURIComponent(graph)}`;
+  const imageUrl = `${url}${encodeURIComponent(graph)}`;
+  return imageUrl;
 }
 
-async function fetchGroupTitle(bot, groupId) {
+async function retrieveGroupTitle(groupId) {
   try {
     const chat = await bot.getChat(groupId);
     return chat.title;
@@ -157,15 +150,14 @@ async function fetchGroupTitle(bot, groupId) {
     return `Nhóm ${groupId}`;
   }
 }
-
 module.exports = (bot) => {
-  bot.onText(/\/111/, async (msg) => {
-    const chatId = msg.chat.id;
-    await processAndDistributeTimesheets2(bot, chatId, false);
-  });
+bot.onText(/\/bangconglan/, async (msg) => {
+  const targetChatId = msg.chat.id;
+  await handleAndDistributeTimesheets(targetChatId, false);
+});
 
-  bot.onText(/\/homnaylan/, async (msg) => {
-    const chatId = msg.chat.id;
-    await processAndDistributeTimesheets2(bot, chatId, true);
-  });
+bot.onText(/\/homnaylan/, async (msg) => {
+  const targetChatId = msg.chat.id;
+  await handleAndDistributeTimesheets(targetChatId, true);
+});
 };
