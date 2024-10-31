@@ -175,6 +175,7 @@ function loadFiles() {
 // Gọi hàm để tải tất cả các file
 loadFiles();
 
+initTimesheetCommands(bot); //hen giờ lên ảnh bảng công
 
 
 
