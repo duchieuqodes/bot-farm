@@ -31,6 +31,11 @@ const updatedManagementFees = {
   '-1002160116020': 50000 
 };
 
+const allowedGroupIds = [
+  -1002230199552, -1002449707024, -1002160116020, -1002259135527, -1002349272974, -1002312409314, -1002439441449, -1002178207739, -1002235474314, -1002186698265, -1002205826480,
+  -1002311358141, -1002481836552, -1002245725621, -1002350493572, -1002300392959, -1002113921526, -1002243393101, -1002311651580
+];
+
 // Hàm xử lý và phân phối bảng công cho từng nhóm
 async function processAndDistributeTimesheetsUpdated(chatId, isToday) {
   const targetDate = isToday ? new Date() : new Date(Date.now() - 86400000); 
