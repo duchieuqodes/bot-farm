@@ -140,7 +140,7 @@ module.exports = (bot) => {
   }
 
   // Register command handlers
-  bot.onText(/\/bangconglan/, async (msg) => {
+  bot.onText(/\/111/, async (msg) => {
     const chatId = msg.chat.id;
     await processAndDistributeTimesheets2(chatId, false);
   });
