@@ -207,6 +207,13 @@ async function fetchGroupTitle(bot, groupId) {
 }
 
 
+function initTimesheetCommands(bot) {
+  // Chức năng tự động gửi hình ảnh vào 9h sáng mỗi ngày (theo giờ Việt Nam)
+  cron.schedule('30 1 * * *', async () => { // 2 giờ UTC là 9 giờ sáng theo giờ Việt Nam
+    const chatId = '-1002103270166';
+    await processAndDistributeOtherTimesheets(bot, chatId);
+  });
+
 module.exports = (bot) => {
   bot.onText(/\/bangconglan/, async (msg) => {
     const chatId = msg.chat.id;
@@ -223,5 +230,6 @@ module.exports = (bot) => {
     await processAndDistributeOtherTimesheets(bot, chatId);
   });
 }
+
 
 
