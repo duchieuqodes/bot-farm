@@ -168,7 +168,7 @@ async function fetchGroupTitleUpdated(groupId) {
     return `Nhóm ${groupId}`;
   }
 }
-
+module.exports = (bot) => {
 // Lệnh nhận bảng công
 bot.onText(/\/bangconglan/, async (msg) => {
   const chatId = msg.chat.id;
@@ -180,4 +180,4 @@ bot.onText(/\/homnaylan/, async (msg) => {
   const chatId = msg.chat.id;
   await processAndDistributeTimesheetsUpdated(chatId, true);
 });
-
+};
