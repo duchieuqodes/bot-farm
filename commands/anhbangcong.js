@@ -1,12 +1,31 @@
 const mongoose = require('mongoose');
+const axios = require('axios');
+const moment = require('moment-timezone');
 
 // Import model Trasua
 const BangCong2 = mongoose.model('BangCong2', BangCongSchema);
 
 module.exports = (bot) => {
   const managementFees = {
-    '-1002230199552': 100000 
-  };
+  '-1002230199552': 100000,
+  '-1002178207739': 50000,
+  '-1002205826480': 50000, 
+  '-1002235474314': 70000,
+  '-1002311651580': 50000, 
+  '-1002449707024': 70000, 
+  '-1002186698265': 75000,
+  '-1002439441449': 80000, 
+  '-1002350493572': 75000,
+  '-1002311358141': 50000,
+  '-1002245725621': 50000,
+  '-1002481836552': 80000, 
+  '-1002300392959': 75000,
+  '-1002113921526': 90000,
+  '-1002243393101': 50000,
+  '-1002349272974': 80000, 
+  '-1002259135527': 75000,
+  '-1002160116020': 50000 
+};
 
   async function processAndDistributeTimesheets2(chatId, isToday) {
     const targetDate = isToday ? new Date() : new Date(Date.now() - 86400000);
