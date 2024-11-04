@@ -3493,3 +3493,62 @@ bot.on('message', async (msg) => {
     }
   }
 });
+
+let step = {};
+let userIdTemp = {};
+
+// Lệnh /levelup để bắt đầu quy trình cập nhật level
+bot.onText(/\/levelup/, (msg) => {
+  const chatId = msg.chat.id;
+  bot.sendMessage(chatId, 'Nhập userId của thành viên mà bạn muốn tăng level:');
+  step[chatId] = 'awaitingUserId';
+});
+
+// Xử lý các tin nhắn sau khi gửi lệnh /levelup
+bot.on('message', async (msg) => {
+  const chatId = msg.chat.id;
+
+  // Kiểm tra nếu người dùng đã nhập lệnh /levelup và đang chờ userId
+  if (step[chatId] === 'awaitingUserId') {
+    const userId = parseInt(msg.text);
+
+    // Kiểm tra nếu userId hợp lệ
+    if (isNaN(userId)) {
+      bot.sendMessage(chatId, 'Vui lòng nhập userId hợp lệ.');
+      return;
+    }
+
+    // Lưu trữ userId tạm thời
+    userIdTemp[chatId] = userId;
+    bot.sendMessage(chatId, 'Nhập số level muốn tăng:');
+    step[chatId] = 'awaitingLevelIncrease';
+  
+  } else if (step[chatId] === 'awaitingLevelIncrease') {
+    const levelIncrease = parseInt(msg.text);
+
+    // Kiểm tra nếu levelIncrease hợp lệ
+    if (isNaN(levelIncrease)) {
+      bot.sendMessage(chatId, 'Vui lòng nhập số level hợp lệ.');
+      return;
+    }
+
+    // Cập nhật level của thành viên trong cơ sở dữ liệu
+    try {
+      const member = await Member.findOne({ userId: userIdTemp[chatId] });
+      if (member) {
+        member.level += levelIncrease;
+        await member.save();
+        bot.sendMessage(chatId, `Level của thành viên có userId ${userIdTemp[chatId]} đã được tăng lên ${levelIncrease}. Level hiện tại: ${member.level}`);
+      } else {
+        bot.sendMessage(chatId, `Không tìm thấy thành viên với userId ${userIdTemp[chatId]}.`);
+      }
+    } catch (error) {
+      console.error(error);
+      bot.sendMessage(chatId, 'Đã xảy ra lỗi khi cập nhật level.');
+    }
+
+    // Reset bước sau khi hoàn tất
+    step[chatId] = null;
+    userIdTemp[chatId] = null;
+  }
+});
