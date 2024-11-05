@@ -55,7 +55,7 @@ module.exports = (bot) => {
     bot.on('message', async (msg) => {
         const chatId = msg.chat.id;
 
-        if (chatId == -1002247863313) {
+        if (chatId == -100223939393) {
             const messageContent = msg.text || msg.caption;
             if (messageContent && accRegex8.test(messageContent)) {
                 await processAccMessage8(msg, bot);
