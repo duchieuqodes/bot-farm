@@ -1024,7 +1024,7 @@ async function processSubmission(msg, targetMsg) {
     case -1002300392959:
     case -1002350493572:
     case -1002259135527:
-    case -1002360155473
+    case -1002360155473:
       pricePerKeo = 1500;
       break;
     case -1002113921526:
